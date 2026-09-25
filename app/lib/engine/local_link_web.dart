@@ -30,7 +30,10 @@ class IframeLink extends LocalEngineLink {
       ..style.border = 'none'
       ..style.width = '100%'
       ..style.height = '100%'
-      ..style.background = '#000';
+      ..style.background = '#000'
+      // L'iframe est purement d'affichage ; sans ça elle capte les clics
+      // destinés aux contrôles Flutter posés par-dessus.
+      ..style.pointerEvents = 'none';
     _iframe.addEventListener(
         'load',
         (web.Event _) {

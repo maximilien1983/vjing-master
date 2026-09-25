@@ -32,6 +32,12 @@ class Session {
   final energy = ValueNotifier<double>(0.5);
   final light = ValueNotifier<double>(0.5);
   final hold = ValueNotifier<bool>(false);
+
+  /// Décalage de calibration en ms. Négatif = avancer les visuels (compense
+  /// la latence de capture micro), positif = les retarder (son du téléphone
+  /// sur enceinte Bluetooth, cf. brief). Calibration auto au jalon 2b.
+  final offsetMs = ValueNotifier<int>(kIsWeb ? -120 : 0);
+  BeatEstimate? _lastBeat;
   bool debug = true;
 
   final List<StreamSubscription> _subs = [];
@@ -55,14 +61,8 @@ class Session {
       bpm.value = b.bpm;
       confidence.value = b.confidence;
       pilot.onBeat(b);
-      _sendAll({
-        'type': 'beat',
-        'bpm': b.bpm,
-        'phase': b.phase,
-        't0': b.t0,
-        'offsetMs': 0,
-        'confidence': b.confidence,
-      });
+      _lastBeat = b;
+      _sendBeat(b);
     }));
     _subs.add(analyzer.structures.listen((s) {
       structure.value = s;
@@ -125,6 +125,23 @@ class Session {
     for (final link in _links) {
       link.send(msg);
     }
+  }
+
+  void _sendBeat(BeatEstimate b) {
+    _sendAll({
+      'type': 'beat',
+      'bpm': b.bpm,
+      'phase': b.phase,
+      't0': b.t0,
+      'offsetMs': offsetMs.value,
+      'confidence': b.confidence,
+    });
+  }
+
+  void setOffsetMs(int v) {
+    offsetMs.value = v;
+    // Réapplique immédiatement le décalage sans attendre le prochain beat.
+    if (_lastBeat case final b?) _sendBeat(b);
   }
 
   void setEnergy(double v) {

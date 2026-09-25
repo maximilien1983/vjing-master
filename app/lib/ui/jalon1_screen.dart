@@ -173,26 +173,26 @@ class _ControlBar extends StatelessWidget {
               ),
             ],
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+          Wrap(
+            spacing: 6,
+            runSpacing: 2,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _Fader(
                 label: 'ÉNERGIE',
                 listenable: session.energy,
                 onChanged: session.setEnergy,
               ),
-              const SizedBox(width: 10),
               _Fader(
                 label: 'LUMIÈRE',
                 listenable: session.light,
                 onChanged: session.setLight,
               ),
-              const SizedBox(width: 14),
+              _SyncFader(session: session),
               _TriggerButton('FLASH', onPressed: session.flash),
               _TriggerButton('DROP', onPressed: session.drop),
               _TriggerButton('SCÈNE', onPressed: session.scene),
               _TriggerButton('SUIVANT', onPressed: session.next),
-              const SizedBox(width: 6),
               ValueListenableBuilder(
                 valueListenable: session.hold,
                 builder: (_, holding, _) => FilterChip(
@@ -265,6 +265,48 @@ class _ControlBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Calibration du décalage son/visuel : négatif = avancer les visuels
+/// (latence de capture micro), positif = les retarder (enceinte Bluetooth).
+class _SyncFader extends StatelessWidget {
+  final Session session;
+  const _SyncFader({required this.session});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('SYNC',
+            style: TextStyle(
+                color: Colors.white54, fontSize: 10, letterSpacing: 1.2)),
+        SizedBox(
+          width: 130,
+          child: ValueListenableBuilder(
+            valueListenable: session.offsetMs,
+            builder: (_, v, _) => Slider(
+              value: v.toDouble(),
+              min: -300,
+              max: 300,
+              divisions: 60,
+              onChanged: (x) => session.setOffsetMs(x.round()),
+              activeColor: const Color(0xFFFFB547),
+              inactiveColor: Colors.white24,
+            ),
+          ),
+        ),
+        ValueListenableBuilder(
+          valueListenable: session.offsetMs,
+          builder: (_, v, _) => SizedBox(
+            width: 52,
+            child: Text('$v ms',
+                style: const TextStyle(color: Colors.white70, fontSize: 11)),
+          ),
+        ),
+      ],
     );
   }
 }
