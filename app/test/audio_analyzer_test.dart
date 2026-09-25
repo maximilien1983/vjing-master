@@ -50,6 +50,41 @@ void main() {
         reason: 'BPM détecté : ${last.bpm} (confiance ${last.confidence})');
   });
 
+  test('la phase colle aux kicks (pulsation calée sur le temps)', () async {
+    final analyzer = AudioAnalyzer();
+    final estimates = <BeatEstimate>[];
+    final sub = analyzer.beats.listen(estimates.add);
+
+    const bpm = 124.0;
+    final pcm = synthKicks(bpm: bpm, seconds: 15);
+    // Capturé juste avant le premier bloc : l'horloge du flux démarre là.
+    final startMs = DateTime.now().millisecondsSinceEpoch;
+    const block = 4096;
+    for (var i = 0; i < pcm.length; i += block) {
+      analyzer.addPcm16(Uint8List.sublistView(
+          pcm, i, math.min(i + block, pcm.length)));
+    }
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+    analyzer.dispose();
+
+    // Les kicks tombent à phase de temps 0 (t = k * 60/bpm depuis le début du
+    // flux). On vérifie les dernières estimations : la phase de temps estimée
+    // doit coller à la vraie, à ~0,2 temps près (latence d'attaque comprise).
+    final beatDurMs = 60000 / bpm;
+    final recent = estimates.where((e) => e.bpm > 0).toList().reversed.take(3);
+    expect(recent, isNotEmpty);
+    for (final e in recent) {
+      final estBeatPhase = (e.phase * 4) % 1;
+      final trueBeatPhase = ((e.t0 - startMs) / beatDurMs) % 1;
+      var diff = (estBeatPhase - trueBeatPhase).abs();
+      if (diff > 0.5) diff = 1 - diff;
+      expect(diff, lessThan(0.2),
+          reason: 'phase estimée $estBeatPhase vs réelle $trueBeatPhase '
+              '(bpm ${e.bpm})');
+    }
+  });
+
   test('bpm = 0 sur du silence', () async {
     final analyzer = AudioAnalyzer();
     final estimates = <BeatEstimate>[];

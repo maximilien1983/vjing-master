@@ -63,7 +63,8 @@ class AudioAnalyzer {
 
   double _bpm = 0;
   double _confidence = 0;
-  int _anchorMs = 0; // epoch ms d'un temps (ancre de phase)
+  int _anchorMs = 0; // epoch ms d'un temps récent (ancre de phase)
+  int _anchorBeatCount = 0; // temps écoulés à l'ancre, modulo 4 (phase de mesure)
   int _lastBeatSentMs = 0;
   double _lastSentBpm = -1;
   int _lastLevelsSentMs = 0;
@@ -133,14 +134,15 @@ class AudioAnalyzer {
       _bandSmooth[b] += (norm - _bandSmooth[b]) * k;
     }
 
-    // Flux spectral, pondéré vers les basses pour résister aux voix.
+    // Flux spectral, très pondéré basses : le kick fait foi, les charlestons
+    // à contretemps ne doivent pas tirer la phase.
     var flux = 0.0;
     if (_prevMags != null) {
       final lowEnd = 150 ~/ binHz + 1;
       final midEnd = 2000 ~/ binHz + 1;
       for (var i = 1; i < mags.length; i++) {
         final d = mags[i] - _prevMags![i];
-        if (d > 0) flux += i < lowEnd ? d * 3.0 : (i < midEnd ? d * 0.5 : d * 0.2);
+        if (d > 0) flux += i < lowEnd ? d * 4.0 : (i < midEnd ? d * 0.2 : d * 0.05);
       }
     }
     _prevMags = Float64List.fromList(mags);
@@ -308,7 +310,9 @@ class AudioAnalyzer {
   }
 
   /// Cale l'ancre de phase : offset du peigne qui maximise l'alignement
-  /// des attaques sur la période détectée.
+  /// des attaques sur la période détectée. L'ancre est toujours ramenée sur
+  /// un temps récent : une ancre ancienne amplifierait la moindre fluctuation
+  /// du BPM en grand décalage de phase (c'était le bug de dérive).
   void _updatePhaseAnchor(int nowMs) {
     final periodHops = 60.0 * hopsPerSecond / _bpm;
     final env = _chronoOnsets();
@@ -319,8 +323,10 @@ class AudioAnalyzer {
       var score = 0.0;
       for (var k = 0; ; k++) {
         final idx = onsetWindow - 1 - offset - (k * periodHops).round();
-        if (idx < 0) break;
-        score += env[idx];
+        if (idx < 1) break;
+        // Fenêtre ±1 hop : les attaques font 1 à 2 hops de large.
+        score += env[idx] + 0.5 * env[idx - 1] +
+            (idx + 1 < onsetWindow ? 0.5 * env[idx + 1] : 0);
       }
       if (score > bestScore) {
         bestScore = score;
@@ -332,13 +338,17 @@ class AudioAnalyzer {
     final beatDurMs = 60000.0 / _bpm;
     if (_anchorMs == 0) {
       _anchorMs = beatMs;
-    } else {
-      // Corrige l'ancre en douceur : on la déplace d'un nombre entier de
-      // temps + une fraction de l'erreur, pour éviter les sauts de phase.
-      final drift = (beatMs - _anchorMs) % beatDurMs;
-      final err = drift > beatDurMs / 2 ? drift - beatDurMs : drift;
-      _anchorMs += (err * 0.3).round();
+      _anchorBeatCount = 0;
+      return;
     }
+    // Nombre entier de temps écoulés sur l'ancienne grille + erreur signée.
+    final delta = beatMs - _anchorMs;
+    final n = (delta / beatDurMs).round();
+    final err = delta - n * beatDurMs;
+    // Nouvelle ancre : le temps mesuré, corrigé à 30 % seulement (pas de saut),
+    // et le compte de temps avance pour préserver la phase de mesure.
+    _anchorMs = (_anchorMs + n * beatDurMs + err * 0.3).round();
+    _anchorBeatCount = (_anchorBeatCount + n) % 4;
   }
 
   void _maybeEmitBeat(int nowMs) {
@@ -352,7 +362,7 @@ class AudioAnalyzer {
       return;
     }
     final beatDurMs = 60000.0 / _bpm;
-    final beatsSinceAnchor = (nowMs - _anchorMs) / beatDurMs;
+    final beatsSinceAnchor = _anchorBeatCount + (nowMs - _anchorMs) / beatDurMs;
     // Mesure de 4 temps ; le temps 1 est arbitraire au jalon 1.
     final phase = (beatsSinceAnchor / 4) % 1;
     _beatCtrl.add(
