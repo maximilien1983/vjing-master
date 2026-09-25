@@ -189,6 +189,23 @@ class _ControlBar extends StatelessWidget {
                 onChanged: session.setLight,
               ),
               _SyncFader(session: session),
+              ValueListenableBuilder(
+                valueListenable: session.beatBar,
+                builder: (_, on, _) => FilterChip(
+                  label: const Text('CAL'),
+                  selected: on,
+                  showCheckmark: false,
+                  tooltip: 'Barre de calibration : flash sur chaque temps',
+                  labelStyle: TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: on ? const Color(0xFF4A2305) : Colors.white70,
+                  ),
+                  selectedColor: const Color(0xFFFFB547),
+                  backgroundColor: Colors.white10,
+                  onSelected: session.setBeatBar,
+                ),
+              ),
               _TriggerButton('FLASH', onPressed: session.flash),
               _TriggerButton('DROP', onPressed: session.drop),
               _TriggerButton('SCÈNE', onPressed: session.scene),

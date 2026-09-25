@@ -71,6 +71,8 @@ export interface ConfigMsg {
   type: 'config';
   v?: number;
   debug?: boolean;
+  /// Barre de calibration : flash sur chaque temps extrapolé (offset inclus).
+  beatBar?: boolean;
   energy?: number;
   light?: number;
 }

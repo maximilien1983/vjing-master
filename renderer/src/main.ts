@@ -14,9 +14,30 @@ declare global {
 
 const canvas = document.getElementById('vjm-canvas') as HTMLCanvasElement;
 const debugEl = document.getElementById('vjm-debug') as HTMLDivElement;
+const beatBarEl = document.getElementById('vjm-beatbar') as HTMLDivElement;
 
 const engine = new Engine(canvas);
 let debug = false;
+let beatBar = false;
+
+// Barre de calibration : flash net sur chaque temps EXTRAPOLÉ par le moteur
+// (donc décalage SYNC inclus) — ambre sur le temps 1, blanc sur les autres.
+// C'est la référence visuelle pour caler le curseur SYNC sur le kick audible.
+function beatBarLoop(): void {
+  if (beatBar) {
+    const phase = engine.clockRef.beatPhase();
+    if (phase < 0) {
+      beatBarEl.style.opacity = '0';
+    } else {
+      const intensity = Math.pow(Math.max(0, 1 - phase * 3), 2);
+      beatBarEl.style.opacity = (intensity * 0.95).toFixed(3);
+      beatBarEl.style.background =
+        engine.clockRef.beatIndex() === 0 ? '#ffb547' : '#ffffff';
+    }
+  }
+  requestAnimationFrame(beatBarLoop);
+}
+requestAnimationFrame(beatBarLoop);
 
 function sendFeedback(msg: OutboundMsg): void {
   window.VJM.onFeedback?.(msg);
@@ -44,9 +65,16 @@ window.VJM = {
       console.error('VJM: message illisible', raw, e);
       return;
     }
-    if (msg.type === 'config' && msg.debug !== undefined) {
-      debug = msg.debug;
-      debugEl.style.display = debug ? 'block' : 'none';
+    if (msg.type === 'config') {
+      if (msg.debug !== undefined) {
+        debug = msg.debug;
+        debugEl.style.display = debug ? 'block' : 'none';
+      }
+      if (msg.beatBar !== undefined) {
+        beatBar = msg.beatBar;
+        beatBarEl.style.display = beatBar ? 'block' : 'none';
+        if (!beatBar) beatBarEl.style.opacity = '0';
+      }
     }
     if (msg.type === 'ping') {
       sendFeedback({ type: 'pong', t: msg.t, tr: Date.now() });

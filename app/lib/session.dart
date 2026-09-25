@@ -37,6 +37,10 @@ class Session {
   /// la latence de capture micro), positif = les retarder (son du téléphone
   /// sur enceinte Bluetooth, cf. brief). Calibration auto au jalon 2b.
   final offsetMs = ValueNotifier<int>(kIsWeb ? -120 : 0);
+
+  /// Barre de calibration du moteur (flash sur chaque temps extrapolé).
+  /// Activée d'office en préviz web, où la calibration SYNC est nécessaire.
+  final beatBar = ValueNotifier<bool>(kIsWeb);
   BeatEstimate? _lastBeat;
   bool debug = true;
 
@@ -72,7 +76,13 @@ class Session {
       castState.value = s;
       if (s == CastState.connected) {
         // Le receiver démarre muet : on lui pousse l'état courant complet.
-        cast.send({'type': 'config', 'debug': debug, 'energy': pilot.energy, 'light': pilot.light});
+        cast.send({
+          'type': 'config',
+          'debug': debug,
+          'beatBar': beatBar.value,
+          'energy': pilot.energy,
+          'light': pilot.light,
+        });
       }
     }));
 
@@ -86,7 +96,7 @@ class Session {
       };
     }
 
-    local.send({'type': 'config', 'debug': debug});
+    local.send({'type': 'config', 'debug': debug, 'beatBar': beatBar.value});
     pilot.start();
     setEnergy(energy.value);
     setLight(light.value);
@@ -167,6 +177,11 @@ class Session {
   void setDebug(bool value) {
     debug = value;
     _sendAll({'type': 'config', 'debug': value});
+  }
+
+  void setBeatBar(bool value) {
+    beatBar.value = value;
+    _sendAll({'type': 'config', 'beatBar': value});
   }
 
   Future<void> dispose() async {

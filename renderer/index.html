@@ -12,11 +12,17 @@
       font: 12px/1.5 monospace; color: #9f9; background: rgba(0,0,0,.55);
       padding: 6px 10px; border-radius: 4px; white-space: pre; pointer-events: none;
     }
+    #vjm-beatbar {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 16%;
+      z-index: 9; display: none; opacity: 0; background: #fff;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <canvas id="vjm-canvas"></canvas>
   <div id="vjm-debug"></div>
+  <div id="vjm-beatbar"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
