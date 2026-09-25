@@ -65,6 +65,11 @@ class AudioAnalyzer {
   double _confidence = 0;
   int _anchorMs = 0; // epoch ms d'un temps récent (ancre de phase)
   int _anchorBeatCount = 0; // temps écoulés à l'ancre, modulo 4 (phase de mesure)
+  // Verrou de tempo : on ne lâche pas au premier passage chargé, et on
+  // n'adopte pas un grand saut de BPM sans confirmation.
+  int _lowConfCount = 0;
+  double _candidateBpm = 0;
+  int _candidateCount = 0;
   int _lastBeatSentMs = 0;
   double _lastSentBpm = -1;
   int _lastLevelsSentMs = 0;
@@ -234,9 +239,17 @@ class AudioAnalyzer {
     }
     final confidence = ((bestVal / (meanVal.abs() + 1e-12)) / 4).clamp(0.0, 1.0);
     if (confidence < 0.25) {
-      _setNoBeat();
+      // Verrou persistant : sur un passage chargé la confiance plonge, mais
+      // le tempo n'a probablement pas changé. On extrapole ~5 s avant de
+      // lâcher (10 mises à jour à 2/s), sans toucher à l'ancre de phase.
+      if (_bpm > 0) {
+        _lowConfCount++;
+        _confidence = confidence;
+        if (_lowConfCount >= 10) _setNoBeat();
+      }
       return;
     }
+    _lowConfCount = 0;
 
     // Interpolation parabolique autour du pic pour affiner le lag.
     var lag = bestLag.toDouble();
@@ -254,10 +267,36 @@ class AudioAnalyzer {
       bpm /= 2;
     }
 
-    // Lissage : on ne saute que si l'estimation s'écarte durablement.
-    _bpm = _bpm > 0 && (bpm - _bpm).abs() / _bpm < 0.08
-        ? _bpm + (bpm - _bpm) * 0.2
-        : bpm;
+    if (_bpm <= 0) {
+      // Acquisition initiale.
+      _bpm = bpm;
+    } else if ((bpm - _bpm).abs() / _bpm < 0.08) {
+      // Petite variation : lissage, et la piste candidate est abandonnée.
+      _bpm += (bpm - _bpm) * 0.2;
+      _candidateBpm = 0;
+      _candidateCount = 0;
+    } else {
+      // Grand saut (demi-tempo, morceau suivant…) : exiger 3 estimations
+      // concordantes (~1,5 s) avant d'adopter, sinon garder le verrou actuel.
+      if (_candidateBpm > 0 && (bpm - _candidateBpm).abs() / _candidateBpm < 0.04) {
+        _candidateCount++;
+        if (_candidateCount >= 3) {
+          _bpm = bpm;
+          _candidateBpm = 0;
+          _candidateCount = 0;
+          _anchorMs = 0; // nouvelle grille : on ré-ancre proprement
+        }
+      } else {
+        _candidateBpm = bpm;
+        _candidateCount = 1;
+      }
+      if (_candidateBpm > 0) {
+        // En attendant la confirmation, l'ancien tempo reste la référence.
+        _confidence = confidence;
+        _updatePhaseAnchor(nowMs);
+        return;
+      }
+    }
     _confidence = confidence;
     _updatePhaseAnchor(nowMs);
   }
@@ -265,6 +304,10 @@ class AudioAnalyzer {
   void _setNoBeat() {
     _bpm = 0;
     _confidence = 0;
+    _lowConfCount = 0;
+    _candidateBpm = 0;
+    _candidateCount = 0;
+    _anchorMs = 0;
   }
 
   /// Moyenne des `n` derniers hops d'énergie, en remontant depuis l'écriture.

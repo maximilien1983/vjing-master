@@ -36,7 +36,8 @@ class Session {
   /// Décalage de calibration en ms. Négatif = avancer les visuels (compense
   /// la latence de capture micro), positif = les retarder (son du téléphone
   /// sur enceinte Bluetooth, cf. brief). Calibration auto au jalon 2b.
-  final offsetMs = ValueNotifier<int>(kIsWeb ? -120 : 0);
+  // -100 ms : latence de capture micro mesurée à l'oreille en préviz Chrome.
+  final offsetMs = ValueNotifier<int>(kIsWeb ? -100 : 0);
 
   /// Barre de calibration du moteur (flash sur chaque temps extrapolé).
   /// Activée d'office en préviz web, où la calibration SYNC est nécessaire.
