@@ -16,7 +16,10 @@ App mobile perso (iOS + Android) de VJing automatique : elle écoute la musique 
 ## Développement
 
 ```sh
-# Moteur (navigateur, http://localhost:5173 — touches : b = beat simulé, d = debug, f = flash)
+# Préviz complète sur PC (app + micro + moteur en iframe, dans Chrome)
+cd app && flutter run -d chrome
+
+# Moteur seul (http://localhost:5173 — touches : b = beat simulé, d = debug, f = flash)
 cd renderer && npm install && npm run dev
 
 # Receiver (nécessite un vrai Chromecast enregistré, voir docs/cast-setup.md)
@@ -25,5 +28,7 @@ cd receiver && npm install && npm run build
 # App (téléphone Android branché en USB, débogage activé)
 cd app && flutter run
 ```
+
+La préviz PC utilise le vrai micro (autoriser Chrome), la vraie détection de BPM et le moteur hébergé sur Pages dans une iframe. Chromecast et retour haptique sont inactifs sur le web ; après un changement du moteur, pousser sur `main` pour que l'iframe le voie (ou utiliser `npm run dev` pour itérer sur le moteur seul).
 
 Le déploiement du moteur, du receiver et du catalogue sur GitHub Pages est automatique à chaque push sur `main` (`.github/workflows/pages.yml`).

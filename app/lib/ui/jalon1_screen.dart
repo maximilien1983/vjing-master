@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../audio/audio_analyzer.dart';
 import '../cast/cast_link.dart';
@@ -38,9 +37,7 @@ class _Jalon1ScreenState extends State<Jalon1Screen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: WebViewWidget(controller: session.webView.controller),
-          ),
+          Positioned.fill(child: session.local.buildView()),
           if (_overlayVisible)
             SafeArea(
               child: Align(

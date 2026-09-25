@@ -19,6 +19,8 @@ dependencies:
   wakelock_plus: ^1.2.8
   # FFT pure Dart pour l'analyse spectrale.
   fftea: ^1.5.0
+  # Interop DOM pour la préviz Flutter web (iframe du moteur).
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:

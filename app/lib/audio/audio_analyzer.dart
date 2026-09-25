@@ -24,14 +24,18 @@ class Levels {
 /// spectral (priorité aux basses), BPM par autocorrélation, phase de mesure.
 /// Tout est basé sur l'horloge des échantillons, pas sur des timers.
 class AudioAnalyzer {
-  static const int sampleRate = 44100;
+  /// 44,1 kHz sur mobile ; les navigateurs travaillent presque tous à 48 kHz.
+  final int sampleRate;
   static const int fftSize = 2048;
-  static const int hopSize = 1024; // ~43 analyses/s
-  static const double hopsPerSecond = sampleRate / hopSize;
+  static const int hopSize = 1024; // ~43 analyses/s à 44,1 kHz
 
   // Fenêtre d'autocorrélation : ~8 s d'enveloppe d'attaques.
   static const int onsetWindow = 344;
   static const double minBpm = 60, maxBpm = 180;
+
+  AudioAnalyzer({this.sampleRate = 44100});
+
+  double get hopsPerSecond => sampleRate / hopSize;
 
   final _fft = FFT(fftSize);
   late final Float64List _hann = Float64List.fromList(List.generate(
@@ -94,7 +98,7 @@ class AudioAnalyzer {
     final mags = _fft.realFft(chunk).discardConjugates().magnitudes();
 
     // Bandes : basses 20-150 Hz, médiums 150-2000, aigus 2000-16000.
-    const binHz = sampleRate / fftSize; // ~21.5 Hz
+    final binHz = sampleRate / fftSize; // ~21.5 Hz à 44,1 kHz
     final low = _bandMean(mags, 20 ~/ binHz + 1, 150 ~/ binHz + 1);
     final mid = _bandMean(mags, 150 ~/ binHz + 1, 2000 ~/ binHz + 1);
     final high = _bandMean(mags, 2000 ~/ binHz + 1, 16000 ~/ binHz + 1);

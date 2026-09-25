@@ -49,14 +49,22 @@ class CastLink extends EngineLink {
     });
   }
 
-  Future<void> startDiscovery() => _channel.invokeMethod('startDiscovery');
+  /// Sans implémentation native (web, desktop) : Cast indisponible, sans bruit.
+  Future<void> _invoke(String method, [Map<String, Object?>? args]) async {
+    try {
+      await _channel.invokeMethod(method, args);
+    } on MissingPluginException {
+      // Préviz PC : pas de Chromecast, la découverte reste simplement vide.
+    }
+  }
 
-  Future<void> stopDiscovery() => _channel.invokeMethod('stopDiscovery');
+  Future<void> startDiscovery() => _invoke('startDiscovery');
 
-  Future<void> connect(String routeId) =>
-      _channel.invokeMethod('connect', {'routeId': routeId});
+  Future<void> stopDiscovery() => _invoke('stopDiscovery');
 
-  Future<void> disconnect() => _channel.invokeMethod('disconnect');
+  Future<void> connect(String routeId) => _invoke('connect', {'routeId': routeId});
+
+  Future<void> disconnect() => _invoke('disconnect');
 
   @override
   void send(Map<String, dynamic> msg) => sendJson(jsonEncode(msg));
@@ -64,7 +72,7 @@ class CastLink extends EngineLink {
   @override
   void sendJson(String json) {
     if (_state != CastState.connected) return;
-    _channel.invokeMethod('sendMessage', {'json': json});
+    _invoke('sendMessage', {'json': json});
   }
 
   void dispose() {

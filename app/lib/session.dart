@@ -6,14 +6,15 @@ import 'package:record/record.dart';
 import 'audio/audio_analyzer.dart';
 import 'cast/cast_link.dart';
 import 'engine/engine_link.dart';
-import 'engine/webview_link.dart';
+import 'engine/local_link.dart';
 
 /// Session jalon 1 : micro -> analyse -> moteur(s).
-/// Le même flux de messages part vers la WebView locale et, si connecté,
-/// vers le Chromecast (le moniteur local sert d'aperçu).
+/// Le même flux de messages part vers le moteur local (WebView sur mobile,
+/// iframe en préviz web) et, si connecté, vers le Chromecast.
 class Session {
-  final analyzer = AudioAnalyzer();
-  final webView = WebViewLink();
+  // Les navigateurs capturent quasi systématiquement à 48 kHz.
+  final analyzer = AudioAnalyzer(sampleRate: kIsWeb ? 48000 : 44100);
+  final local = createLocalLink();
   final cast = CastLink();
   final _recorder = AudioRecorder();
 
@@ -30,7 +31,7 @@ class Session {
   Timer? _pingTimer;
 
   List<EngineLink> get _links => [
-        webView,
+        local,
         if (cast.state == CastState.connected) cast,
       ];
 
@@ -59,7 +60,7 @@ class Session {
       }
     }));
 
-    for (final link in [webView, cast]) {
+    for (final link in [local, cast]) {
       link.onFeedback = (msg) {
         if (msg['type'] == 'stats') {
           final src = link == cast ? 'TV' : 'local';
@@ -69,12 +70,12 @@ class Session {
       };
     }
 
-    webView.send({'type': 'config', 'debug': debug});
+    local.send({'type': 'config', 'debug': debug});
 
     // Latence aller-retour mesurée toutes les 2 s sur le lien actif.
     _pingTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
       final link =
-          cast.state == CastState.connected ? cast : webView;
+          cast.state == CastState.connected ? cast : local;
       final label = link == cast ? 'TV' : 'local';
       try {
         final rtt = await link.ping();
@@ -86,9 +87,9 @@ class Session {
 
     try {
       if (await _recorder.hasPermission()) {
-        final stream = await _recorder.startStream(const RecordConfig(
+        final stream = await _recorder.startStream(RecordConfig(
           encoder: AudioEncoder.pcm16bits,
-          sampleRate: AudioAnalyzer.sampleRate,
+          sampleRate: analyzer.sampleRate,
           numChannels: 1,
         ));
         _subs.add(stream.listen(analyzer.addPcm16));

@@ -21,7 +21,18 @@ let debug = false;
 function sendFeedback(msg: OutboundMsg): void {
   window.VJM.onFeedback?.(msg);
   window.VjmFeedback?.postMessage(JSON.stringify(msg));
+  // Enveloppe iframe (préviz Flutter web) : feedback vers la page parente.
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage(JSON.stringify(msg), '*');
+  }
 }
+
+// Enveloppe iframe : messages entrants par postMessage (chaînes JSON).
+window.addEventListener('message', (e) => {
+  if (typeof e.data === 'string' && e.data.startsWith('{')) {
+    window.VJM.handleMessage(e.data);
+  }
+});
 
 window.VJM = {
   onFeedback: null,

@@ -9,7 +9,7 @@ import 'package:vjing_master/audio/audio_analyzer.dart';
 Uint8List synthKicks({
   required double bpm,
   required double seconds,
-  int sampleRate = AudioAnalyzer.sampleRate,
+  int sampleRate = 44100,
 }) {
   final total = (seconds * sampleRate).round();
   final samples = Int16List(total);
@@ -55,7 +55,7 @@ void main() {
     final estimates = <BeatEstimate>[];
     final sub = analyzer.beats.listen(estimates.add);
 
-    final silence = Uint8List((10 * AudioAnalyzer.sampleRate * 2));
+    final silence = Uint8List(10 * 44100 * 2);
     const block = 4096;
     for (var i = 0; i < silence.length; i += block) {
       analyzer.addPcm16(Uint8List.sublistView(

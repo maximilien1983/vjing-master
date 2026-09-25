@@ -1,13 +1,15 @@
 import 'dart:convert';
-import 'dart:ui' show Color;
 
+import 'package:flutter/widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import 'engine_link.dart';
+import 'local_link.dart';
+
+LocalEngineLink createPlatformLocalLink() => WebViewLink();
 
 /// Moteur dans la WebView locale (mode local, plus tard AirPlay).
 /// Charge la copie single-file du moteur depuis les assets Flutter.
-class WebViewLink extends EngineLink {
+class WebViewLink extends LocalEngineLink {
   late final WebViewController controller;
   bool _ready = false;
   final List<String> _queue = [];
@@ -27,6 +29,9 @@ class WebViewLink extends EngineLink {
       }))
       ..loadFlutterAsset('assets/renderer/index.html');
   }
+
+  @override
+  Widget buildView() => WebViewWidget(controller: controller);
 
   @override
   void send(Map<String, dynamic> msg) => sendJson(jsonEncode(msg));
