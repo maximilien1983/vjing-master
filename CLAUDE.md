@@ -26,6 +26,7 @@ App mobile perso (iOS + Android) de VJing automatique : elle écoute la musique 
 - Console en mode local : tiroir escamotable (maquettes 05/06), repli après 5 s d'inactivité.
 - FedFlix : copie pré-découpée hébergée (domaine public), pas de lecture directe depuis Internet Archive.
 - Hébergement statique : GitHub Pages (moteur, receiver, catalogue). Surveiller les limites (~1 Go / 100 Go/mois) ; bascule possible des vidéos vers Cloudflare R2 si besoin.
+- Dépôt public (compte GitHub gratuit : Pages exige un dépôt public). Donc vigilance renforcée : jamais de secret ni de contenu sous licence douteuse dans le dépôt.
 - Build iOS : Codemagic + TestFlight (pipeline à monter avant le jalon 5).
 - Poste de dev : Windows 11 (ce PC). Android via USB puis débogage sans fil, `flutter run` avec hot reload.
 
