@@ -20,19 +20,24 @@ const engine = new Engine(canvas);
 let debug = false;
 let beatBar = false;
 
-// Barre de calibration : flash net sur chaque temps EXTRAPOLÉ par le moteur
-// (donc décalage SYNC inclus) — ambre sur le temps 1, blanc sur les autres.
-// C'est la référence visuelle pour caler le curseur SYNC sur le kick audible.
+// Jauge de calibration (gauche de l'écran) : pleine à l'attaque de chaque
+// temps EXTRAPOLÉ par le moteur (décalage SYNC inclus), se vide jusqu'au
+// temps suivant. Le sommet doit claquer pile sur le kick audible.
 function beatBarLoop(): void {
   if (beatBar) {
     const phase = engine.clockRef.beatPhase();
     if (phase < 0) {
-      beatBarEl.style.opacity = '0';
+      beatBarEl.style.height = '0';
     } else {
-      const intensity = Math.pow(Math.max(0, 1 - phase * 3), 2);
-      beatBarEl.style.opacity = (intensity * 0.95).toFixed(3);
-      beatBarEl.style.background =
-        engine.clockRef.beatIndex() === 0 ? '#ffb547' : '#ffffff';
+      const fill = 1 - phase;
+      beatBarEl.style.height = `${(fill * 100).toFixed(1)}%`;
+      // Plus vive à l'attaque, glow renforcé sur le temps 1.
+      const attack = phase < 0.12;
+      beatBarEl.style.filter = attack ? 'brightness(1.5)' : 'none';
+      beatBarEl.style.boxShadow =
+        attack && engine.clockRef.beatIndex() === 0
+          ? '0 0 26px rgba(255, 60, 30, .95)'
+          : '0 0 12px rgba(255, 40, 20, .6)';
     }
   }
   requestAnimationFrame(beatBarLoop);
@@ -73,7 +78,7 @@ window.VJM = {
       if (msg.beatBar !== undefined) {
         beatBar = msg.beatBar;
         beatBarEl.style.display = beatBar ? 'block' : 'none';
-        if (!beatBar) beatBarEl.style.opacity = '0';
+        if (!beatBar) beatBarEl.style.height = '0';
       }
     }
     if (msg.type === 'ping') {

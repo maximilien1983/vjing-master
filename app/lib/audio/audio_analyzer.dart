@@ -139,15 +139,14 @@ class AudioAnalyzer {
       _bandSmooth[b] += (norm - _bandSmooth[b]) * k;
     }
 
-    // Flux spectral, très pondéré basses : le kick fait foi, les charlestons
-    // à contretemps ne doivent pas tirer la phase.
+    // Flux spectral basses UNIQUEMENT (20-150 Hz) : seul le kick pilote le
+    // tempo et la phase — voix, nappes et charlestons n'y touchent plus.
     var flux = 0.0;
     if (_prevMags != null) {
       final lowEnd = 150 ~/ binHz + 1;
-      final midEnd = 2000 ~/ binHz + 1;
-      for (var i = 1; i < mags.length; i++) {
+      for (var i = 1; i < lowEnd && i < mags.length; i++) {
         final d = mags[i] - _prevMags![i];
-        if (d > 0) flux += i < lowEnd ? d * 4.0 : (i < midEnd ? d * 0.2 : d * 0.05);
+        if (d > 0) flux += d;
       }
     }
     _prevMags = Float64List.fromList(mags);
@@ -270,17 +269,18 @@ class AudioAnalyzer {
     if (_bpm <= 0) {
       // Acquisition initiale.
       _bpm = bpm;
-    } else if ((bpm - _bpm).abs() / _bpm < 0.08) {
-      // Petite variation : lissage, et la piste candidate est abandonnée.
-      _bpm += (bpm - _bpm) * 0.2;
+    } else if ((bpm - _bpm).abs() / _bpm < 0.04) {
+      // Micro-variation de mesure : le tempo d'un morceau est stable, on ne
+      // fait que suivre très lentement (dérive < 1 BPM sur plusieurs secondes).
+      _bpm += (bpm - _bpm) * 0.08;
       _candidateBpm = 0;
       _candidateCount = 0;
     } else {
-      // Grand saut (demi-tempo, morceau suivant…) : exiger 3 estimations
-      // concordantes (~1,5 s) avant d'adopter, sinon garder le verrou actuel.
-      if (_candidateBpm > 0 && (bpm - _candidateBpm).abs() / _candidateBpm < 0.04) {
+      // Vrai saut (demi-tempo, morceau suivant…) : exiger 4 estimations
+      // concordantes (~2 s) avant d'adopter, sinon garder le verrou actuel.
+      if (_candidateBpm > 0 && (bpm - _candidateBpm).abs() / _candidateBpm < 0.03) {
         _candidateCount++;
-        if (_candidateCount >= 3) {
+        if (_candidateCount >= 4) {
           _bpm = bpm;
           _candidateBpm = 0;
           _candidateCount = 0;
