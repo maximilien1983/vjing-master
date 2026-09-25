@@ -65,8 +65,41 @@ engine.start((stats) => {
     `BPM    ${clock.hasBeat ? clock.currentBpm.toFixed(1) : '—'}\n` +
     `mesure ${clock.hasBeat ? clock.measurePhase().toFixed(2) : '—'}  temps ${clock.hasBeat ? clock.beatIndex() + 1 : '—'}\n` +
     `L ${lv.low.toFixed(2)}  M ${lv.mid.toFixed(2)}  H ${lv.high.toFixed(2)}\n` +
+    `fond ${stats.bg}\n` +
     `${stats.fps} i/s  ${stats.renderMs} ms  perdu ${stats.droppedFrames}`;
 });
+
+// Test visuel direct : ?bg=cosmos-stars force un fond, ?demo=1 ajoute motifs
+// et filtres Retrofutur. Utilisé par les captures automatisées et le dev.
+{
+  const params = new URLSearchParams(location.search);
+  const bg = params.get('bg');
+  const demo = params.get('demo');
+  if (bg || demo) {
+    window.VJM.handleMessage({
+      type: 'scene',
+      state: {
+        background: { kind: 'shader', id: bg ?? 'cosmos-sun' },
+        overlays: demo
+          ? [
+              { iid: 'a', motif: 'grid', x: -0.5, y: 0.3, scale: 0.5, rot: 0.4, pulse: 0.8 },
+              { iid: 'b', motif: 'loop', x: 0.55, y: -0.25, scale: 0.45, rot: 0, pulse: 0.6 },
+            ]
+          : [],
+        filters: demo
+          ? [
+              { id: 'bloom', intensity: 0.7 },
+              { id: 'chroma', intensity: 0.6 },
+            ]
+          : [],
+        transition: { kind: 'cut', beats: 0 },
+      },
+    });
+    if (demo) {
+      window.VJM.handleMessage({ type: 'levels', low: 0.8, mid: 0.5, high: 0.4 });
+    }
+  }
+}
 
 // Dev navigateur : simulation clavier (d = debug, f = flash, b = beat 124 BPM).
 if (import.meta.env.DEV) {

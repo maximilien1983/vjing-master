@@ -20,6 +20,14 @@ class Levels {
   const Levels(this.low, this.mid, this.high);
 }
 
+/// Structure musicale détectée par variation d'énergie sur 8 à 16 mesures.
+enum StructureState {
+  calm, // énergie durablement basse : dérive lente
+  steady, // régime de croisière
+  rise, // montée : l'autopilote resserre les changements
+  drop, // pic soudain après une montée : lâcher tout
+}
+
 /// Analyse un flux PCM 16 bits mono : bandes lissées, attaques par flux
 /// spectral (priorité aux basses), BPM par autocorrélation, phase de mesure.
 /// Tout est basé sur l'horloge des échantillons, pas sur des timers.
@@ -61,11 +69,25 @@ class AudioAnalyzer {
   int _lastLevelsSentMs = 0;
   int _lastBpmComputeHop = 0;
 
+  // Structure : énergie par hop sur ~20 s, comparaison court terme / long terme.
+  static const int _energyWindow = 860; // ~20 s à 43 hops/s
+  final Float64List _energyHist = Float64List(_energyWindow);
+  int _energyWrite = 0;
+  int _energyCount = 0;
+  double _energyMax = 1e-6;
+  StructureState _structure = StructureState.steady;
+  int _dropHoldUntilHop = 0;
+  double _prevShort = 0;
+  double _shortSlope = 0;
+
   final _levelsCtrl = StreamController<Levels>.broadcast();
   final _beatCtrl = StreamController<BeatEstimate>.broadcast();
+  final _structureCtrl = StreamController<StructureState>.broadcast();
 
   Stream<Levels> get levels => _levelsCtrl.stream;
   Stream<BeatEstimate> get beats => _beatCtrl.stream;
+  Stream<StructureState> get structures => _structureCtrl.stream;
+  StructureState get currentStructure => _structure;
 
   Levels get currentLevels =>
       Levels(_bandSmooth[0], _bandSmooth[1], _bandSmooth[2]);
@@ -124,6 +146,15 @@ class AudioAnalyzer {
     _prevMags = Float64List.fromList(mags);
     _onsets[_onsetWrite] = flux;
     _onsetWrite = (_onsetWrite + 1) % onsetWindow;
+
+    // Énergie brute pondérée basses pour la structure.
+    _energyMax = math.max(_energyMax * 0.9999, 1e-6);
+    final hopEnergy = raw[0] * 2 + raw[1] + raw[2] * 0.5;
+    _energyMax = math.max(_energyMax, hopEnergy);
+    _energyHist[_energyWrite] = hopEnergy / _energyMax;
+    _energyWrite = (_energyWrite + 1) % _energyWindow;
+    if (_energyCount < _energyWindow) _energyCount++;
+    if (_totalHops % 43 == 0) _updateStructure();
 
     final nowMs = _hopMs(_totalHops);
     if (nowMs - _lastLevelsSentMs >= 80) {
@@ -234,6 +265,48 @@ class AudioAnalyzer {
     _confidence = 0;
   }
 
+  /// Moyenne des `n` derniers hops d'énergie, en remontant depuis l'écriture.
+  double _energyAvg(int n, [int skip = 0]) {
+    n = math.min(n, _energyCount - skip);
+    if (n <= 0) return 0;
+    var sum = 0.0;
+    for (var i = 0; i < n; i++) {
+      final idx = (_energyWrite - 1 - skip - i + _energyWindow * 2) % _energyWindow;
+      sum += _energyHist[idx];
+    }
+    return sum / n;
+  }
+
+  /// Appelée ~1 fois par seconde. Fenêtres exprimées en hops (~43/s) : le
+  /// court terme ~2 s, le long terme ~15 s (8 à 16 mesures selon le tempo).
+  void _updateStructure() {
+    if (_energyCount < 430) return; // moins de 10 s d'historique : trop tôt
+    final short = _energyAvg(86);
+    final long = _energyAvg(645);
+    _shortSlope = short - _prevShort;
+    _prevShort = short;
+
+    StructureState next;
+    if (_totalHops < _dropHoldUntilHop) {
+      next = StructureState.drop;
+    } else if (long > 1e-6 && short > long * 1.55 && _shortSlope > 0.04) {
+      // Pic soudain nettement au-dessus du régime : drop, tenu ~4 mesures.
+      next = StructureState.drop;
+      final beatDurHops = _bpm > 0 ? hopsPerSecond * 60 / _bpm : hopsPerSecond * 0.5;
+      _dropHoldUntilHop = _totalHops + (beatDurHops * 16).round();
+    } else if (short > long * 1.12 && _shortSlope > 0.015) {
+      next = StructureState.rise;
+    } else if (short < long * 0.55) {
+      next = StructureState.calm;
+    } else {
+      next = StructureState.steady;
+    }
+    if (next != _structure) {
+      _structure = next;
+      _structureCtrl.add(next);
+    }
+  }
+
   /// Cale l'ancre de phase : offset du peigne qui maximise l'alignement
   /// des attaques sur la période détectée.
   void _updatePhaseAnchor(int nowMs) {
@@ -289,5 +362,6 @@ class AudioAnalyzer {
   void dispose() {
     _levelsCtrl.close();
     _beatCtrl.close();
+    _structureCtrl.close();
   }
 }

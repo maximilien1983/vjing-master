@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 
 import 'audio/audio_analyzer.dart';
+import 'autopilot/autopilot.dart';
+import 'autopilot/presets.dart';
 import 'cast/cast_link.dart';
 import 'engine/engine_link.dart';
 import 'engine/local_link.dart';
 
-/// Session jalon 1 : micro -> analyse -> moteur(s).
+/// Session jalon 2 : micro -> analyse -> autopilote -> moteur(s).
 /// Le même flux de messages part vers le moteur local (WebView sur mobile,
 /// iframe en préviz web) et, si connecté, vers le Chromecast.
 class Session {
@@ -17,18 +19,27 @@ class Session {
   final local = createLocalLink();
   final cast = CastLink();
   final _recorder = AudioRecorder();
+  late final Autopilot pilot;
 
   final bpm = ValueNotifier<double>(0);
   final confidence = ValueNotifier<double>(0);
   final levels = ValueNotifier<Levels>(const Levels(0, 0, 0));
+  final structure = ValueNotifier<StructureState>(StructureState.steady);
   final micOk = ValueNotifier<bool?>(null);
   final castState = ValueNotifier<CastState>(CastState.idle);
   final stats = ValueNotifier<String>('—');
   final latency = ValueNotifier<String>('—');
+  final energy = ValueNotifier<double>(0.5);
+  final light = ValueNotifier<double>(0.5);
+  final hold = ValueNotifier<bool>(false);
   bool debug = true;
 
   final List<StreamSubscription> _subs = [];
   Timer? _pingTimer;
+
+  Session() {
+    pilot = Autopilot(style: retrofutur, universe: cosmos, send: _sendAll);
+  }
 
   List<EngineLink> get _links => [
         local,
@@ -43,6 +54,7 @@ class Session {
     _subs.add(analyzer.beats.listen((b) {
       bpm.value = b.bpm;
       confidence.value = b.confidence;
+      pilot.onBeat(b);
       _sendAll({
         'type': 'beat',
         'bpm': b.bpm,
@@ -52,11 +64,15 @@ class Session {
         'confidence': b.confidence,
       });
     }));
+    _subs.add(analyzer.structures.listen((s) {
+      structure.value = s;
+      pilot.onStructure(s);
+    }));
     _subs.add(cast.states.listen((s) {
       castState.value = s;
       if (s == CastState.connected) {
-        // Le receiver démarre muet : on lui pousse l'état debug courant.
-        cast.send({'type': 'config', 'debug': debug});
+        // Le receiver démarre muet : on lui pousse l'état courant complet.
+        cast.send({'type': 'config', 'debug': debug, 'energy': pilot.energy, 'light': pilot.light});
       }
     }));
 
@@ -65,17 +81,19 @@ class Session {
         if (msg['type'] == 'stats') {
           final src = link == cast ? 'TV' : 'local';
           stats.value =
-              '$src ${msg['fps']} i/s · ${msg['renderMs']} ms · perdu ${msg['droppedFrames']}';
+              '$src ${msg['fps']} i/s · ${msg['renderMs']} ms · ${msg['bg']}';
         }
       };
     }
 
     local.send({'type': 'config', 'debug': debug});
+    pilot.start();
+    setEnergy(energy.value);
+    setLight(light.value);
 
     // Latence aller-retour mesurée toutes les 2 s sur le lien actif.
     _pingTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      final link =
-          cast.state == CastState.connected ? cast : local;
+      final link = cast.state == CastState.connected ? cast : local;
       final label = link == cast ? 'TV' : 'local';
       try {
         final rtt = await link.ping();
@@ -109,7 +127,25 @@ class Session {
     }
   }
 
-  void trigger(String id) => _sendAll({'type': 'trigger', 'id': id});
+  void setEnergy(double v) {
+    energy.value = v;
+    pilot.setEnergy(v);
+  }
+
+  void setLight(double v) {
+    light.value = v;
+    pilot.setLight(v);
+  }
+
+  void setHold(bool v) {
+    hold.value = v;
+    pilot.setHold(v);
+  }
+
+  void flash() => pilot.triggerFlash();
+  void drop() => pilot.triggerDrop();
+  void scene() => pilot.triggerScene();
+  void next() => pilot.triggerNext();
 
   void setDebug(bool value) {
     debug = value;
@@ -118,6 +154,7 @@ class Session {
 
   Future<void> dispose() async {
     _pingTimer?.cancel();
+    pilot.stop();
     for (final s in _subs) {
       await s.cancel();
     }

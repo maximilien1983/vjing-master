@@ -13,43 +13,39 @@
       padding: 6px 10px; border-radius: 4px; white-space: pre; pointer-events: none;
     }
   </style>
-  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))o(r);new MutationObserver(r=>{for(const i of r)if(i.type==="childList")for(const a of i.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&o(a)}).observe(document,{childList:!0,subtree:!0});function e(r){const i={};return r.integrity&&(i.integrity=r.integrity),r.referrerPolicy&&(i.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?i.credentials="include":r.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function o(r){if(r.ep)return;r.ep=!0;const i=e(r);fetch(r.href,i)}})();class v{constructor(){this.bpm=0,this.phaseAtT0=0,this.t0=0,this.offsetMs=0,this.clockSkewMs=0,this.hasSkew=!1}update(t){const e=Date.now()-t.t0;!this.hasSkew||t.bpm!==this.bpm?(this.clockSkewMs=e,this.hasSkew=!0):this.clockSkewMs+=(e-this.clockSkewMs)*.1,this.bpm=t.bpm,this.phaseAtT0=t.phase,this.t0=t.t0,this.offsetMs=t.offsetMs}get hasBeat(){return this.bpm>0}get currentBpm(){return this.bpm}measurePhase(t=Date.now()){if(this.bpm<=0)return-1;const r=(t-this.clockSkewMs-this.t0-this.offsetMs)/6e4*(this.bpm/4),i=(this.phaseAtT0+r)%1;return i<0?i+1:i}beatPhase(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:e*4%1}beatIndex(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:Math.floor(e*4)%4}}const l=854,c=480,w=`#version 300 es
-layout(location = 0) in vec2 aPos;
-out vec2 vUv;
-void main() {
-  vUv = aPos * 0.5 + 0.5;
-  gl_Position = vec4(aPos, 0.0, 1.0);
-}`,g=`#version 300 es
-precision highp float;
-in vec2 vUv;
-out vec4 outColor;
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))a(s);new MutationObserver(s=>{for(const i of s)if(i.type==="childList")for(const n of i.addedNodes)n.tagName==="LINK"&&n.rel==="modulepreload"&&a(n)}).observe(document,{childList:!0,subtree:!0});function e(s){const i={};return s.integrity&&(i.integrity=s.integrity),s.referrerPolicy&&(i.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?i.credentials="include":s.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function a(s){if(s.ep)return;s.ep=!0;const i=e(s);fetch(s.href,i)}})();class _{constructor(){this.bpm=0,this.phaseAtT0=0,this.t0=0,this.offsetMs=0,this.clockSkewMs=0,this.hasSkew=!1}update(t){const e=Date.now()-t.t0;!this.hasSkew||t.bpm!==this.bpm?(this.clockSkewMs=e,this.hasSkew=!0):this.clockSkewMs+=(e-this.clockSkewMs)*.1,this.bpm=t.bpm,this.phaseAtT0=t.phase,this.t0=t.t0,this.offsetMs=t.offsetMs}get hasBeat(){return this.bpm>0}get currentBpm(){return this.bpm}measurePhase(t=Date.now()){if(this.bpm<=0)return-1;const s=(t-this.clockSkewMs-this.t0-this.offsetMs)/6e4*(this.bpm/4),i=(this.phaseAtT0+s)%1;return i<0?i+1:i}beatPhase(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:e*4%1}beatIndex(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:Math.floor(e*4)%4}}const O=`
 uniform float uTime;
 uniform float uBeat;
 uniform float uMeasure;
 uniform float uLow;
 uniform float uMid;
 uniform float uHigh;
-uniform float uFlash;
+uniform float uLight;   // 0 dark .. 1 lumineux
+uniform float uEnergy;  // 0 .. 1
 uniform vec2 uRes;
-
+`,L=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
+  return v;
+}
+`,N=`
 void main() {
   vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
   float d = length(uv);
-  float a = atan(uv.y, uv.x);
-
-  // Soleil central : rayon qui respire avec le kick et les basses.
   float radius = 0.16 + 0.10 * uBeat + 0.06 * uLow;
   float sun = smoothstep(radius + 0.012, radius - 0.012, d);
-
-  // Bandes horizontales du soleil (esthétique rétrofutur).
   float bands = step(0.5, fract(uv.y * 26.0 + uTime * 0.6));
   sun *= mix(1.0, bands, smoothstep(0.0, -0.14, uv.y));
-
-  // Anneaux concentriques qui se propagent depuis le centre sur la mesure.
-  float rings = sin(d * 34.0 - uMeasure * 6.2831853 * 4.0) * 0.5 + 0.5;
+  float rings = sin(d * 34.0 - uMeasure * 25.13) * 0.5 + 0.5;
   rings = pow(rings, 6.0) * smoothstep(0.16, 0.55, d) * (0.25 + 0.75 * uBeat);
-
-  // Grille perspective sous l'horizon, qui défile au tempo.
   float grid = 0.0;
   if (uv.y < -0.08) {
     float py = 1.0 / (abs(uv.y) + 0.02);
@@ -58,24 +54,183 @@ void main() {
     grid = (smoothstep(0.06, 0.0, gx) + smoothstep(0.08, 0.0, gy))
          * smoothstep(-0.08, -0.5, uv.y) * (0.35 + 0.4 * uMid);
   }
-
   vec3 magenta = vec3(1.0, 0.15, 0.65);
   vec3 cyan = vec3(0.15, 0.85, 1.0);
   vec3 amber = vec3(1.0, 0.65, 0.25);
-
   vec3 col = vec3(0.02, 0.01, 0.05);
   col += sun * mix(amber, magenta, clamp(uv.y * 2.0 + 0.6, 0.0, 1.0));
   col += rings * cyan * 0.6;
   col += grid * cyan;
   col += pow(max(0.0, 1.0 - d), 3.0) * magenta * (0.10 + 0.35 * uBeat + 0.2 * uLow);
-  col += uHigh * 0.08 * vec3(sin(a * 12.0 + uTime * 3.0) * 0.5 + 0.5);
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,C=`
+${L}
+vec3 starLayer(vec2 uv, float scale, float speed, float brightness) {
+  vec2 p = uv * scale + vec2(uTime * speed * 0.02, uMeasure * speed * 0.05);
+  vec2 cell = floor(p);
+  vec2 f = fract(p) - 0.5;
+  float h = hash(cell);
+  vec2 offset = vec2(hash(cell + 7.0), hash(cell + 13.0)) - 0.5;
+  float d = length(f - offset * 0.7);
+  float twinkle = 0.7 + 0.3 * sin(uTime * (2.0 + h * 6.0) + h * 40.0) * (0.4 + 0.6 * uHigh);
+  float star = smoothstep(0.06 + h * 0.05, 0.0, d) * step(0.72, h) * twinkle;
+  vec3 tint = mix(vec3(0.6, 0.8, 1.0), vec3(1.0, 0.5, 0.8), h);
+  return star * brightness * tint;
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.01, 0.0, 0.04), vec3(0.03, 0.02, 0.10), vUv.y);
+  col += starLayer(uv, 14.0, 1.0, 0.9);
+  col += starLayer(uv, 26.0, 2.2, 0.55);
+  col += starLayer(uv, 44.0, 4.0, 0.35);
+  // Voie lactée diagonale discrète qui respire avec les basses.
+  float band = exp(-pow((uv.y - uv.x * 0.3) * 3.0, 2.0));
+  col += band * vec3(0.10, 0.07, 0.16) * (0.5 + 0.5 * uLow + 0.4 * uBeat);
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,D=`
+${L}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 drift = vec2(uTime * 0.015, uMeasure * 0.08);
+  float n1 = fbm(uv * 2.2 + drift);
+  float n2 = fbm(uv * 3.6 - drift * 1.4 + n1 * 1.2);
+  float n3 = fbm(uv * 1.4 + vec2(n2, n1) * (0.8 + 0.5 * uBeat));
+  vec3 magenta = vec3(0.85, 0.12, 0.55);
+  vec3 cyan = vec3(0.10, 0.65, 0.90);
+  vec3 deep = vec3(0.03, 0.01, 0.08);
+  vec3 col = deep;
+  col += magenta * pow(n2, 2.2) * (0.9 + 0.6 * uLow + 0.5 * uBeat);
+  col += cyan * pow(n3, 2.6) * (0.8 + 0.5 * uMid);
+  col += vec3(1.0, 0.9, 0.8) * pow(n1 * n3, 5.0) * 1.4;
+  col *= 0.5 + 1.0 * uLight;
+  outColor = vec4(col, 1.0);
+}`,I=`
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  float d = length(uv) + 0.0001;
+  float a = atan(uv.y, uv.x);
+  float depth = 0.35 / d - uMeasure * 3.0;
+  float ring = abs(fract(depth) - 0.5);
+  float glow = smoothstep(0.22, 0.0, ring) * (0.35 + 0.65 * uBeat);
+  float seg = 0.75 + 0.25 * sin(a * 8.0 + uTime * 0.7);
+  float idx = mod(floor(depth), 2.0);
+  vec3 c1 = vec3(1.0, 0.15, 0.65);
+  vec3 c2 = vec3(0.15, 0.85, 1.0);
+  vec3 col = mix(c1, c2, idx) * glow * seg;
+  col *= smoothstep(1.4, 0.25, d); // fond du tunnel sombre
+  col += vec3(1.0, 0.8, 0.9) * smoothstep(0.05, 0.0, d) * uBeat * 0.6;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,R={"cosmos-sun":N,"cosmos-stars":C,"cosmos-nebula":D,"cosmos-rings":I},V=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float pulse = 1.0 + uPulse * uBeat * 0.5;
+  vec2 g = abs(fract(uv * 3.0 * pulse) - 0.5);
+  float line = smoothstep(0.06, 0.0, min(g.x, g.y));
+  float mask = smoothstep(1.3, 0.4, length(uv));
+  vec3 col = vec3(0.15, 0.85, 1.0) * line * mask * (0.5 + 0.5 * uMid);
+  outColor = vec4(col * uOpacity, 1.0);
+}`,G=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  float radius = 0.5 + uPulse * uBeat * 0.18;
+  float disc = smoothstep(radius, radius - 0.05, d);
+  float bands = step(0.45, fract(uv.y * 9.0 - uTime * 0.4));
+  disc *= mix(1.0, bands, smoothstep(0.1, -0.2, uv.y));
+  float halo = pow(max(0.0, 1.0 - d), 2.5) * 0.6;
+  vec3 col = vec3(1.0, 0.55, 0.20) * disc + vec3(1.0, 0.3, 0.5) * halo;
+  outColor = vec4(col * uOpacity * (0.6 + 0.4 * uLow), 1.0);
+}`,H=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float t = uTime * 0.3 + uMeasure * 6.2831;
+  float best = 1e3;
+  for (int i = 0; i < 90; i++) {
+    float s = float(i) / 90.0 * 6.2831;
+    vec2 p = vec2(sin(s * 2.0 + t), sin(s * 3.0 + t * 0.7)) * 0.55;
+    best = min(best, length(uv - p));
+  }
+  float w = 0.035 + uPulse * uBeat * 0.03;
+  float line = smoothstep(w, w * 0.3, best);
+  vec3 col = mix(vec3(1.0, 0.15, 0.65), vec3(0.15, 0.85, 1.0), sin(t) * 0.5 + 0.5);
+  outColor = vec4(col * line * uOpacity * (0.6 + 0.4 * uHigh), 1.0);
+}`,T={grid:V,sun:G,loop:H},$=`#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uScene;
+uniform float uBloom;
+uniform float uChroma;
+uniform float uPosterize;
+uniform float uHue;
+uniform float uFlash;
+uniform float uBlack;
+uniform vec2 uRes;
 
+vec3 hueShift(vec3 c, float a) {
+  const vec3 k = vec3(0.57735);
+  return c * cos(a) + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - cos(a));
+}
+
+void main() {
+  vec2 px = 1.0 / uRes;
+  // Décalage chromatique radial.
+  vec2 dir = (vUv - 0.5) * uChroma * 0.02;
+  vec3 col;
+  col.r = texture(uScene, vUv + dir).r;
+  col.g = texture(uScene, vUv).g;
+  col.b = texture(uScene, vUv - dir).b;
+  // Bloom approché : moyenne élargie des voisins brillants.
+  if (uBloom > 0.001) {
+    vec3 acc = vec3(0.0);
+    for (int x = -2; x <= 2; x++)
+      for (int y = -2; y <= 2; y++)
+        acc += texture(uScene, vUv + vec2(float(x), float(y)) * px * 2.5).rgb;
+    acc /= 25.0;
+    col += max(acc - 0.35, 0.0) * uBloom * 1.6;
+  }
+  if (uPosterize > 0.001) {
+    float levels = mix(24.0, 4.0, uPosterize);
+    col = floor(col * levels) / levels;
+  }
+  if (abs(uHue) > 0.001) col = hueShift(col, uHue);
+  col = mix(col, vec3(0.0), clamp(uBlack, 0.0, 1.0));
   col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));
   outColor = vec4(col, 1.0);
-}`;function d(s,t,e){const o=s.createShader(t);if(s.shaderSource(o,e),s.compileShader(o),!s.getShaderParameter(o,s.COMPILE_STATUS))throw new Error(`Shader: ${s.getShaderInfoLog(o)}`);return o}class b{constructor(t){this.uniforms={},this.clock=new v,this.levels={low:0,mid:0,high:0},this.beatEnv=0,this.lastBeatIndex=-1,this.flashArmed=!1,this.flashLevel=0,this.startTime=performance.now(),this.lastFrame=performance.now(),this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=performance.now(),this.lastStats={fps:0,renderMs:0,droppedFrames:0},this.running=!1,t.width=l,t.height=c;const e=t.getContext("webgl2",{antialias:!1,alpha:!1});if(!e)throw new Error("WebGL2 indisponible");this.gl=e;const o=e.createProgram();if(e.attachShader(o,d(e,e.VERTEX_SHADER,w)),e.attachShader(o,d(e,e.FRAGMENT_SHADER,g)),e.linkProgram(o),!e.getProgramParameter(o,e.LINK_STATUS))throw new Error(`Program: ${e.getProgramInfoLog(o)}`);e.useProgram(o);for(const a of["uTime","uBeat","uMeasure","uLow","uMid","uHigh","uFlash","uRes"])this.uniforms[a]=e.getUniformLocation(o,a);e.uniform2f(this.uniforms.uRes,l,c);const r=e.createVertexArray();e.bindVertexArray(r);const i=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,i),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),e.viewport(0,0,l,c)}handle(t){switch(t.type){case"beat":this.clock.update(t);break;case"levels":this.smoothLevels(t);break;case"trigger":t.id==="flash"&&(this.clock.hasBeat?this.flashArmed=!0:this.flashLevel=1);break;case"scene":this.applyScene(t.state);break}}applyScene(t){}smoothLevels(t){this.levels.low+=(t.low-this.levels.low)*.5,this.levels.mid+=(t.mid-this.levels.mid)*.5,this.levels.high+=(t.high-this.levels.high)*.5}get clockRef(){return this.clock}get levelsRef(){return this.levels}get stats(){return this.lastStats}start(t){if(this.running)return;this.running=!0;const e=()=>{this.running&&(this.frame(t),requestAnimationFrame(e))};requestAnimationFrame(e)}frame(t){const e=performance.now(),o=(e-this.lastFrame)/1e3;e-this.lastFrame>50&&this.dropped++,this.lastFrame=e;const r=this.clock.beatIndex();if(r>=0&&r!==this.lastBeatIndex&&(this.lastBeatIndex=r,this.beatEnv=.5+.5*Math.min(1,this.levels.low*1.4),this.flashArmed&&(this.flashArmed=!1,this.flashLevel=1)),this.beatEnv=Math.max(0,this.beatEnv-o*5.5),this.flashLevel>0){const h=this.clock.hasBeat?60/this.clock.currentBpm:.15;this.flashLevel=Math.max(0,this.flashLevel-o/h)}const i=this.gl,a=performance.now();i.uniform1f(this.uniforms.uTime,(e-this.startTime)/1e3),i.uniform1f(this.uniforms.uBeat,this.clock.hasBeat?this.beatEnv:.08+.06*Math.sin(e/900));const f=this.clock.measurePhase();if(i.uniform1f(this.uniforms.uMeasure,f<0?(e-this.startTime)/8e3%1:f),i.uniform1f(this.uniforms.uLow,this.levels.low),i.uniform1f(this.uniforms.uMid,this.levels.mid),i.uniform1f(this.uniforms.uHigh,this.levels.high),i.uniform1f(this.uniforms.uFlash,this.flashLevel),i.drawArrays(i.TRIANGLES,0,3),this.renderMsAccum+=performance.now()-a,this.frameCount++,e-this.statsWindowStart>=1e3){const h=(e-this.statsWindowStart)/1e3;this.lastStats={fps:Math.round(this.frameCount/h*10)/10,renderMs:Math.round(this.renderMsAccum/Math.max(1,this.frameCount)*100)/100,droppedFrames:this.dropped},this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=e,t?.(this.lastStats)}}}const y=document.getElementById("vjm-canvas"),m=document.getElementById("vjm-debug"),n=new b(y);let u=!1;function p(s){window.VJM.onFeedback?.(s),window.VjmFeedback?.postMessage(JSON.stringify(s)),window.parent&&window.parent!==window&&window.parent.postMessage(JSON.stringify(s),"*")}window.addEventListener("message",s=>{typeof s.data=="string"&&s.data.startsWith("{")&&window.VJM.handleMessage(s.data)});window.VJM={onFeedback:null,handleMessage(s){let t;try{t=typeof s=="string"?JSON.parse(s):s}catch(e){console.error("VJM: message illisible",s,e);return}if(t.type==="config"&&t.debug!==void 0&&(u=t.debug,m.style.display=u?"block":"none"),t.type==="ping"){p({type:"pong",t:t.t,tr:Date.now()});return}n.handle(t)}};n.start(s=>{if(!u)return;p({...s,type:"stats",t:Date.now()});const t=n.clockRef,e=n.levelsRef;m.textContent=`BPM    ${t.hasBeat?t.currentBpm.toFixed(1):"—"}
+}`,d=854,m=480,A=`#version 300 es
+layout(location = 0) in vec2 aPos;
+out vec2 vUv;
+void main() {
+  vUv = aPos * 0.5 + 0.5;
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}`,X=`#version 300 es
+layout(location = 0) in vec2 aPos;
+out vec2 vUv;
+uniform vec2 uOffset;
+uniform vec2 uScale;
+uniform float uRot;
+void main() {
+  vUv = aPos * 0.5 + 0.5;
+  float c = cos(uRot), s = sin(uRot);
+  vec2 p = aPos * uScale;
+  p = vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+  gl_Position = vec4(p + uOffset, 0.0, 1.0);
+}`;function M(o){return`#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+${O}
+uniform float uOpacity;
+uniform float uPulse;
+${o}`}function S(o,t,e){const a=o.createShader(t);if(o.shaderSource(a,e),o.compileShader(a),!o.getShaderParameter(a,o.COMPILE_STATUS))throw new Error(`Shader: ${o.getShaderInfoLog(a)}
+${e.slice(0,400)}`);return a}function b(o,t,e){const a=o.createProgram();if(o.attachShader(a,S(o,o.VERTEX_SHADER,t)),o.attachShader(a,S(o,o.FRAGMENT_SHADER,e)),o.linkProgram(a),!o.getProgramParameter(a,o.LINK_STATUS))throw new Error(`Program: ${o.getProgramInfoLog(a)}`);const s=new Map,i=o.getProgramParameter(a,o.ACTIVE_UNIFORMS);for(let n=0;n<i;n++){const l=o.getActiveUniform(a,n);s.set(l.name,o.getUniformLocation(a,l.name))}return{program:a,uniforms:s}}class W{constructor(t){this.bgPrograms=new Map,this.overlayPrograms=new Map,this.clock=new _,this.levels={low:0,mid:0,high:0},this.light=.5,this.energy=.5,this.currentBg="cosmos-sun",this.nextBg=null,this.fadeStart=0,this.fadeDurMs=0,this.overlays=[],this.filters=new Map,this.beatEnv=0,this.lastBeatIndex=-1,this.flashArmed=!1,this.flashLevel=0,this.blackLevel=0,this.startTime=performance.now(),this.lastFrame=performance.now(),this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=performance.now(),this.lastStats={fps:0,renderMs:0,droppedFrames:0,bg:this.currentBg},this.running=!1,t.width=d,t.height=m;const e=t.getContext("webgl2",{antialias:!1,alpha:!1});if(!e)throw new Error("WebGL2 indisponible");this.gl=e,this.fullscreenVao=e.createVertexArray(),e.bindVertexArray(this.fullscreenVao);const a=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,a),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),this.quadVao=e.createVertexArray(),e.bindVertexArray(this.quadVao);const s=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,s),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),e.bindVertexArray(null),this.sceneTex=e.createTexture(),e.bindTexture(e.TEXTURE_2D,this.sceneTex),e.texImage2D(e.TEXTURE_2D,0,e.RGBA8,d,m,0,e.RGBA,e.UNSIGNED_BYTE,null),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MIN_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MAG_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_S,e.CLAMP_TO_EDGE),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_T,e.CLAMP_TO_EDGE),this.sceneFbo=e.createFramebuffer(),e.bindFramebuffer(e.FRAMEBUFFER,this.sceneFbo),e.framebufferTexture2D(e.FRAMEBUFFER,e.COLOR_ATTACHMENT0,e.TEXTURE_2D,this.sceneTex,0),e.bindFramebuffer(e.FRAMEBUFFER,null),this.post=b(e,A,$),e.viewport(0,0,d,m)}bgProgram(t){let e=this.bgPrograms.get(t);if(!e){const a=R[t]??R["cosmos-sun"];e=b(this.gl,A,M(a)),this.bgPrograms.set(t,e)}return e}overlayProgram(t){let e=this.overlayPrograms.get(t);if(!e){const a=T[t]??T.grid;e=b(this.gl,X,M(a)),this.overlayPrograms.set(t,e)}return e}handle(t){switch(t.type){case"beat":this.clock.update(t);break;case"levels":this.smoothLevels(t);break;case"trigger":t.id==="flash"?this.clock.hasBeat?this.flashArmed=!0:this.flashLevel=1:t.id==="drop"&&(this.blackLevel=1);break;case"scene":this.applyScene(t.state);break;case"config":t.energy!==void 0&&(this.energy=t.energy),t.light!==void 0&&(this.light=t.light);break}}applyScene(t){const e=t.background;if(e&&e.kind==="shader"&&e.id!==(this.nextBg??this.currentBg)){const i=t.transition?.beats??4,n=this.clock.hasBeat?6e4/this.clock.currentBpm:500;t.transition?.kind==="cut"?(this.currentBg=e.id,this.nextBg=null):(this.nextBg&&(this.currentBg=this.nextBg),this.nextBg=e.id,this.fadeStart=performance.now(),this.fadeDurMs=i*n)}const a=t.overlays??[],s=new Set(a.map(i=>i.iid));for(const i of this.overlays)s.has(i.iid)||(i.fadingOut=!0);for(const i of a){const n=this.overlays.find(l=>l.iid===i.iid);n?Object.assign(n,i,{fadingOut:!1}):this.overlays.push({...i,opacity:0,fadingOut:!1})}this.filters.clear();for(const i of t.filters??[])this.filters.set(i.id,i.intensity)}smoothLevels(t){this.levels.low+=(t.low-this.levels.low)*.5,this.levels.mid+=(t.mid-this.levels.mid)*.5,this.levels.high+=(t.high-this.levels.high)*.5}get clockRef(){return this.clock}get levelsRef(){return this.levels}get stats(){return this.lastStats}start(t){if(this.running)return;this.running=!0;const e=()=>{this.running&&(this.frame(t),requestAnimationFrame(e))};requestAnimationFrame(e)}setCommonUniforms(t,e){const a=this.gl,s=(l,r)=>{const v=t.uniforms.get(l);v&&a.uniform1f(v,r)};s("uTime",(e-this.startTime)/1e3),s("uBeat",this.clock.hasBeat?this.beatEnv:.08+.06*Math.sin(e/900));const i=this.clock.measurePhase();s("uMeasure",i<0?(e-this.startTime)/8e3%1:i),s("uLow",this.levels.low),s("uMid",this.levels.mid),s("uHigh",this.levels.high),s("uLight",this.light),s("uEnergy",this.energy);const n=t.uniforms.get("uRes");n&&a.uniform2f(n,d,m)}drawBackground(t,e,a){const s=this.gl,i=this.bgProgram(t);s.useProgram(i.program),this.setCommonUniforms(i,e),s.bindVertexArray(this.fullscreenVao),a<1?(s.enable(s.BLEND),s.blendColor(0,0,0,a),s.blendFunc(s.CONSTANT_ALPHA,s.ONE_MINUS_CONSTANT_ALPHA)):s.disable(s.BLEND),s.drawArrays(s.TRIANGLES,0,3),s.disable(s.BLEND)}frame(t){const e=performance.now(),a=(e-this.lastFrame)/1e3;e-this.lastFrame>50&&this.dropped++,this.lastFrame=e;const s=this.clock.hasBeat?60/this.clock.currentBpm:.5,i=this.clock.beatIndex();i>=0&&i!==this.lastBeatIndex&&(this.lastBeatIndex=i,this.beatEnv=.5+.5*Math.min(1,this.levels.low*1.4),this.flashArmed&&(this.flashArmed=!1,this.flashLevel=1)),this.beatEnv=Math.max(0,this.beatEnv-a*5.5),this.flashLevel>0&&(this.flashLevel=Math.max(0,this.flashLevel-a/s)),this.blackLevel>0&&(this.blackLevel=Math.max(0,this.blackLevel-a/s));const n=a/(s*4);this.overlays=this.overlays.filter(c=>(c.opacity+=c.fadingOut?-n:n,c.opacity=Math.min(1,Math.max(0,c.opacity)),!(c.fadingOut&&c.opacity<=0)));let l=0;this.nextBg&&(l=(e-this.fadeStart)/this.fadeDurMs,l>=1&&(this.currentBg=this.nextBg,this.nextBg=null,l=0));const r=this.gl,v=performance.now();if(r.bindFramebuffer(r.FRAMEBUFFER,this.sceneFbo),r.clearColor(0,0,0,1),r.clear(r.COLOR_BUFFER_BIT),this.drawBackground(this.currentBg,e,1),this.nextBg&&this.drawBackground(this.nextBg,e,l),this.overlays.length>0){r.enable(r.BLEND),r.blendFunc(r.ONE,r.ONE),r.bindVertexArray(this.quadVao);const c=d/m;for(const u of this.overlays){const h=this.overlayProgram(u.motif);r.useProgram(h.program),this.setCommonUniforms(h,e);const g=(k,U)=>{const B=h.uniforms.get(k);B&&r.uniform1f(B,U)};g("uOpacity",u.opacity),g("uPulse",u.pulse),g("uRot",u.rot);const x=h.uniforms.get("uOffset");x&&r.uniform2f(x,u.x,u.y);const E=h.uniforms.get("uScale");E&&r.uniform2f(E,u.scale/c,u.scale),r.drawArrays(r.TRIANGLE_STRIP,0,4)}r.disable(r.BLEND)}r.bindFramebuffer(r.FRAMEBUFFER,null),r.useProgram(this.post.program),r.activeTexture(r.TEXTURE0),r.bindTexture(r.TEXTURE_2D,this.sceneTex);const f=(c,u)=>{const h=this.post.uniforms.get(c);h&&r.uniform1f(h,u)};r.uniform1i(this.post.uniforms.get("uScene"),0),f("uBloom",this.filters.get("bloom")??0),f("uChroma",this.filters.get("chroma")??0),f("uPosterize",this.filters.get("posterize")??0),f("uHue",this.filters.get("hue")??0),f("uFlash",this.flashLevel),f("uBlack",this.blackLevel);const w=this.post.uniforms.get("uRes");if(w&&r.uniform2f(w,d,m),r.bindVertexArray(this.fullscreenVao),r.drawArrays(r.TRIANGLES,0,3),this.renderMsAccum+=performance.now()-v,this.frameCount++,e-this.statsWindowStart>=1e3){const c=(e-this.statsWindowStart)/1e3;this.lastStats={fps:Math.round(this.frameCount/c*10)/10,renderMs:Math.round(this.renderMsAccum/Math.max(1,this.frameCount)*100)/100,droppedFrames:this.dropped,bg:this.currentBg},this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=e,t?.(this.lastStats)}}}const q=document.getElementById("vjm-canvas"),F=document.getElementById("vjm-debug"),p=new W(q);let y=!1;function P(o){window.VJM.onFeedback?.(o),window.VjmFeedback?.postMessage(JSON.stringify(o)),window.parent&&window.parent!==window&&window.parent.postMessage(JSON.stringify(o),"*")}window.addEventListener("message",o=>{typeof o.data=="string"&&o.data.startsWith("{")&&window.VJM.handleMessage(o.data)});window.VJM={onFeedback:null,handleMessage(o){let t;try{t=typeof o=="string"?JSON.parse(o):o}catch(e){console.error("VJM: message illisible",o,e);return}if(t.type==="config"&&t.debug!==void 0&&(y=t.debug,F.style.display=y?"block":"none"),t.type==="ping"){P({type:"pong",t:t.t,tr:Date.now()});return}p.handle(t)}};p.start(o=>{if(!y)return;P({...o,type:"stats",t:Date.now()});const t=p.clockRef,e=p.levelsRef;F.textContent=`BPM    ${t.hasBeat?t.currentBpm.toFixed(1):"—"}
 mesure ${t.hasBeat?t.measurePhase().toFixed(2):"—"}  temps ${t.hasBeat?t.beatIndex()+1:"—"}
 L ${e.low.toFixed(2)}  M ${e.mid.toFixed(2)}  H ${e.high.toFixed(2)}
-${s.fps} i/s  ${s.renderMs} ms  perdu ${s.droppedFrames}`});</script>
+fond ${o.bg}
+${o.fps} i/s  ${o.renderMs} ms  perdu ${o.droppedFrames}`});{const o=new URLSearchParams(location.search),t=o.get("bg"),e=o.get("demo");(t||e)&&(window.VJM.handleMessage({type:"scene",state:{background:{kind:"shader",id:t??"cosmos-sun"},overlays:e?[{iid:"a",motif:"grid",x:-.5,y:.3,scale:.5,rot:.4,pulse:.8},{iid:"b",motif:"loop",x:.55,y:-.25,scale:.45,rot:0,pulse:.6}]:[],filters:e?[{id:"bloom",intensity:.7},{id:"chroma",intensity:.6}]:[],transition:{kind:"cut",beats:0}}}),e&&window.VJM.handleMessage({type:"levels",low:.8,mid:.5,high:.4}))}</script>
 </head>
 <body>
   <canvas id="vjm-canvas"></canvas>

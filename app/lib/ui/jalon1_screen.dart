@@ -4,9 +4,10 @@ import '../audio/audio_analyzer.dart';
 import '../cast/cast_link.dart';
 import '../session.dart';
 
-/// Écran de validation du jalon 1 : rendu plein écran + bandeau de contrôle
-/// technique (BPM, niveaux, latence, i/s, Flash, Cast). La vraie console
-/// (design table de mixage) arrive au jalon 3.
+/// Écran de validation des jalons 1-2 : rendu plein écran + bandeau de
+/// contrôle technique (BPM, niveaux, structure, énergie, lumière,
+/// déclencheurs, Cast). La vraie console (design table de mixage) arrive
+/// au jalon 3.
 class Jalon1Screen extends StatefulWidget {
   const Jalon1Screen({super.key});
 
@@ -68,6 +69,13 @@ class _ControlBar extends StatelessWidget {
   final Session session;
   const _ControlBar({required this.session});
 
+  static const _structureLabels = {
+    StructureState.calm: 'CALME',
+    StructureState.steady: 'STABLE',
+    StructureState.rise: 'MONTÉE',
+    StructureState.drop: 'DROP',
+  };
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -77,72 +85,131 @@ class _ControlBar extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ValueListenableBuilder(
-            valueListenable: session.micOk,
-            builder: (_, ok, _) => Icon(
-              ok == false ? Icons.mic_off : Icons.mic,
-              size: 18,
-              color: switch (ok) {
-                true => Colors.greenAccent,
-                false => Colors.redAccent,
-                null => Colors.white38,
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          ValueListenableBuilder(
-            valueListenable: session.bpm,
-            builder: (_, bpm, _) => Text(
-              bpm > 0 ? '${bpm.toStringAsFixed(1)} BPM' : '— BPM',
-              style: const TextStyle(
-                color: Color(0xFFFFB566),
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                fontFeatures: [FontFeature.tabularFigures()],
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ValueListenableBuilder(
+                valueListenable: session.micOk,
+                builder: (_, ok, _) => Icon(
+                  ok == false ? Icons.mic_off : Icons.mic,
+                  size: 18,
+                  color: switch (ok) {
+                    true => Colors.greenAccent,
+                    false => Colors.redAccent,
+                    null => Colors.white38,
+                  },
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          ValueListenableBuilder(
-            valueListenable: session.levels,
-            builder: (_, l, _) => _LevelBars(levels: l),
-          ),
-          const SizedBox(width: 12),
-          ValueListenableBuilder(
-            valueListenable: session.latency,
-            builder: (_, v, _) => _InfoText('lat $v'),
-          ),
-          const SizedBox(width: 8),
-          ValueListenableBuilder(
-            valueListenable: session.stats,
-            builder: (_, v, _) => _InfoText(v),
-          ),
-          const SizedBox(width: 12),
-          FilledButton.tonal(
-            onPressed: () => session.trigger('flash'),
-            child: const Text('FLASH'),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Debug moteur',
-            icon: const Icon(Icons.bug_report, color: Colors.white70),
-            onPressed: () => session.setDebug(!session.debug),
-          ),
-          ValueListenableBuilder(
-            valueListenable: session.castState,
-            builder: (_, s, _) => IconButton(
-              tooltip: 'Diffuser',
-              icon: Icon(
-                s == CastState.connected ? Icons.cast_connected : Icons.cast,
-                color: s == CastState.connected
-                    ? const Color(0xFFFFB566)
-                    : Colors.white70,
+              const SizedBox(width: 10),
+              ValueListenableBuilder(
+                valueListenable: session.bpm,
+                builder: (_, bpm, _) => Text(
+                  bpm > 0 ? '${bpm.toStringAsFixed(1)} BPM' : '— BPM',
+                  style: const TextStyle(
+                    color: Color(0xFFFFB566),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
               ),
-              onPressed: () => _showCastPicker(context),
-            ),
+              const SizedBox(width: 10),
+              ValueListenableBuilder(
+                valueListenable: session.structure,
+                builder: (_, s, _) => Text(
+                  _structureLabels[s]!,
+                  style: TextStyle(
+                    color: s == StructureState.drop
+                        ? Colors.redAccent
+                        : (s == StructureState.rise
+                            ? const Color(0xFFFFB566)
+                            : Colors.white54),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ValueListenableBuilder(
+                valueListenable: session.levels,
+                builder: (_, l, _) => _LevelBars(levels: l),
+              ),
+              const SizedBox(width: 12),
+              ValueListenableBuilder(
+                valueListenable: session.latency,
+                builder: (_, v, _) => _InfoText('lat $v'),
+              ),
+              const SizedBox(width: 8),
+              ValueListenableBuilder(
+                valueListenable: session.stats,
+                builder: (_, v, _) => _InfoText(v),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Debug moteur',
+                icon: const Icon(Icons.bug_report,
+                    color: Colors.white70, size: 20),
+                onPressed: () => session.setDebug(!session.debug),
+              ),
+              ValueListenableBuilder(
+                valueListenable: session.castState,
+                builder: (_, s, _) => IconButton(
+                  tooltip: 'Diffuser',
+                  icon: Icon(
+                    s == CastState.connected
+                        ? Icons.cast_connected
+                        : Icons.cast,
+                    color: s == CastState.connected
+                        ? const Color(0xFFFFB566)
+                        : Colors.white70,
+                    size: 20,
+                  ),
+                  onPressed: () => _showCastPicker(context),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Fader(
+                label: 'ÉNERGIE',
+                listenable: session.energy,
+                onChanged: session.setEnergy,
+              ),
+              const SizedBox(width: 10),
+              _Fader(
+                label: 'LUMIÈRE',
+                listenable: session.light,
+                onChanged: session.setLight,
+              ),
+              const SizedBox(width: 14),
+              _TriggerButton('FLASH', onPressed: session.flash),
+              _TriggerButton('DROP', onPressed: session.drop),
+              _TriggerButton('SCÈNE', onPressed: session.scene),
+              _TriggerButton('SUIVANT', onPressed: session.next),
+              const SizedBox(width: 6),
+              ValueListenableBuilder(
+                valueListenable: session.hold,
+                builder: (_, holding, _) => FilterChip(
+                  label: const Text('GARDER'),
+                  selected: holding,
+                  showCheckmark: false,
+                  labelStyle: TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: holding ? const Color(0xFF4A2305) : Colors.white70,
+                  ),
+                  selectedColor: const Color(0xFFFFB547),
+                  backgroundColor: Colors.white10,
+                  onSelected: session.setHold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -197,6 +264,60 @@ class _ControlBar extends StatelessWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Fader extends StatelessWidget {
+  final String label;
+  final ValueNotifier<double> listenable;
+  final ValueChanged<double> onChanged;
+  const _Fader(
+      {required this.label, required this.listenable, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: Colors.white54, fontSize: 10, letterSpacing: 1.2)),
+        SizedBox(
+          width: 110,
+          child: ValueListenableBuilder(
+            valueListenable: listenable,
+            builder: (_, v, _) => Slider(
+              value: v,
+              onChanged: onChanged,
+              activeColor: const Color(0xFFFFB547),
+              inactiveColor: Colors.white24,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TriggerButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  const _TriggerButton(this.label, {required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: FilledButton.tonal(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          minimumSize: const Size(0, 34),
+        ),
+        onPressed: onPressed,
+        child: Text(label,
+            style: const TextStyle(fontSize: 11, letterSpacing: 1.2)),
       ),
     );
   }

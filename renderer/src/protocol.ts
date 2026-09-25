@@ -8,6 +8,21 @@ export interface SceneBackground {
   params?: Record<string, number>;
 }
 
+export interface SceneOverlay {
+  iid: string; // identifiant d'instance choisi par l'app
+  motif: string; // 'grid' | 'sun' | 'loop' (jalon 2)
+  x: number; // centre, -1..1
+  y: number;
+  scale: number; // ~0.1..1
+  rot: number; // radians
+  pulse: number; // 0..1, force de pulsation sur le beat
+}
+
+export interface SceneFilter {
+  id: string; // 'bloom' | 'chroma' | 'posterize' | 'hue' (jalon 2)
+  intensity: number; // 0..1 ('hue' : radians)
+}
+
 export interface SceneTransition {
   kind: 'crossfade' | 'cut';
   beats: number;
@@ -15,8 +30,8 @@ export interface SceneTransition {
 
 export interface SceneState {
   background: SceneBackground;
-  overlays: unknown[];
-  filters: unknown[];
+  overlays: SceneOverlay[];
+  filters: SceneFilter[];
   transition?: SceneTransition;
 }
 
@@ -73,6 +88,7 @@ export interface StatsMsg {
   fps: number;
   renderMs: number;
   droppedFrames: number;
+  bg: string; // fond actif (aperçus console)
   t: number;
 }
 
