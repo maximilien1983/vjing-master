@@ -26,7 +26,9 @@ class IframeLink extends LocalEngineLink {
 
   IframeLink() {
     _iframe
-      ..src = _rendererUrl
+      // Cache-buster : Pages met le HTML en cache ~10 min, on veut toujours
+      // le dernier moteur déployé au lancement de la préviz.
+      ..src = '$_rendererUrl?v=${DateTime.now().millisecondsSinceEpoch}'
       ..style.border = 'none'
       ..style.width = '100%'
       ..style.height = '100%'
