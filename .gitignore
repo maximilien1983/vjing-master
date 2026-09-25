@@ -1,7 +1,11 @@
 # Node / Vite
 node_modules/
 dist/
+dist-embed/
 *.local
+
+# Copie embarquée du moteur (générée par renderer `npm run build:embed`)
+app/assets/renderer/
 
 # Flutter / Dart
 app/.dart_tool/

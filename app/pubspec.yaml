@@ -1,0 +1,32 @@
+name: vjing_master
+description: "VJing Master : VJing automatique, console sur téléphone, rendu WebGL local ou sur TV."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # WebView plein écran qui héberge le moteur WebGL en mode local.
+  webview_flutter: ^4.10.0
+  # Flux PCM du micro (jalon 2 : + Visualizer / AudioPlaybackCapture en natif).
+  record: ^6.0.0
+  # Écran maintenu allumé pendant la session.
+  wakelock_plus: ^1.2.8
+  # FFT pure Dart pour l'analyse spectrale.
+  fftea: ^1.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # Copie single-file du moteur (générée par `npm run build:embed` dans /renderer).
+    - assets/renderer/

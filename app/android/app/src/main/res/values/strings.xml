@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App ID du Custom Receiver (Google Cast Developer Console, docs/cast-setup.md).
+         Valeur factice tant que le receiver n'est pas enregistré. -->
+    <string name="cast_app_id" translatable="false">00000000</string>
+</resources>

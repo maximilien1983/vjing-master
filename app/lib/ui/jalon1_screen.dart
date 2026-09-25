@@ -1,0 +1,248 @@
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import '../audio/audio_analyzer.dart';
+import '../cast/cast_link.dart';
+import '../session.dart';
+
+/// Écran de validation du jalon 1 : rendu plein écran + bandeau de contrôle
+/// technique (BPM, niveaux, latence, i/s, Flash, Cast). La vraie console
+/// (design table de mixage) arrive au jalon 3.
+class Jalon1Screen extends StatefulWidget {
+  const Jalon1Screen({super.key});
+
+  @override
+  State<Jalon1Screen> createState() => _Jalon1ScreenState();
+}
+
+class _Jalon1ScreenState extends State<Jalon1Screen> {
+  final session = Session();
+  bool _overlayVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    session.start();
+    session.cast.startDiscovery();
+  }
+
+  @override
+  void dispose() {
+    session.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: WebViewWidget(controller: session.webView.controller),
+          ),
+          if (_overlayVisible)
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _ControlBar(session: session),
+              ),
+            ),
+          // Coin bas-droit : masquer/afficher le bandeau.
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: IconButton(
+              icon: Icon(
+                _overlayVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.white38,
+              ),
+              onPressed: () =>
+                  setState(() => _overlayVisible = !_overlayVisible),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ControlBar extends StatelessWidget {
+  final Session session;
+  const _ControlBar({required this.session});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ValueListenableBuilder(
+            valueListenable: session.micOk,
+            builder: (_, ok, _) => Icon(
+              ok == false ? Icons.mic_off : Icons.mic,
+              size: 18,
+              color: switch (ok) {
+                true => Colors.greenAccent,
+                false => Colors.redAccent,
+                null => Colors.white38,
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          ValueListenableBuilder(
+            valueListenable: session.bpm,
+            builder: (_, bpm, _) => Text(
+              bpm > 0 ? '${bpm.toStringAsFixed(1)} BPM' : '— BPM',
+              style: const TextStyle(
+                color: Color(0xFFFFB566),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ValueListenableBuilder(
+            valueListenable: session.levels,
+            builder: (_, l, _) => _LevelBars(levels: l),
+          ),
+          const SizedBox(width: 12),
+          ValueListenableBuilder(
+            valueListenable: session.latency,
+            builder: (_, v, _) => _InfoText('lat $v'),
+          ),
+          const SizedBox(width: 8),
+          ValueListenableBuilder(
+            valueListenable: session.stats,
+            builder: (_, v, _) => _InfoText(v),
+          ),
+          const SizedBox(width: 12),
+          FilledButton.tonal(
+            onPressed: () => session.trigger('flash'),
+            child: const Text('FLASH'),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: 'Debug moteur',
+            icon: const Icon(Icons.bug_report, color: Colors.white70),
+            onPressed: () => session.setDebug(!session.debug),
+          ),
+          ValueListenableBuilder(
+            valueListenable: session.castState,
+            builder: (_, s, _) => IconButton(
+              tooltip: 'Diffuser',
+              icon: Icon(
+                s == CastState.connected ? Icons.cast_connected : Icons.cast,
+                color: s == CastState.connected
+                    ? const Color(0xFFFFB566)
+                    : Colors.white70,
+              ),
+              onPressed: () => _showCastPicker(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCastPicker(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1B1B1E),
+        title:
+            const Text('Diffuser vers', style: TextStyle(color: Colors.white)),
+        content: SizedBox(
+          width: 320,
+          child: StreamBuilder<List<CastRoute>>(
+            stream: session.cast.routes,
+            builder: (context, snap) {
+              final routes = snap.data ?? const <CastRoute>[];
+              if (routes.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Recherche de TV…',
+                      style: TextStyle(color: Colors.white70)),
+                );
+              }
+              return ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final r in routes)
+                    ListTile(
+                      leading: const Icon(Icons.tv, color: Colors.white70),
+                      title: Text(r.name,
+                          style: const TextStyle(color: Colors.white)),
+                      onTap: () {
+                        session.cast.connect(r.id);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  if (session.cast.state == CastState.connected)
+                    ListTile(
+                      leading: const Icon(Icons.close, color: Colors.white70),
+                      title: const Text('Arrêter la diffusion',
+                          style: TextStyle(color: Colors.white)),
+                      onTap: () {
+                        session.cast.disconnect();
+                        Navigator.pop(context);
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoText extends StatelessWidget {
+  final String text;
+  const _InfoText(this.text);
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: const TextStyle(color: Colors.white70, fontSize: 12),
+      );
+}
+
+class _LevelBars extends StatelessWidget {
+  final Levels levels;
+  const _LevelBars({required this.levels});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (final v in [levels.low, levels.mid, levels.high])
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1.5),
+            child: SizedBox(
+              width: 6,
+              height: 26,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 26 * v.clamp(0.05, 1.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFB547),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
