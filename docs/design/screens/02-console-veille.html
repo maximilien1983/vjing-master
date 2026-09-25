@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Console · TV non connectée</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&amp;family=Barlow+Condensed:wght@300;400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0b0b0c}
+button{font-family:inherit}
+.alu{background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,rgba(255,255,255,0) 1px 3px),repeating-linear-gradient(180deg,rgba(0,0,0,.09) 0 1px,rgba(0,0,0,0) 1px 5px),repeating-linear-gradient(180deg,rgba(255,255,255,.025) 0 2px,rgba(255,255,255,0) 2px 13px),linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.045) 30%,rgba(255,255,255,0) 55%,rgba(255,255,255,.03) 80%,rgba(255,255,255,0) 100%),linear-gradient(180deg,#3a3b3f 0%,#2f3034 50%,#27282b 100%)}
+.walnut{background:repeating-linear-gradient(91deg,rgba(0,0,0,.22) 0 1px,rgba(0,0,0,0) 1px 3px,rgba(255,200,150,.05) 3px 4px,rgba(0,0,0,0) 4px 7px),repeating-linear-gradient(88.5deg,rgba(0,0,0,.18) 0 2px,rgba(0,0,0,0) 2px 11px),radial-gradient(ellipse 60% 18% at 40% 30%,rgba(130,78,40,.35),rgba(0,0,0,0) 70%),radial-gradient(ellipse 50% 22% at 60% 72%,rgba(20,10,4,.35),rgba(0,0,0,0) 70%),linear-gradient(90deg,#22130a 0%,#4a2b18 25%,#5b3720 50%,#432716 75%,#1f1108 100%)}
+.recess{background:linear-gradient(180deg,#141416,#1b1b1e);box-shadow:inset 0 2px 5px rgba(0,0,0,.85),inset 0 -1px 0 rgba(255,255,255,.05),0 1px 0 rgba(255,255,255,.07)}
+.knob-skirt{position:absolute;border:0;padding:0;border-radius:50%;cursor:pointer;background:repeating-conic-gradient(from 0deg,#151517 0deg 5deg,#2c2c30 5deg 10deg);box-shadow:0 8px 12px rgba(0,0,0,.65),0 3px 4px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 3px rgba(0,0,0,.6)}
+.knob-cap{position:absolute;border-radius:50%;background:conic-gradient(from 20deg,#55575b,#9a9ca0 10%,#4f5155 24%,#8e9094 38%,#4a4c50 50%,#9ea0a4 62%,#515357 76%,#8a8c90 88%,#55575b);box-shadow:inset 0 1px 1px rgba(255,255,255,.35),inset 0 -1px 2px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.6)}
+.knob-ptr{position:absolute;left:50%;top:3px;width:3px;margin-left:-1.5px;border-radius:2px;background:#f3ead3;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+.slot{position:absolute;width:6px;border-radius:3px;background:#050506;box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.08)}
+.fcap{position:absolute;border:0;padding:0;border-radius:4px;cursor:pointer;background:repeating-linear-gradient(180deg,rgba(255,255,255,.08) 0 1px,rgba(0,0,0,0) 1px 4px),linear-gradient(180deg,#3d3e42 0%,#202123 47%,#141416 53%,#26272a 100%);box-shadow:0 6px 10px rgba(0,0,0,.7),0 2px 3px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.6)}
+.fcap-line{position:absolute;left:5px;right:5px;top:50%;height:2px;margin-top:-1px;background:#f3ead3;border-radius:1px}
+.pad{display:flex;flex-direction:column;width:86px;height:84px;border:0;padding:6px;border-radius:9px;cursor:pointer;font-family:inherit;background:linear-gradient(180deg,#0f0f11,#1c1c1f);box-shadow:inset 0 2px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.08)}
+.pad-lit{box-shadow:inset 0 2px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.08),0 0 26px rgba(255,150,40,.22)}
+.key-up{display:flex;height:64px;border-radius:6px;padding:5px;background:linear-gradient(180deg,#48494d,#2a2b2e);box-shadow:0 6px 0 #0e0e10,0 8px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2)}
+.key-down{display:flex;height:64px;border-radius:6px;padding:5px;transform:translateY(5px);background:linear-gradient(180deg,#434448,#28292c);box-shadow:0 1px 0 #0e0e10,0 2px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12)}
+.lens-off{flex-grow:1;display:flex;align-items:center;justify-content:center;border-radius:4px;background:radial-gradient(ellipse at 50% 30%,#4a3620,#211608 78%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 2px 6px rgba(0,0,0,.6);color:#eadcc0;font-size:15px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.lens-on{flex-grow:1;display:flex;align-items:center;justify-content:center;border-radius:4px;background:radial-gradient(ellipse at 50% 40%,#fff4d2 0%,#ffc35c 38%,#f08a1f 76%,#c05f10 100%);box-shadow:inset 0 0 0 1px rgba(120,50,0,.5),0 0 16px 3px rgba(255,160,50,.55),0 0 38px rgba(255,130,30,.35);color:#4a2305;font-size:15px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.tkey{display:flex;align-items:center;gap:12px;width:135px;height:48px;border:0;border-radius:6px;padding:0 16px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#e9dfc7;background:linear-gradient(180deg,#3f4044 0%,#323337 55%,#2a2b2e 100%);box-shadow:0 3px 0 #121214,0 5px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16)}
+.tkey-on{transform:translateY(2px);box-shadow:0 1px 0 #121214,0 2px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 18px rgba(255,160,60,.08)}
+.voy-off{width:14px;height:8px;border-radius:2px;background:#33240f;box-shadow:inset 0 1px 2px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.06)}
+.voy-on{width:14px;height:8px;border-radius:2px;background:radial-gradient(ellipse at 50% 40%,#fff1c9,#ffb547 55%,#e07a1a);box-shadow:0 0 6px 2px rgba(255,170,60,.6),0 0 14px rgba(255,140,30,.35)}
+.led-on{border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff1c9,#ffb547 42%,#d9741a 85%);box-shadow:0 0 6px 2px rgba(255,170,60,.6),0 0 14px rgba(255,140,30,.35)}
+.led-off{border-radius:50%;background:radial-gradient(circle at 35% 35%,#5a3d1d,#24170a 75%);box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+.nixie{position:relative;display:flex;align-items:center;justify-content:center;border-radius:17px 17px 6px 6px;background:repeating-linear-gradient(60deg,rgba(255,255,255,.035) 0 1px,rgba(0,0,0,0) 1px 4px),repeating-linear-gradient(-60deg,rgba(255,255,255,.035) 0 1px,rgba(0,0,0,0) 1px 4px),radial-gradient(ellipse at 50% 40%,rgba(255,130,50,.2),rgba(0,0,0,0) 65%),linear-gradient(180deg,#1b1511,#0a0706);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 4px 6px 8px rgba(255,255,255,.05),0 2px 4px rgba(0,0,0,.7)}
+.nx-ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,170,100,.07);font-weight:300;line-height:1}
+.nx-digit{position:relative;color:#ffb566;font-weight:300;line-height:1;text-shadow:0 0 2px #ffd9a0,0 0 6px #ff7b1c,0 0 14px rgba(255,90,0,.75)}
+.beat{animation:beat .484s ease-out infinite}
+@keyframes beat{0%{opacity:1}22%{opacity:1}45%{opacity:.12}100%{opacity:.12}}
+</style>
+</head>
+<body>
+<div style="width: 844px; height: 390px; position: relative; display: flex; overflow: hidden; background: #0b0b0c; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; color: #e9dfc7">
+
+<div class="walnut" style="width: 36px; height: 390px; flex-shrink: 0; box-shadow: inset -1px 0 0 rgba(255,220,180,.10), inset -8px 0 12px rgba(0,0,0,.45)"></div>
+
+<div class="alu" style="flex-grow: 1; height: 390px; box-sizing: border-box; padding: 10px 8px 22px 8px; display: flex; gap: 8px; box-shadow: inset 4px 0 6px rgba(0,0,0,.55), inset -4px 0 6px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.14)">
+
+<div style="width: 680px; display: flex; flex-direction: column; gap: 8px">
+
+<div class="recess" style="height: 140px; border-radius: 8px; box-sizing: border-box; padding: 10px; display: flex; gap: 12px; align-items: flex-start">
+
+<div style="width: 312px; align-self: center; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 14px; display: flex; align-items: center; gap: 10px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; line-height: 14px; color: #e9dfc7">SOURCES</div>
+<div style="font-size: 10px; font-weight: 500; letter-spacing: .14em; line-height: 14px; color: #b8ad95">TOUCHER POUR CHANGER</div>
+<div style="flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(233,223,199,.3), rgba(233,223,199,0))"></div>
+</div>
+<div style="display: flex; gap: 12px">
+
+<button aria-label="Changer la source (actuelle : Caméra du téléphone)" style="width: 96px; border: 0; padding: 0; background: transparent; cursor: pointer; font-family: inherit; color: inherit; display: flex; flex-direction: column; gap: 6px; text-align: left">
+<div style="width: 96px; height: 58px; box-sizing: border-box; padding: 4px; border-radius: 5px; background: linear-gradient(180deg,#2c2d30,#0f0f10); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 3px rgba(0,0,0,.7)">
+<div style="width: 88px; height: 50px; border-radius: 2px; overflow: hidden; position: relative; background: #140f0b">
+<svg width="88" height="50" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="display: block" aria-label="Aperçu : caméra du téléphone">
+<defs><linearGradient id="tcBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1d14"></stop><stop offset="1" stop-color="#120c09"></stop></linearGradient></defs>
+<rect width="160" height="90" fill="url(#tcBg)"></rect>
+<circle cx="30" cy="30" r="14" fill="#ffb35a" opacity=".35"></circle><circle cx="58" cy="22" r="8" fill="#ffd28a" opacity=".45"></circle><circle cx="112" cy="34" r="18" fill="#ff7a6a" opacity=".25"></circle><circle cx="136" cy="18" r="7" fill="#ffe2a8" opacity=".5"></circle><circle cx="88" cy="16" r="5" fill="#ffc070" opacity=".5"></circle>
+<path d="M40 90 C 48 62 62 52 80 52 C 98 52 112 62 120 90 Z" fill="#0a0706" opacity=".9"></path>
+<circle cx="80" cy="42" r="13" fill="#0a0706" opacity=".9"></circle>
+</svg>
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.2) 0 1px, rgba(0,0,0,0) 1px 3px), linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,0) 45%)"></div>
+</div>
+</div>
+<div style="height: 12px; display: flex; align-items: center; gap: 6px">
+<span class="led-off" style="width: 7px; height: 7px; flex-shrink: 0"></span>
+<span style="font-size: 9.5px; font-weight: 600; letter-spacing: .06em; line-height: 12px; white-space: nowrap; color: #b8ad95">CAMÉRA</span><span style="flex-grow: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8ad95" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l4 4-4 4"></path><path d="M20 7H6"></path><path d="M8 21l-4-4 4-4"></path><path d="M4 17h14"></path></svg>
+</div>
+</button>
+
+<button aria-label="Changer la source (actuelle : neon-tunnel.mp4)" style="width: 96px; border: 0; padding: 0; background: transparent; cursor: pointer; font-family: inherit; color: inherit; display: flex; flex-direction: column; gap: 6px; text-align: left">
+<div style="width: 96px; height: 58px; box-sizing: border-box; padding: 4px; border-radius: 5px; background: linear-gradient(180deg,#2c2d30,#0f0f10); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 3px rgba(0,0,0,.7), 0 0 0 1px rgba(255,180,80,.45), 0 0 12px rgba(255,160,50,.25)">
+<div style="width: 88px; height: 50px; border-radius: 2px; overflow: hidden; position: relative; background: #070512">
+<svg width="88" height="50" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="display: block" aria-label="Aperçu : neon-tunnel.mp4">
+<rect width="160" height="90" fill="#070512"></rect>
+<g fill="none" stroke-width="2.5">
+<rect x="6" y="4" width="148" height="82" rx="4" stroke="#ff3fb4" opacity=".35"></rect>
+<rect x="22" y="13" width="116" height="64" rx="4" stroke="#43e6ff" opacity=".5"></rect>
+<rect x="38" y="22" width="84" height="46" rx="3" stroke="#ff3fb4" opacity=".7"></rect>
+<rect x="52" y="30" width="56" height="30" rx="3" stroke="#43e6ff" opacity=".85"></rect>
+<rect x="64" y="37" width="32" height="16" rx="2" stroke="#ff8ae0"></rect>
+</g>
+<rect x="74" y="42" width="12" height="6" fill="#ffffff" opacity=".8"></rect>
+</svg>
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.2) 0 1px, rgba(0,0,0,0) 1px 3px), linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,0) 45%)"></div>
+</div>
+</div>
+<div style="height: 12px; display: flex; align-items: center; gap: 6px">
+<span class="led-on" style="width: 7px; height: 7px; flex-shrink: 0"></span>
+<span style="font-size: 9.5px; font-weight: 600; letter-spacing: .06em; line-height: 12px; white-space: nowrap; color: #e9dfc7">NEON-TUNNEL</span><span style="flex-grow: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8ad95" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l4 4-4 4"></path><path d="M20 7H6"></path><path d="M8 21l-4-4 4-4"></path><path d="M4 17h14"></path></svg>
+</div>
+</button>
+
+<button aria-label="Changer la source (actuelle : super8-plage-1974.mov)" style="width: 96px; border: 0; padding: 0; background: transparent; cursor: pointer; font-family: inherit; color: inherit; display: flex; flex-direction: column; gap: 6px; text-align: left">
+<div style="width: 96px; height: 58px; box-sizing: border-box; padding: 4px; border-radius: 5px; background: linear-gradient(180deg,#2c2d30,#0f0f10); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 3px rgba(0,0,0,.7), 0 0 0 1px rgba(255,180,80,.45), 0 0 12px rgba(255,160,50,.25)">
+<div style="width: 88px; height: 50px; border-radius: 2px; overflow: hidden; position: relative; background: #5b2a3a">
+<svg width="88" height="50" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="display: block" aria-label="Aperçu : super8-plage-1974.mov">
+<defs>
+<linearGradient id="tsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c27a"></stop><stop offset=".55" stop-color="#e0764a"></stop><stop offset="1" stop-color="#7a3446"></stop></linearGradient>
+<radialGradient id="tsVig" cx="50%" cy="50%" r="70%"><stop offset=".55" stop-color="#000000" stop-opacity="0"></stop><stop offset="1" stop-color="#000000" stop-opacity=".6"></stop></radialGradient>
+</defs>
+<rect width="160" height="90" fill="url(#tsSky)"></rect>
+<circle cx="104" cy="50" r="16" fill="#fff0c4" opacity=".9"></circle>
+<rect y="56" width="160" height="34" fill="#3d2a4a" opacity=".85"></rect>
+<g stroke="#ffd9a0" stroke-width="1.2" opacity=".5"><line x1="80" y1="62" x2="128" y2="62"></line><line x1="88" y1="68" x2="120" y2="68"></line><line x1="96" y1="74" x2="112" y2="74"></line></g>
+<rect width="160" height="90" fill="url(#tsVig)"></rect>
+</svg>
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.2) 0 1px, rgba(0,0,0,0) 1px 3px), linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,0) 45%)"></div>
+</div>
+</div>
+<div style="height: 12px; display: flex; align-items: center; gap: 6px">
+<span class="led-on" style="width: 7px; height: 7px; flex-shrink: 0"></span>
+<span style="font-size: 9.5px; font-weight: 600; letter-spacing: .06em; line-height: 12px; white-space: nowrap; color: #e9dfc7">SUPER8-PLAGE</span><span style="flex-grow: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8ad95" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l4 4-4 4"></path><path d="M20 7H6"></path><path d="M8 21l-4-4 4-4"></path><path d="M4 17h14"></path></svg>
+</div>
+</button>
+
+</div>
+</div>
+
+<div style="width: 200px; height: 120px; box-sizing: border-box; border-radius: 8px; padding: 7px; background: linear-gradient(180deg,#2c2d30,#0f0f10); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 2px 4px rgba(0,0,0,.7)">
+<div style="width: 186px; height: 106px; border-radius: 4px; overflow: hidden; position: relative; background: #07060f; box-shadow: 0 0 0 1px #000">
+<svg width="186" height="106" viewBox="0 0 844 390" preserveAspectRatio="xMidYMid slice" style="display: block" aria-label="Aperçu de la vidéo diffusée">
+<defs>
+<radialGradient id="mvBg" cx="62%" cy="62%" r="75%"><stop offset="0" stop-color="#7a2470"></stop><stop offset=".38" stop-color="#321150"></stop><stop offset="1" stop-color="#08061a"></stop></radialGradient>
+<linearGradient id="mvSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe49a"></stop><stop offset=".5" stop-color="#ff963f"></stop><stop offset="1" stop-color="#ec3f7c"></stop></linearGradient>
+<radialGradient id="mvGlow"><stop offset="0" stop-color="#ff8a4a" stop-opacity=".55"></stop><stop offset="1" stop-color="#ff8a4a" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="mvPlanet" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#9ff5dc"></stop><stop offset=".45" stop-color="#2fb4b0"></stop><stop offset="1" stop-color="#0d2f52"></stop></radialGradient>
+<linearGradient id="mvWave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b1a8a"></stop><stop offset=".5" stop-color="#b3338f"></stop><stop offset="1" stop-color="#2a1666"></stop></linearGradient>
+<mask id="mvBands"><rect width="844" height="390" fill="#fff"></rect><rect x="380" y="214" width="280" height="5" fill="#000"></rect><rect x="380" y="232" width="280" height="8" fill="#000"></rect><rect x="380" y="252" width="280" height="11" fill="#000"></rect><rect x="380" y="276" width="280" height="14" fill="#000"></rect><rect x="380" y="303" width="280" height="30" fill="#000"></rect></mask>
+</defs>
+<rect width="844" height="390" fill="url(#mvBg)"></rect>
+<g fill="#ffffff" opacity=".8"><circle cx="60" cy="40" r="2"></circle><circle cx="120" cy="72" r="1.4"></circle><circle cx="262" cy="30" r="1.8"></circle><circle cx="332" cy="92" r="1.3"></circle><circle cx="402" cy="42" r="2.2"></circle><circle cx="642" cy="50" r="1.5"></circle><circle cx="702" cy="112" r="2"></circle><circle cx="782" cy="40" r="1.3"></circle><circle cx="762" cy="172" r="1.6"></circle><circle cx="90" cy="202" r="1.5"></circle><circle cx="300" cy="212" r="1.3"></circle><circle cx="40" cy="262" r="1.8"></circle><circle cx="820" cy="232" r="1.3"></circle></g>
+<circle cx="520" cy="205" r="210" fill="url(#mvGlow)"></circle>
+<circle cx="520" cy="205" r="118" fill="url(#mvSun)" mask="url(#mvBands)"></circle>
+<ellipse cx="520" cy="215" rx="250" ry="40" fill="none" stroke="#8fe6ff" stroke-width="3" opacity=".6" transform="rotate(-9 520 215)"></ellipse>
+<ellipse cx="520" cy="215" rx="290" ry="52" fill="none" stroke="#8fe6ff" stroke-width="1.5" opacity=".28" transform="rotate(-9 520 215)"></ellipse>
+<circle cx="190" cy="120" r="46" fill="url(#mvPlanet)"></circle>
+<path d="M0 318 C 140 268 290 352 440 306 S 700 262 844 312 L844 390 L0 390 Z" fill="url(#mvWave)" opacity=".85"></path>
+<path d="M0 346 C 180 312 320 378 500 340 S 740 318 844 350 L844 390 L0 390 Z" fill="#12082a" opacity=".9"></path>
+</svg>
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 3px), radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.5) 100%), linear-gradient(135deg, rgba(255,255,255,.13), rgba(255,255,255,0) 42%)"></div>
+</div>
+</div>
+
+<div style="width: 124px; height: 120px; display: flex; flex-direction: column; gap: 6px">
+<div style="height: 48px; display: flex; gap: 8px; align-items: center">
+<div style="width: 68px; height: 38px; box-sizing: border-box; padding: 3px; border-radius: 6px; background: linear-gradient(180deg,#0a0a0b,#232326); box-shadow: 0 1px 0 rgba(255,255,255,.08), inset 0 1px 2px #000">
+<div style="height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 35%, #4a1a15 0%, #2a0d0a 70%, #1c0806 100%); box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), inset 0 2px 5px rgba(0,0,0,.6); color: #b36a5c; font-size: 14px; font-weight: 700; letter-spacing: .14em">ON AIR</div>
+</div>
+<button aria-label="Diffuser vers la TV" style="width: 48px; height: 48px; border: 0; padding: 0; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg,#3f4044,#2a2b2e); box-shadow: 0 3px 0 #121214, 0 5px 8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.16)">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e9dfc7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M12 14l5 6H7z" fill="#e9dfc7"></path></svg>
+</button>
+</div>
+<div style="height: 14px; display: flex; align-items: center; gap: 7px">
+<div style="position: relative; width: 10px; height: 10px">
+<div class="led-off" style="position: absolute; inset: 0"></div>
+<div class="led-on beat" style="position: absolute; inset: 0"></div>
+</div>
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; color: #e9dfc7; flex-grow: 1">TEMPO</div>
+<div style="font-size: 10px; font-weight: 600; letter-spacing: .2em; color: #b8ad95">BPM</div>
+</div>
+<div style="height: 46px; display: flex; gap: 5px; justify-content: center">
+<div class="nixie" style="width: 34px; height: 46px; font-size: 38px"><span class="nx-ghost">8</span><span class="nx-digit">1</span></div>
+<div class="nixie" style="width: 34px; height: 46px; font-size: 38px"><span class="nx-ghost">8</span><span class="nx-digit">2</span></div>
+<div class="nixie" style="width: 34px; height: 46px; font-size: 38px"><span class="nx-ghost">8</span><span class="nx-digit">4</span></div>
+</div>
+</div>
+
+</div>
+
+<div style="height: 184px; display: flex; gap: 10px; align-items: center">
+
+<div style="width: 156px; display: flex; flex-direction: column; gap: 8px; align-items: center">
+<div style="width: 156px; height: 106px; position: relative">
+<svg width="156" height="106" viewBox="2 22 156 106" style="position: absolute; left: 0; top: 0; overflow: visible" aria-hidden="true">
+<g stroke="#e9dfc7" stroke-width="1.6" stroke-linecap="round" opacity=".8">
+<line x1="62" y1="99.7" x2="59" y2="104.9"></line><line x1="46" y1="72" x2="40" y2="72"></line><line x1="62" y1="44.3" x2="59" y2="39.1"></line><line x1="94" y1="44.3" x2="97" y2="39.1"></line><line x1="110" y1="72" x2="116" y2="72"></line><line x1="94" y1="99.7" x2="97" y2="104.9"></line>
+</g>
+<g fill="#33230f" stroke="rgba(0,0,0,.6)" stroke-width=".6">
+<circle cx="57.5" cy="107.5" r="2.2"></circle><circle cx="57.5" cy="36.5" r="2.2"></circle><circle cx="98.5" cy="36.5" r="2.2"></circle><circle cx="119" cy="72" r="2.2"></circle><circle cx="98.5" cy="107.5" r="2.2"></circle>
+</g>
+<circle cx="37" cy="72" r="6" fill="#ffa640" opacity=".3"></circle>
+<circle cx="37" cy="72" r="2.6" fill="#ffd27e"></circle>
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9.5" font-weight="600" letter-spacing=".9" fill="#b8ad95">
+<text x="54" y="117.1" text-anchor="end">VINTAGE</text>
+<text x="30" y="75.5" text-anchor="end" fill="#ffc166">70'S</text>
+<text x="54" y="33.9" text-anchor="end">PUNK</text>
+<text x="102" y="33.9">RETROFUTUR</text>
+<text x="126" y="75.5">VHS</text>
+<text x="102" y="117.1">PSYCHÉ</text>
+</g>
+</svg>
+<button class="knob-skirt" aria-label="Style : 70's" style="left: 46px; top: 20px; width: 60px; height: 60px">
+<span class="knob-cap" style="left: 10px; top: 10px; width: 40px; height: 40px"></span>
+<span style="position: absolute; inset: 0; transform: rotate(-90deg)"><span class="knob-ptr" style="height: 24px"></span></span>
+</button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; width: 120px">
+<div style="flex-grow: 1; height: 1px; background: rgba(233,223,199,.3)"></div>
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; color: #e9dfc7">STYLE</div>
+<div style="flex-grow: 1; height: 1px; background: rgba(233,223,199,.3)"></div>
+</div>
+</div>
+
+<div style="width: 156px; display: flex; flex-direction: column; gap: 8px; align-items: center">
+<div style="width: 156px; height: 106px; position: relative">
+<svg width="156" height="106" viewBox="2 22 156 106" style="position: absolute; left: 0; top: 0; overflow: visible" aria-hidden="true">
+<g stroke="#e9dfc7" stroke-width="1.6" stroke-linecap="round" opacity=".8">
+<line x1="62" y1="99.7" x2="59" y2="104.9"></line><line x1="46" y1="72" x2="40" y2="72"></line><line x1="62" y1="44.3" x2="59" y2="39.1"></line><line x1="94" y1="44.3" x2="97" y2="39.1"></line><line x1="110" y1="72" x2="116" y2="72"></line><line x1="94" y1="99.7" x2="97" y2="104.9"></line>
+</g>
+<g fill="#33230f" stroke="rgba(0,0,0,.6)" stroke-width=".6">
+<circle cx="57.5" cy="107.5" r="2.2"></circle><circle cx="37" cy="72" r="2.2"></circle><circle cx="98.5" cy="36.5" r="2.2"></circle><circle cx="119" cy="72" r="2.2"></circle><circle cx="98.5" cy="107.5" r="2.2"></circle>
+</g>
+<circle cx="57.5" cy="36.5" r="6" fill="#ffa640" opacity=".3"></circle>
+<circle cx="57.5" cy="36.5" r="2.6" fill="#ffd27e"></circle>
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9.5" font-weight="600" letter-spacing=".9" fill="#b8ad95">
+<text x="54" y="117.1" text-anchor="end">CAMPAGNE</text>
+<text x="30" y="75.5" text-anchor="end">VILLE</text>
+<text x="54" y="33.9" text-anchor="end" fill="#ffc166">COSMOS</text>
+<text x="102" y="33.9">MACHINES</text>
+<text x="126" y="75.5">NATURE</text>
+<text x="102" y="117.1">MIROIR</text>
+</g>
+</svg>
+<button class="knob-skirt" aria-label="Univers : Cosmos" style="left: 46px; top: 20px; width: 60px; height: 60px">
+<span class="knob-cap" style="left: 10px; top: 10px; width: 40px; height: 40px"></span>
+<span style="position: absolute; inset: 0; transform: rotate(-30deg)"><span class="knob-ptr" style="height: 24px"></span></span>
+</button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; width: 120px">
+<div style="flex-grow: 1; height: 1px; background: rgba(233,223,199,.3)"></div>
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; color: #e9dfc7">UNIVERS</div>
+<div style="flex-grow: 1; height: 1px; background: rgba(233,223,199,.3)"></div>
+</div>
+</div>
+
+<div style="width: 56px; height: 184px; display: flex; flex-direction: column; gap: 6px; align-items: center">
+<div style="width: 56px; height: 164px; position: relative">
+<svg width="56" height="164" viewBox="0 0 56 164" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9" font-weight="600" letter-spacing=".8" fill="#b8ad95" text-anchor="middle">
+<text x="28" y="9">LUMINEUX</text>
+<text x="28" y="161">DARK</text>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".7">
+<line x1="8" y1="20" x2="20" y2="20"></line><line x1="36" y1="20" x2="48" y2="20"></line>
+<line x1="13" y1="32.2" x2="20" y2="32.2"></line><line x1="36" y1="32.2" x2="43" y2="32.2"></line>
+<line x1="13" y1="44.4" x2="20" y2="44.4"></line><line x1="36" y1="44.4" x2="43" y2="44.4"></line>
+<line x1="13" y1="56.6" x2="20" y2="56.6"></line><line x1="36" y1="56.6" x2="43" y2="56.6"></line>
+<line x1="13" y1="68.8" x2="20" y2="68.8"></line><line x1="36" y1="68.8" x2="43" y2="68.8"></line>
+<line x1="8" y1="81" x2="20" y2="81"></line><line x1="36" y1="81" x2="48" y2="81"></line>
+<line x1="13" y1="93.2" x2="20" y2="93.2"></line><line x1="36" y1="93.2" x2="43" y2="93.2"></line>
+<line x1="13" y1="105.4" x2="20" y2="105.4"></line><line x1="36" y1="105.4" x2="43" y2="105.4"></line>
+<line x1="13" y1="117.6" x2="20" y2="117.6"></line><line x1="36" y1="117.6" x2="43" y2="117.6"></line>
+<line x1="13" y1="129.8" x2="20" y2="129.8"></line><line x1="36" y1="129.8" x2="43" y2="129.8"></line>
+<line x1="8" y1="142" x2="20" y2="142"></line><line x1="36" y1="142" x2="48" y2="142"></line>
+</g>
+</svg>
+<div class="slot" style="left: 25px; top: 16px; height: 130px"></div>
+<button class="fcap" aria-label="Lumière : 40 %" style="left: 4px; top: 80px; width: 48px; height: 26px"><span class="fcap-line"></span></button>
+</div>
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .22em; line-height: 14px; color: #e9dfc7">LUMIÈRE</div>
+</div>
+
+<div style="width: 282px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; gap: 12px">
+<button class="pad" aria-label="Flash"><span class="key-up"><span class="lens-off">Flash</span></span></button>
+<button class="pad" aria-label="Drop"><span class="key-up"><span class="lens-off">Drop</span></span></button>
+<button class="pad" aria-label="Scène"><span class="key-up"><span class="lens-off">Scène</span></span></button>
+</div>
+<div style="display: flex; gap: 12px">
+<button class="tkey" aria-label="Suivant"><span class="voy-off"></span><span>Suivant</span></button>
+<button class="tkey" aria-label="Garder"><span class="voy-off"></span><span>Garder</span></button>
+</div>
+</div>
+
+</div>
+
+<div style="height: 18px; display: flex; align-items: center; gap: 12px">
+<div style="height: 18px; padding: 0 4px 0 6px; display: flex; align-items: center; font-size: 25px; line-height: 18px; font-family: 'Allura', 'Snell Roundhand', cursive; font-weight: 400; color: rgba(233,223,199,.8); text-shadow: 0 -1px 0 rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.12); white-space: nowrap">VJing Master</div>
+<div style="flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(233,223,199,.28), rgba(233,223,199,0))"></div>
+</div>
+
+</div>
+
+<div style="width: 68px; display: flex; flex-direction: column; gap: 8px; align-items: center; box-shadow: inset 1px 0 0 rgba(0,0,0,.45), inset 2px 0 0 rgba(255,255,255,.06)">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .2em; line-height: 14px; color: #e9dfc7">ÉNERGIE</div>
+<div style="width: 68px; height: 336px; position: relative">
+<svg width="68" height="336" viewBox="0 0 68 336" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9.5" font-weight="600" fill="#b8ad95" text-anchor="end">
+<text x="25" y="19.3">100</text><text x="25" y="49.7">90</text><text x="25" y="80.1">80</text><text x="25" y="110.5">70</text><text x="25" y="140.9">60</text><text x="25" y="171.3">50</text><text x="25" y="201.7">40</text><text x="25" y="232.1">30</text><text x="25" y="262.5">20</text><text x="25" y="292.9">10</text><text x="25" y="323.3">0</text>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".7">
+<line x1="28" y1="16" x2="36" y2="16"></line><line x1="48" y1="16" x2="58" y2="16"></line>
+<line x1="28" y1="46.4" x2="36" y2="46.4"></line><line x1="48" y1="46.4" x2="58" y2="46.4"></line>
+<line x1="28" y1="76.8" x2="36" y2="76.8"></line><line x1="48" y1="76.8" x2="58" y2="76.8"></line>
+<line x1="28" y1="107.2" x2="36" y2="107.2"></line><line x1="48" y1="107.2" x2="58" y2="107.2"></line>
+<line x1="28" y1="137.6" x2="36" y2="137.6"></line><line x1="48" y1="137.6" x2="58" y2="137.6"></line>
+<line x1="28" y1="168" x2="36" y2="168"></line><line x1="48" y1="168" x2="58" y2="168"></line>
+<line x1="28" y1="198.4" x2="36" y2="198.4"></line><line x1="48" y1="198.4" x2="58" y2="198.4"></line>
+<line x1="28" y1="228.8" x2="36" y2="228.8"></line><line x1="48" y1="228.8" x2="58" y2="228.8"></line>
+<line x1="28" y1="259.2" x2="36" y2="259.2"></line><line x1="48" y1="259.2" x2="58" y2="259.2"></line>
+<line x1="28" y1="289.6" x2="36" y2="289.6"></line><line x1="48" y1="289.6" x2="58" y2="289.6"></line>
+<line x1="28" y1="320" x2="36" y2="320"></line><line x1="48" y1="320" x2="58" y2="320"></line>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".45">
+<line x1="32" y1="31.2" x2="36" y2="31.2"></line><line x1="48" y1="31.2" x2="52" y2="31.2"></line>
+<line x1="32" y1="61.6" x2="36" y2="61.6"></line><line x1="48" y1="61.6" x2="52" y2="61.6"></line>
+<line x1="32" y1="92" x2="36" y2="92"></line><line x1="48" y1="92" x2="52" y2="92"></line>
+<line x1="32" y1="122.4" x2="36" y2="122.4"></line><line x1="48" y1="122.4" x2="52" y2="122.4"></line>
+<line x1="32" y1="152.8" x2="36" y2="152.8"></line><line x1="48" y1="152.8" x2="52" y2="152.8"></line>
+<line x1="32" y1="183.2" x2="36" y2="183.2"></line><line x1="48" y1="183.2" x2="52" y2="183.2"></line>
+<line x1="32" y1="213.6" x2="36" y2="213.6"></line><line x1="48" y1="213.6" x2="52" y2="213.6"></line>
+<line x1="32" y1="244" x2="36" y2="244"></line><line x1="48" y1="244" x2="52" y2="244"></line>
+<line x1="32" y1="274.4" x2="36" y2="274.4"></line><line x1="48" y1="274.4" x2="52" y2="274.4"></line>
+<line x1="32" y1="304.8" x2="36" y2="304.8"></line><line x1="48" y1="304.8" x2="52" y2="304.8"></line>
+</g>
+</svg>
+<div class="slot" style="left: 39px; top: 10px; height: 316px"></div>
+<button class="fcap" aria-label="Énergie : 72" style="left: 16px; top: 86px; width: 52px; height: 30px"><span class="fcap-line"></span></button>
+</div>
+</div>
+
+</div>
+
+<div class="walnut" style="width: 36px; height: 390px; flex-shrink: 0; box-shadow: inset 1px 0 0 rgba(255,220,180,.10), inset 8px 0 12px rgba(0,0,0,.45)"></div>
+
+</div>
+</body>
+</html>

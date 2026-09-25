@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VJing Master — moteur</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #vjm-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #vjm-debug {
+      position: absolute; top: 8px; left: 8px; z-index: 10; display: none;
+      font: 12px/1.5 monospace; color: #9f9; background: rgba(0,0,0,.55);
+      padding: 6px 10px; border-radius: 4px; white-space: pre; pointer-events: none;
+    }
+  </style>
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))o(r);new MutationObserver(r=>{for(const s of r)if(s.type==="childList")for(const a of s.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&o(a)}).observe(document,{childList:!0,subtree:!0});function e(r){const s={};return r.integrity&&(s.integrity=r.integrity),r.referrerPolicy&&(s.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?s.credentials="include":r.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function o(r){if(r.ep)return;r.ep=!0;const s=e(r);fetch(r.href,s)}})();class v{constructor(){this.bpm=0,this.phaseAtT0=0,this.t0=0,this.offsetMs=0,this.clockSkewMs=0,this.hasSkew=!1}update(t){const e=Date.now()-t.t0;!this.hasSkew||t.bpm!==this.bpm?(this.clockSkewMs=e,this.hasSkew=!0):this.clockSkewMs+=(e-this.clockSkewMs)*.1,this.bpm=t.bpm,this.phaseAtT0=t.phase,this.t0=t.t0,this.offsetMs=t.offsetMs}get hasBeat(){return this.bpm>0}get currentBpm(){return this.bpm}measurePhase(t=Date.now()){if(this.bpm<=0)return-1;const r=(t-this.clockSkewMs-this.t0-this.offsetMs)/6e4*(this.bpm/4),s=(this.phaseAtT0+r)%1;return s<0?s+1:s}beatPhase(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:e*4%1}beatIndex(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:Math.floor(e*4)%4}}const l=854,c=480,g=`#version 300 es
+layout(location = 0) in vec2 aPos;
+out vec2 vUv;
+void main() {
+  vUv = aPos * 0.5 + 0.5;
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}`,w=`#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform float uTime;
+uniform float uBeat;
+uniform float uMeasure;
+uniform float uLow;
+uniform float uMid;
+uniform float uHigh;
+uniform float uFlash;
+uniform vec2 uRes;
+
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  float d = length(uv);
+  float a = atan(uv.y, uv.x);
+
+  // Soleil central : rayon qui respire avec le kick et les basses.
+  float radius = 0.16 + 0.10 * uBeat + 0.06 * uLow;
+  float sun = smoothstep(radius + 0.012, radius - 0.012, d);
+
+  // Bandes horizontales du soleil (esthétique rétrofutur).
+  float bands = step(0.5, fract(uv.y * 26.0 + uTime * 0.6));
+  sun *= mix(1.0, bands, smoothstep(0.0, -0.14, uv.y));
+
+  // Anneaux concentriques qui se propagent depuis le centre sur la mesure.
+  float rings = sin(d * 34.0 - uMeasure * 6.2831853 * 4.0) * 0.5 + 0.5;
+  rings = pow(rings, 6.0) * smoothstep(0.16, 0.55, d) * (0.25 + 0.75 * uBeat);
+
+  // Grille perspective sous l'horizon, qui défile au tempo.
+  float grid = 0.0;
+  if (uv.y < -0.08) {
+    float py = 1.0 / (abs(uv.y) + 0.02);
+    float gx = abs(fract(uv.x * py * 0.35) - 0.5);
+    float gy = abs(fract(py * 0.5 - uMeasure * 4.0) - 0.5);
+    grid = (smoothstep(0.06, 0.0, gx) + smoothstep(0.08, 0.0, gy))
+         * smoothstep(-0.08, -0.5, uv.y) * (0.35 + 0.4 * uMid);
+  }
+
+  vec3 magenta = vec3(1.0, 0.15, 0.65);
+  vec3 cyan = vec3(0.15, 0.85, 1.0);
+  vec3 amber = vec3(1.0, 0.65, 0.25);
+
+  vec3 col = vec3(0.02, 0.01, 0.05);
+  col += sun * mix(amber, magenta, clamp(uv.y * 2.0 + 0.6, 0.0, 1.0));
+  col += rings * cyan * 0.6;
+  col += grid * cyan;
+  col += pow(max(0.0, 1.0 - d), 3.0) * magenta * (0.10 + 0.35 * uBeat + 0.2 * uLow);
+  col += uHigh * 0.08 * vec3(sin(a * 12.0 + uTime * 3.0) * 0.5 + 0.5);
+
+  col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));
+  outColor = vec4(col, 1.0);
+}`;function m(i,t,e){const o=i.createShader(t);if(i.shaderSource(o,e),i.compileShader(o),!i.getShaderParameter(o,i.COMPILE_STATUS))throw new Error(`Shader: ${i.getShaderInfoLog(o)}`);return o}class b{constructor(t){this.uniforms={},this.clock=new v,this.levels={low:0,mid:0,high:0},this.beatEnv=0,this.lastBeatIndex=-1,this.flashArmed=!1,this.flashLevel=0,this.startTime=performance.now(),this.lastFrame=performance.now(),this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=performance.now(),this.lastStats={fps:0,renderMs:0,droppedFrames:0},this.running=!1,t.width=l,t.height=c;const e=t.getContext("webgl2",{antialias:!1,alpha:!1});if(!e)throw new Error("WebGL2 indisponible");this.gl=e;const o=e.createProgram();if(e.attachShader(o,m(e,e.VERTEX_SHADER,g)),e.attachShader(o,m(e,e.FRAGMENT_SHADER,w)),e.linkProgram(o),!e.getProgramParameter(o,e.LINK_STATUS))throw new Error(`Program: ${e.getProgramInfoLog(o)}`);e.useProgram(o);for(const a of["uTime","uBeat","uMeasure","uLow","uMid","uHigh","uFlash","uRes"])this.uniforms[a]=e.getUniformLocation(o,a);e.uniform2f(this.uniforms.uRes,l,c);const r=e.createVertexArray();e.bindVertexArray(r);const s=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,s),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),e.viewport(0,0,l,c)}handle(t){switch(t.type){case"beat":this.clock.update(t);break;case"levels":this.smoothLevels(t);break;case"trigger":t.id==="flash"&&(this.clock.hasBeat?this.flashArmed=!0:this.flashLevel=1);break;case"scene":this.applyScene(t.state);break}}applyScene(t){}smoothLevels(t){this.levels.low+=(t.low-this.levels.low)*.5,this.levels.mid+=(t.mid-this.levels.mid)*.5,this.levels.high+=(t.high-this.levels.high)*.5}get clockRef(){return this.clock}get levelsRef(){return this.levels}get stats(){return this.lastStats}start(t){if(this.running)return;this.running=!0;const e=()=>{this.running&&(this.frame(t),requestAnimationFrame(e))};requestAnimationFrame(e)}frame(t){const e=performance.now(),o=(e-this.lastFrame)/1e3;e-this.lastFrame>50&&this.dropped++,this.lastFrame=e;const r=this.clock.beatIndex();if(r>=0&&r!==this.lastBeatIndex&&(this.lastBeatIndex=r,this.beatEnv=.5+.5*Math.min(1,this.levels.low*1.4),this.flashArmed&&(this.flashArmed=!1,this.flashLevel=1)),this.beatEnv=Math.max(0,this.beatEnv-o*5.5),this.flashLevel>0){const h=this.clock.hasBeat?60/this.clock.currentBpm:.15;this.flashLevel=Math.max(0,this.flashLevel-o/h)}const s=this.gl,a=performance.now();s.uniform1f(this.uniforms.uTime,(e-this.startTime)/1e3),s.uniform1f(this.uniforms.uBeat,this.clock.hasBeat?this.beatEnv:.08+.06*Math.sin(e/900));const f=this.clock.measurePhase();if(s.uniform1f(this.uniforms.uMeasure,f<0?(e-this.startTime)/8e3%1:f),s.uniform1f(this.uniforms.uLow,this.levels.low),s.uniform1f(this.uniforms.uMid,this.levels.mid),s.uniform1f(this.uniforms.uHigh,this.levels.high),s.uniform1f(this.uniforms.uFlash,this.flashLevel),s.drawArrays(s.TRIANGLES,0,3),this.renderMsAccum+=performance.now()-a,this.frameCount++,e-this.statsWindowStart>=1e3){const h=(e-this.statsWindowStart)/1e3;this.lastStats={fps:Math.round(this.frameCount/h*10)/10,renderMs:Math.round(this.renderMsAccum/Math.max(1,this.frameCount)*100)/100,droppedFrames:this.dropped},this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=e,t?.(this.lastStats)}}}const y=document.getElementById("vjm-canvas"),d=document.getElementById("vjm-debug"),n=new b(y);let u=!1;function p(i){window.VJM.onFeedback?.(i),window.VjmFeedback?.postMessage(JSON.stringify(i))}window.VJM={onFeedback:null,handleMessage(i){let t;try{t=typeof i=="string"?JSON.parse(i):i}catch(e){console.error("VJM: message illisible",i,e);return}if(t.type==="config"&&t.debug!==void 0&&(u=t.debug,d.style.display=u?"block":"none"),t.type==="ping"){p({type:"pong",t:t.t,tr:Date.now()});return}n.handle(t)}};n.start(i=>{if(!u)return;p({...i,type:"stats",t:Date.now()});const t=n.clockRef,e=n.levelsRef;d.textContent=`BPM    ${t.hasBeat?t.currentBpm.toFixed(1):"—"}
+mesure ${t.hasBeat?t.measurePhase().toFixed(2):"—"}  temps ${t.hasBeat?t.beatIndex()+1:"—"}
+L ${e.low.toFixed(2)}  M ${e.mid.toFixed(2)}  H ${e.high.toFixed(2)}
+${i.fps} i/s  ${i.renderMs} ms  perdu ${i.droppedFrames}`});</script>
+</head>
+<body>
+  <canvas id="vjm-canvas"></canvas>
+  <div id="vjm-debug"></div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VJing Master — moteur</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #vjm-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #vjm-debug {
+      position: absolute; top: 8px; left: 8px; z-index: 10; display: none;
+      font: 12px/1.5 monospace; color: #9f9; background: rgba(0,0,0,.55);
+      padding: 6px 10px; border-radius: 4px; white-space: pre; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="vjm-canvas"></canvas>
+  <div id="vjm-debug"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

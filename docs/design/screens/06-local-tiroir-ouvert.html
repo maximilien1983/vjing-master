@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mode local · tiroir ouvert</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0b0b0c}
+button{font-family:inherit}
+.alu{background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,rgba(255,255,255,0) 1px 3px),repeating-linear-gradient(180deg,rgba(0,0,0,.09) 0 1px,rgba(0,0,0,0) 1px 5px),repeating-linear-gradient(180deg,rgba(255,255,255,.025) 0 2px,rgba(255,255,255,0) 2px 13px),linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.045) 30%,rgba(255,255,255,0) 55%,rgba(255,255,255,.03) 80%,rgba(255,255,255,0) 100%),linear-gradient(180deg,#3a3b3f 0%,#2f3034 50%,#27282b 100%)}
+.walnut{background:repeating-linear-gradient(91deg,rgba(0,0,0,.22) 0 1px,rgba(0,0,0,0) 1px 3px,rgba(255,200,150,.05) 3px 4px,rgba(0,0,0,0) 4px 7px),repeating-linear-gradient(88.5deg,rgba(0,0,0,.18) 0 2px,rgba(0,0,0,0) 2px 11px),radial-gradient(ellipse 60% 18% at 40% 30%,rgba(130,78,40,.35),rgba(0,0,0,0) 70%),linear-gradient(90deg,#22130a 0%,#4a2b18 25%,#5b3720 50%,#432716 75%,#1f1108 100%)}
+.recess{background:linear-gradient(180deg,#141416,#1b1b1e);box-shadow:inset 0 2px 5px rgba(0,0,0,.85),inset 0 -1px 0 rgba(255,255,255,.05),0 1px 0 rgba(255,255,255,.07)}
+.knob-skirt{position:absolute;border:0;padding:0;border-radius:50%;cursor:pointer;background:repeating-conic-gradient(from 0deg,#151517 0deg 5deg,#2c2c30 5deg 10deg);box-shadow:0 7px 10px rgba(0,0,0,.65),0 3px 4px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 3px rgba(0,0,0,.6)}
+.knob-cap{position:absolute;border-radius:50%;background:conic-gradient(from 20deg,#55575b,#9a9ca0 10%,#4f5155 24%,#8e9094 38%,#4a4c50 50%,#9ea0a4 62%,#515357 76%,#8a8c90 88%,#55575b);box-shadow:inset 0 1px 1px rgba(255,255,255,.35),inset 0 -1px 2px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.6)}
+.knob-ptr{position:absolute;left:50%;top:3px;width:3px;margin-left:-1.5px;border-radius:2px;background:#f3ead3;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+.slot{position:absolute;width:6px;border-radius:3px;background:#050506;box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.08)}
+.fcap{position:absolute;border:0;padding:0;border-radius:4px;cursor:pointer;background:repeating-linear-gradient(180deg,rgba(255,255,255,.08) 0 1px,rgba(0,0,0,0) 1px 4px),linear-gradient(180deg,#3d3e42 0%,#202123 47%,#141416 53%,#26272a 100%);box-shadow:0 6px 10px rgba(0,0,0,.7),0 2px 3px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.6)}
+.fcap-line{position:absolute;left:5px;right:5px;top:50%;height:2px;margin-top:-1px;background:#f3ead3;border-radius:1px}
+.pad{display:flex;flex-direction:column;border:0;border-radius:8px;cursor:pointer;font-family:inherit;background:linear-gradient(180deg,#0f0f11,#1c1c1f);box-shadow:inset 0 2px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.08)}
+.pad-lit{box-shadow:inset 0 2px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.08),0 0 24px rgba(255,150,40,.22)}
+.key-up{display:flex;border-radius:5px;padding:4px;background:linear-gradient(180deg,#48494d,#2a2b2e);box-shadow:0 6px 0 #0e0e10,0 8px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2)}
+.key-down{display:flex;border-radius:5px;padding:4px;transform:translateY(5px);background:linear-gradient(180deg,#434448,#28292c);box-shadow:0 1px 0 #0e0e10,0 2px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12)}
+.lens-off{flex-grow:1;display:flex;align-items:center;justify-content:center;border-radius:3px;background:radial-gradient(ellipse at 50% 30%,#4a3620,#211608 78%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 2px 6px rgba(0,0,0,.6);color:#eadcc0;font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.lens-on{flex-grow:1;display:flex;align-items:center;justify-content:center;border-radius:3px;background:radial-gradient(ellipse at 50% 40%,#fff4d2 0%,#ffc35c 38%,#f08a1f 76%,#c05f10 100%);box-shadow:inset 0 0 0 1px rgba(120,50,0,.5),0 0 14px 3px rgba(255,160,50,.55),0 0 34px rgba(255,130,30,.35);color:#4a2305;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.tkey{display:flex;align-items:center;gap:12px;height:48px;border:0;border-radius:6px;padding:0 16px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#e9dfc7;background:linear-gradient(180deg,#3f4044 0%,#323337 55%,#2a2b2e 100%);box-shadow:0 3px 0 #121214,0 5px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16)}
+.tkey-on{transform:translateY(2px);box-shadow:0 1px 0 #121214,0 2px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 18px rgba(255,160,60,.08)}
+.voy-off{width:14px;height:8px;border-radius:2px;background:#33240f;box-shadow:inset 0 1px 2px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.06)}
+.voy-on{width:14px;height:8px;border-radius:2px;background:radial-gradient(ellipse at 50% 40%,#fff1c9,#ffb547 55%,#e07a1a);box-shadow:0 0 6px 2px rgba(255,170,60,.6),0 0 14px rgba(255,140,30,.35)}
+.led-on{border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff1c9,#ffb547 42%,#d9741a 85%);box-shadow:0 0 6px 2px rgba(255,170,60,.6),0 0 14px rgba(255,140,30,.35)}
+.led-off{border-radius:50%;background:radial-gradient(circle at 35% 35%,#5a3d1d,#24170a 75%);box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+.readout{width:88px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:#0c0a08;box-shadow:inset 0 1px 3px #000,0 1px 0 rgba(255,255,255,.07);color:#ffc166;font-size:11px;font-weight:600;letter-spacing:.18em;text-shadow:0 0 6px rgba(255,150,40,.7)}
+.nixie{position:relative;display:flex;align-items:center;justify-content:center;border-radius:12px 12px 4px 4px;background:repeating-linear-gradient(60deg,rgba(255,255,255,.035) 0 1px,rgba(0,0,0,0) 1px 4px),repeating-linear-gradient(-60deg,rgba(255,255,255,.035) 0 1px,rgba(0,0,0,0) 1px 4px),radial-gradient(ellipse at 50% 40%,rgba(255,130,50,.2),rgba(0,0,0,0) 65%),linear-gradient(180deg,#1b1511,#0a0706);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 3px 4px 6px rgba(255,255,255,.05),0 2px 4px rgba(0,0,0,.7)}
+.nx-ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,170,100,.07);font-weight:300;line-height:1}
+.nx-digit{position:relative;color:#ffb566;font-weight:300;line-height:1;text-shadow:0 0 2px #ffd9a0,0 0 6px #ff7b1c,0 0 14px rgba(255,90,0,.75)}
+.beat{animation:beat .484s ease-out infinite}
+@keyframes beat{0%{opacity:1}22%{opacity:1}45%{opacity:.12}100%{opacity:.12}}
+</style>
+</head>
+<body>
+<div style="width: 844px; height: 390px; position: relative; overflow: hidden; background: #07060f; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; color: #e9dfc7">
+
+<svg width="844" height="390" viewBox="0 0 844 390" preserveAspectRatio="xMidYMid slice" style="position: absolute; left: 0; top: 0; display: block" aria-label="Vidéo générée en plein écran">
+<defs>
+<radialGradient id="lvBg" cx="62%" cy="62%" r="75%"><stop offset="0" stop-color="#7a2470"></stop><stop offset=".38" stop-color="#321150"></stop><stop offset="1" stop-color="#08061a"></stop></radialGradient>
+<linearGradient id="lvSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe49a"></stop><stop offset=".5" stop-color="#ff963f"></stop><stop offset="1" stop-color="#ec3f7c"></stop></linearGradient>
+<radialGradient id="lvGlow"><stop offset="0" stop-color="#ff8a4a" stop-opacity=".55"></stop><stop offset="1" stop-color="#ff8a4a" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="lvPlanet" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#9ff5dc"></stop><stop offset=".45" stop-color="#2fb4b0"></stop><stop offset="1" stop-color="#0d2f52"></stop></radialGradient>
+<linearGradient id="lvWave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b1a8a"></stop><stop offset=".5" stop-color="#b3338f"></stop><stop offset="1" stop-color="#2a1666"></stop></linearGradient>
+<mask id="lvBands"><rect width="844" height="390" fill="#fff"></rect><rect x="380" y="214" width="280" height="5" fill="#000"></rect><rect x="380" y="232" width="280" height="8" fill="#000"></rect><rect x="380" y="252" width="280" height="11" fill="#000"></rect><rect x="380" y="276" width="280" height="14" fill="#000"></rect><rect x="380" y="303" width="280" height="30" fill="#000"></rect></mask>
+</defs>
+<rect width="844" height="390" fill="url(#lvBg)"></rect>
+<g fill="#ffffff" opacity=".8"><circle cx="60" cy="40" r="2"></circle><circle cx="120" cy="72" r="1.4"></circle><circle cx="262" cy="30" r="1.8"></circle><circle cx="332" cy="92" r="1.3"></circle><circle cx="402" cy="42" r="2.2"></circle><circle cx="642" cy="50" r="1.5"></circle><circle cx="702" cy="112" r="2"></circle><circle cx="782" cy="40" r="1.3"></circle><circle cx="762" cy="172" r="1.6"></circle><circle cx="90" cy="202" r="1.5"></circle><circle cx="300" cy="212" r="1.3"></circle><circle cx="40" cy="262" r="1.8"></circle><circle cx="820" cy="232" r="1.3"></circle></g>
+<circle cx="520" cy="205" r="210" fill="url(#lvGlow)"></circle>
+<circle cx="520" cy="205" r="118" fill="url(#lvSun)" mask="url(#lvBands)"></circle>
+<ellipse cx="520" cy="215" rx="250" ry="40" fill="none" stroke="#8fe6ff" stroke-width="3" opacity=".6" transform="rotate(-9 520 215)"></ellipse>
+<ellipse cx="520" cy="215" rx="290" ry="52" fill="none" stroke="#8fe6ff" stroke-width="1.5" opacity=".28" transform="rotate(-9 520 215)"></ellipse>
+<circle cx="190" cy="120" r="46" fill="url(#lvPlanet)"></circle>
+<path d="M0 318 C 140 268 290 352 440 306 S 700 262 844 312 L844 390 L0 390 Z" fill="url(#lvWave)" opacity=".85"></path>
+<path d="M0 346 C 180 312 320 378 500 340 S 740 318 844 350 L844 390 L0 390 Z" fill="#12082a" opacity=".9"></path>
+</svg>
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.12) 0 1px, rgba(0,0,0,0) 1px 3px), radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,.45) 100%)"></div>
+
+<div style="position: absolute; right: 48px; top: 14px; height: 60px; box-sizing: border-box; padding: 6px 6px 6px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; background: rgba(18,18,20,.62); backdrop-filter: blur(10px); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.45)">
+<div style="position: relative; width: 9px; height: 9px">
+<div class="led-off" style="position: absolute; inset: 0"></div>
+<div class="led-on beat" style="position: absolute; inset: 0"></div>
+</div>
+<div style="display: flex; gap: 3px">
+<div class="nixie" style="width: 22px; height: 32px; font-size: 26px"><span class="nx-ghost">8</span><span class="nx-digit">1</span></div>
+<div class="nixie" style="width: 22px; height: 32px; font-size: 26px"><span class="nx-ghost">8</span><span class="nx-digit">2</span></div>
+<div class="nixie" style="width: 22px; height: 32px; font-size: 26px"><span class="nx-ghost">8</span><span class="nx-digit">4</span></div>
+</div>
+<div style="font-size: 10px; font-weight: 600; letter-spacing: .2em; color: #b8ad95">BPM</div>
+<button aria-label="Sources vidéo : 3 chargées" style="width: 48px; height: 48px; border: 0; padding: 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg,#3f4044,#2a2b2e); box-shadow: 0 2px 0 #121214, 0 4px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.16)">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e9dfc7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"></rect><circle cx="8.5" cy="11" r="2"></circle><circle cx="15.5" cy="11" r="2"></circle><path d="M10.5 11h3"></path><path d="M6 19l1.5-3.5h9L18 19"></path></svg>
+</button>
+<button aria-label="Diffuser vers la TV" style="width: 48px; height: 48px; border: 0; padding: 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg,#3f4044,#2a2b2e); box-shadow: 0 2px 0 #121214, 0 4px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.16)">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e9dfc7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M12 14l5 6H7z" fill="#e9dfc7"></path></svg>
+</button>
+</div>
+
+<div style="position: absolute; left: 0; bottom: 0; width: 844px; height: 200px; display: flex; border-radius: 16px 16px 0 0; overflow: hidden; box-shadow: 0 -14px 34px rgba(0,0,0,.6), 0 -2px 6px rgba(0,0,0,.5)">
+<div class="walnut" style="width: 36px; height: 200px; flex-shrink: 0; box-shadow: inset -1px 0 0 rgba(255,220,180,.10), inset -8px 0 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,180,.18)"></div>
+<div class="alu" style="flex-grow: 1; height: 200px; box-sizing: border-box; padding: 30px 14px 22px 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: inset 4px 0 6px rgba(0,0,0,.55), inset -4px 0 6px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.2)">
+
+<div style="display: flex; gap: 12px">
+<div style="width: 100px; display: flex; flex-direction: column; gap: 4px; align-items: center">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; line-height: 12px; color: #e9dfc7">STYLE</div>
+<div style="width: 88px; height: 80px; position: relative">
+<svg width="88" height="80" viewBox="0 0 88 80" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g stroke="#e9dfc7" stroke-width="1.5" stroke-linecap="round" opacity=".8">
+<line x1="30.5" y1="63.4" x2="28.5" y2="66.8"></line><line x1="17" y1="40" x2="13" y2="40"></line><line x1="30.5" y1="16.6" x2="28.5" y2="13.2"></line><line x1="57.5" y1="16.6" x2="59.5" y2="13.2"></line><line x1="71" y1="40" x2="75" y2="40"></line><line x1="57.5" y1="63.4" x2="59.5" y2="66.8"></line>
+</g>
+<g fill="#33230f" stroke="rgba(0,0,0,.6)" stroke-width=".6">
+<circle cx="27" cy="69.4" r="2"></circle><circle cx="27" cy="10.6" r="2"></circle><circle cx="61" cy="10.6" r="2"></circle><circle cx="78" cy="40" r="2"></circle><circle cx="61" cy="69.4" r="2"></circle>
+</g>
+<circle cx="10" cy="40" r="5.5" fill="#ffa640" opacity=".3"></circle>
+<circle cx="10" cy="40" r="2.4" fill="#ffd27e"></circle>
+</svg>
+<button class="knob-skirt" aria-label="Style : 70's" style="left: 20px; top: 16px; width: 48px; height: 48px">
+<span class="knob-cap" style="left: 8px; top: 8px; width: 32px; height: 32px"></span>
+<span style="position: absolute; inset: 0; transform: rotate(-90deg)"><span class="knob-ptr" style="height: 18px"></span></span>
+</button>
+</div>
+<div class="readout">70'S</div>
+</div>
+<div style="width: 100px; display: flex; flex-direction: column; gap: 4px; align-items: center">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .26em; line-height: 12px; color: #e9dfc7">UNIVERS</div>
+<div style="width: 88px; height: 80px; position: relative">
+<svg width="88" height="80" viewBox="0 0 88 80" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g stroke="#e9dfc7" stroke-width="1.5" stroke-linecap="round" opacity=".8">
+<line x1="30.5" y1="63.4" x2="28.5" y2="66.8"></line><line x1="17" y1="40" x2="13" y2="40"></line><line x1="30.5" y1="16.6" x2="28.5" y2="13.2"></line><line x1="57.5" y1="16.6" x2="59.5" y2="13.2"></line><line x1="71" y1="40" x2="75" y2="40"></line><line x1="57.5" y1="63.4" x2="59.5" y2="66.8"></line>
+</g>
+<g fill="#33230f" stroke="rgba(0,0,0,.6)" stroke-width=".6">
+<circle cx="27" cy="69.4" r="2"></circle><circle cx="10" cy="40" r="2"></circle><circle cx="61" cy="10.6" r="2"></circle><circle cx="78" cy="40" r="2"></circle><circle cx="61" cy="69.4" r="2"></circle>
+</g>
+<circle cx="27" cy="10.6" r="5.5" fill="#ffa640" opacity=".3"></circle>
+<circle cx="27" cy="10.6" r="2.4" fill="#ffd27e"></circle>
+</svg>
+<button class="knob-skirt" aria-label="Univers : Cosmos" style="left: 20px; top: 16px; width: 48px; height: 48px">
+<span class="knob-cap" style="left: 8px; top: 8px; width: 32px; height: 32px"></span>
+<span style="position: absolute; inset: 0; transform: rotate(-30deg)"><span class="knob-ptr" style="height: 18px"></span></span>
+</button>
+</div>
+<div class="readout">COSMOS</div>
+</div>
+</div>
+
+<div style="width: 2px; height: 120px; box-shadow: inset 1px 0 0 rgba(0,0,0,.5), inset -1px 0 0 rgba(255,255,255,.07)"></div>
+
+<div style="display: flex; gap: 16px">
+<div style="width: 52px; display: flex; flex-direction: column; gap: 4px; align-items: center">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .2em; line-height: 14px; color: #e9dfc7">LUMIÈRE</div>
+<div style="width: 52px; height: 128px; position: relative">
+<svg width="52" height="128" viewBox="0 0 52 128" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9" font-weight="600" letter-spacing=".6" fill="#b8ad95" text-anchor="middle">
+<text x="26" y="8">LUMINEUX</text>
+<text x="26" y="126">DARK</text>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".7">
+<line x1="8" y1="16" x2="18" y2="16"></line><line x1="34" y1="16" x2="44" y2="16"></line>
+<line x1="12" y1="39.5" x2="18" y2="39.5"></line><line x1="34" y1="39.5" x2="40" y2="39.5"></line>
+<line x1="8" y1="63" x2="18" y2="63"></line><line x1="34" y1="63" x2="44" y2="63"></line>
+<line x1="12" y1="86.5" x2="18" y2="86.5"></line><line x1="34" y1="86.5" x2="40" y2="86.5"></line>
+<line x1="8" y1="110" x2="18" y2="110"></line><line x1="34" y1="110" x2="44" y2="110"></line>
+</g>
+</svg>
+<div class="slot" style="left: 23px; top: 12px; height: 102px"></div>
+<button class="fcap" aria-label="Lumière : 40 %" style="left: 4px; top: 61px; width: 44px; height: 24px"><span class="fcap-line"></span></button>
+</div>
+</div>
+<div style="width: 60px; display: flex; flex-direction: column; gap: 4px; align-items: center">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .2em; line-height: 14px; color: #e9dfc7">ÉNERGIE</div>
+<div style="width: 60px; height: 128px; position: relative">
+<svg width="60" height="128" viewBox="0 0 60 128" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="9.5" font-weight="600" fill="#b8ad95" text-anchor="end">
+<text x="20" y="15.3">100</text><text x="20" y="67.3">50</text><text x="20" y="119.3">0</text>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".7">
+<line x1="23" y1="12" x2="31" y2="12"></line><line x1="43" y1="12" x2="51" y2="12"></line>
+<line x1="23" y1="64" x2="31" y2="64"></line><line x1="43" y1="64" x2="51" y2="64"></line>
+<line x1="23" y1="116" x2="31" y2="116"></line><line x1="43" y1="116" x2="51" y2="116"></line>
+</g>
+<g stroke="#e9dfc7" stroke-width="1" opacity=".45">
+<line x1="27" y1="22.4" x2="31" y2="22.4"></line><line x1="43" y1="22.4" x2="47" y2="22.4"></line>
+<line x1="27" y1="32.8" x2="31" y2="32.8"></line><line x1="43" y1="32.8" x2="47" y2="32.8"></line>
+<line x1="27" y1="43.2" x2="31" y2="43.2"></line><line x1="43" y1="43.2" x2="47" y2="43.2"></line>
+<line x1="27" y1="53.6" x2="31" y2="53.6"></line><line x1="43" y1="53.6" x2="47" y2="53.6"></line>
+<line x1="27" y1="74.4" x2="31" y2="74.4"></line><line x1="43" y1="74.4" x2="47" y2="74.4"></line>
+<line x1="27" y1="84.8" x2="31" y2="84.8"></line><line x1="43" y1="84.8" x2="47" y2="84.8"></line>
+<line x1="27" y1="95.2" x2="31" y2="95.2"></line><line x1="43" y1="95.2" x2="47" y2="95.2"></line>
+<line x1="27" y1="105.6" x2="31" y2="105.6"></line><line x1="43" y1="105.6" x2="47" y2="105.6"></line>
+</g>
+</svg>
+<div class="slot" style="left: 34px; top: 6px; height: 116px"></div>
+<button class="fcap" aria-label="Énergie : 72" style="left: 14px; top: 29px; width: 46px; height: 24px"><span class="fcap-line"></span></button>
+</div>
+</div>
+</div>
+
+<div style="width: 2px; height: 120px; box-shadow: inset 1px 0 0 rgba(0,0,0,.5), inset -1px 0 0 rgba(255,255,255,.07)"></div>
+
+<div style="width: 272px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 10px">
+<button class="pad pad-lit" aria-label="Flash" aria-pressed="true" style="width: 84px; height: 64px; padding: 5px"><span class="key-down" style="height: 48px"><span class="lens-on">Flash</span></span></button>
+<button class="pad" aria-label="Drop" style="width: 84px; height: 64px; padding: 5px"><span class="key-up" style="height: 48px"><span class="lens-off">Drop</span></span></button>
+<button class="pad" aria-label="Scène" style="width: 84px; height: 64px; padding: 5px"><span class="key-up" style="height: 48px"><span class="lens-off">Scène</span></span></button>
+</div>
+<div style="display: flex; gap: 10px">
+<button class="tkey" aria-label="Suivant" style="width: 131px"><span class="voy-off"></span><span>Suivant</span></button>
+<button class="tkey tkey-on" aria-label="Garder" aria-pressed="true" style="width: 131px"><span class="voy-on"></span><span>Garder</span></button>
+</div>
+</div>
+
+</div>
+<div class="walnut" style="width: 36px; height: 200px; flex-shrink: 0; box-shadow: inset 1px 0 0 rgba(255,220,180,.10), inset 8px 0 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,180,.18)"></div>
+</div>
+
+<button aria-label="Fermer la console" style="position: absolute; left: 334px; top: 166px; width: 176px; height: 48px; border: 0; padding: 6px 0 0 0; background: transparent; cursor: pointer; display: flex; flex-direction: column; font-family: inherit">
+<span style="width: 176px; height: 30px; border-radius: 10px; overflow: hidden; display: flex; box-shadow: 0 -4px 12px rgba(0,0,0,.45), 0 2px 3px rgba(0,0,0,.6)">
+<span class="walnut" style="width: 14px; height: 30px; flex-shrink: 0"></span>
+<span class="alu" style="flex-grow: 1; height: 30px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: inset 2px 0 3px rgba(0,0,0,.5), inset -2px 0 3px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.2)">
+<svg width="16" height="8" viewBox="0 0 16 8" fill="none" stroke="#e9dfc7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l6 5 6-5"></path></svg>
+<span style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #e9dfc7; line-height: 1">CONSOLE</span>
+</span>
+<span class="walnut" style="width: 14px; height: 30px; flex-shrink: 0"></span>
+</span>
+</button>
+
+</div>
+</body>
+</html>
