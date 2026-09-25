@@ -50,6 +50,35 @@ void main() {
         reason: 'BPM détecté : ${last.bpm} (confiance ${last.confidence})');
   });
 
+  test('le BPM reste stable sur un tempo constant (pas d\'oscillation)', () async {
+    final analyzer = AudioAnalyzer();
+    final estimates = <BeatEstimate>[];
+    final sub = analyzer.beats.listen(estimates.add);
+
+    final pcm = synthKicks(bpm: 124, seconds: 30);
+    const block = 4096;
+    for (var i = 0; i < pcm.length; i += block) {
+      analyzer.addPcm16(Uint8List.sublistView(
+          pcm, i, math.min(i + block, pcm.length)));
+    }
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+    analyzer.dispose();
+
+    // Une fois verrouillé (après ~12 s), l'estimation ne doit plus osciller :
+    // écart max-min sous 1,5 BPM sur toute la suite de la session.
+    final startMs = estimates.first.t0;
+    final locked = estimates
+        .where((e) => e.bpm > 0 && e.t0 - startMs > 12000)
+        .map((e) => e.bpm)
+        .toList();
+    expect(locked, isNotEmpty);
+    final spread =
+        locked.reduce(math.max) - locked.reduce(math.min);
+    expect(spread, lessThan(1.5),
+        reason: 'BPM oscillant : ${locked.map((b) => b.toStringAsFixed(1))}');
+  });
+
   test('la phase colle aux kicks (pulsation calée sur le temps)', () async {
     final analyzer = AudioAnalyzer();
     final estimates = <BeatEstimate>[];

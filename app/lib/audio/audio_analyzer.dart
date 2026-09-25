@@ -37,8 +37,9 @@ class AudioAnalyzer {
   static const int fftSize = 2048;
   static const int hopSize = 1024; // ~43 analyses/s à 44,1 kHz
 
-  // Fenêtre d'autocorrélation : ~8 s d'enveloppe d'attaques.
-  static const int onsetWindow = 344;
+  // Fenêtre d'analyse du tempo : ~16 s d'enveloppe d'attaques. Longue =
+  // estimation fine et stable ; le verrou démarre dès ~7 s de signal.
+  static const int onsetWindow = 688;
   static const double minBpm = 60, maxBpm = 180;
 
   AudioAnalyzer({this.sampleRate = 44100});
@@ -167,9 +168,9 @@ class AudioAnalyzer {
       _lastLevelsSentMs = nowMs;
       _levelsCtrl.add(currentLevels);
     }
-    // BPM recalculé 2 fois par seconde.
+    // BPM recalculé 2 fois par seconde, dès ~7 s de signal.
     if (_totalHops - _lastBpmComputeHop >= hopsPerSecond ~/ 2 &&
-        _totalHops >= onsetWindow) {
+        _totalHops >= 300) {
       _lastBpmComputeHop = _totalHops;
       _updateTempo(nowMs);
     }
@@ -185,22 +186,37 @@ class AudioAnalyzer {
     return sum / math.max(1, end - from);
   }
 
-  /// Enveloppe d'attaques dans l'ordre chronologique.
-  Float64List _chronoOnsets() {
-    final out = Float64List(onsetWindow);
-    for (var i = 0; i < onsetWindow; i++) {
-      out[i] = _onsets[(_onsetWrite + i) % onsetWindow];
+  /// Les `length` dernières attaques dans l'ordre chronologique, moyenne
+  /// retirée (nécessaire pour un tempogramme propre).
+  Float64List _chronoOnsets(int length) {
+    final out = Float64List(length);
+    for (var i = 0; i < length; i++) {
+      out[i] = _onsets[(_onsetWrite - length + i + onsetWindow * 2) % onsetWindow];
     }
-    // Retire la moyenne pour une autocorrélation propre.
-    final mean = out.reduce((a, b) => a + b) / onsetWindow;
-    for (var i = 0; i < onsetWindow; i++) {
+    final mean = out.reduce((a, b) => a + b) / length;
+    for (var i = 0; i < length; i++) {
       out[i] -= mean;
     }
     return out;
   }
 
+  /// Puissance de l'enveloppe à la période donnée (algorithme de Goertzel :
+  /// une raie de Fourier, sans FFT).
+  static double _goertzel(Float64List env, double periodHops) {
+    final w = 2 * math.pi / periodHops;
+    final coeff = 2 * math.cos(w);
+    var s1 = 0.0, s2 = 0.0;
+    for (var i = 0; i < env.length; i++) {
+      final s = env[i] + coeff * s1 - s2;
+      s2 = s1;
+      s1 = s;
+    }
+    return s1 * s1 + s2 * s2 - coeff * s1 * s2;
+  }
+
   void _updateTempo(int nowMs) {
-    final env = _chronoOnsets();
+    final length = math.min(_totalHops, onsetWindow);
+    final env = _chronoOnsets(length);
     var energy = 0.0;
     for (final v in env) {
       energy += v * v;
@@ -209,34 +225,40 @@ class AudioAnalyzer {
       _setNoBeat();
       return;
     }
+    // Fenêtre de Hann : réduit les fuites spectrales du tempogramme.
+    for (var i = 0; i < length; i++) {
+      env[i] *= 0.5 - 0.5 * math.cos(2 * math.pi * i / (length - 1));
+    }
 
-    final minLag = (hopsPerSecond * 60 / maxBpm).floor(); // ~14
-    final maxLag = (hopsPerSecond * 60 / minBpm).ceil(); // ~43
-    var bestLag = 0;
+    // Tempogramme de Fourier sur une grille fine (0,5 BPM) : résolution très
+    // supérieure à l'autocorrélation à retards entiers (~6 BPM par pas), donc
+    // plus d'oscillation de l'estimation sur un tempo stable.
+    // Score harmonique : appui du double tempo contre les erreurs d'octave,
+    // et léger a priori vers les tempos club (~125 BPM).
+    const step = 0.5;
+    final count = ((maxBpm - minBpm) / step).round() + 1;
+    final scores = Float64List(count);
+    var bestIdx = 0;
     var bestVal = 0.0;
     var sumVal = 0.0;
-    var count = 0;
-    final vals = Float64List(maxLag + 2);
-    for (var lag = minLag; lag <= maxLag; lag++) {
-      var acc = 0.0;
-      for (var i = lag; i < onsetWindow; i++) {
-        acc += env[i] * env[i - lag];
-      }
-      acc /= (onsetWindow - lag);
-      vals[lag] = acc;
-      sumVal += acc;
-      count++;
-      if (acc > bestVal) {
-        bestVal = acc;
-        bestLag = lag;
+    for (var i = 0; i < count; i++) {
+      final bpm = minBpm + i * step;
+      final period = 60.0 * hopsPerSecond / bpm;
+      final prior = math.exp(-math.pow((bpm - 125) / 60, 2).toDouble());
+      final s = (_goertzel(env, period) + 0.5 * _goertzel(env, period / 2)) * prior;
+      scores[i] = s;
+      sumVal += s;
+      if (s > bestVal) {
+        bestVal = s;
+        bestIdx = i;
       }
     }
     final meanVal = sumVal / count;
-    if (bestLag == 0 || bestVal <= 0 || meanVal <= 0) {
+    if (bestVal <= 0 || meanVal <= 0) {
       _setNoBeat();
       return;
     }
-    final confidence = ((bestVal / (meanVal.abs() + 1e-12)) / 4).clamp(0.0, 1.0);
+    final confidence = ((bestVal / meanVal - 1) / 6).clamp(0.0, 1.0);
     if (confidence < 0.25) {
       // Verrou persistant : sur un passage chargé la confiance plonge, mais
       // le tempo n'a probablement pas changé. On extrapole ~5 s avant de
@@ -250,14 +272,13 @@ class AudioAnalyzer {
     }
     _lowConfCount = 0;
 
-    // Interpolation parabolique autour du pic pour affiner le lag.
-    var lag = bestLag.toDouble();
-    if (bestLag > minLag && bestLag < maxLag) {
-      final a = vals[bestLag - 1], b = vals[bestLag], c = vals[bestLag + 1];
+    // Interpolation parabolique autour du pic pour affiner sous le pas de 0,5.
+    var bpm = minBpm + bestIdx * step;
+    if (bestIdx > 0 && bestIdx < count - 1) {
+      final a = scores[bestIdx - 1], b = scores[bestIdx], c = scores[bestIdx + 1];
       final denom = a - 2 * b + c;
-      if (denom.abs() > 1e-12) lag += 0.5 * (a - c) / denom;
+      if (denom.abs() > 1e-12) bpm += step * 0.5 * (a - c) / denom;
     }
-    var bpm = 60.0 * hopsPerSecond / lag;
     // Préférer la plage 85-170 : corrige les erreurs d'octave.
     while (bpm < 85 && bpm * 2 <= maxBpm) {
       bpm *= 2;
@@ -358,18 +379,20 @@ class AudioAnalyzer {
   /// du BPM en grand décalage de phase (c'était le bug de dérive).
   void _updatePhaseAnchor(int nowMs) {
     final periodHops = 60.0 * hopsPerSecond / _bpm;
-    final env = _chronoOnsets();
+    // L'ancrage regarde les ~8 dernières secondes (le récent fait foi).
+    final length = math.min(_totalHops, 344);
+    final env = _chronoOnsets(length);
     final steps = periodHops.floor();
     var bestOffset = 0;
     var bestScore = -double.infinity;
     for (var offset = 0; offset < steps; offset++) {
       var score = 0.0;
       for (var k = 0; ; k++) {
-        final idx = onsetWindow - 1 - offset - (k * periodHops).round();
+        final idx = length - 1 - offset - (k * periodHops).round();
         if (idx < 1) break;
         // Fenêtre ±1 hop : les attaques font 1 à 2 hops de large.
         score += env[idx] + 0.5 * env[idx - 1] +
-            (idx + 1 < onsetWindow ? 0.5 * env[idx + 1] : 0);
+            (idx + 1 < length ? 0.5 * env[idx + 1] : 0);
       }
       if (score > bestScore) {
         bestScore = score;
