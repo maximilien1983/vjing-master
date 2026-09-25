@@ -11,7 +11,7 @@ Le receiver n'est pas publié pendant le développement : il faut l'enregistrer 
 
 1. « Add New Application » → **Custom Receiver**.
 2. Nom : `VJing Master` (libre).
-3. **Receiver Application URL** : l'URL HTTPS du receiver sur GitHub Pages, par ex. `https://<votre-compte>.github.io/vjing-master/receiver/`.
+3. **Receiver Application URL** : `https://maximilien1983.github.io/vjing-master/receiver/` (déployé automatiquement par le workflow Pages).
 4. Laisser « Guest Mode » désactivé.
 5. Enregistrer → la console fournit un **Application ID** (8 caractères hexadécimaux). Le noter : il se met dans `app/lib/config.dart` (`castAppId`).
 
