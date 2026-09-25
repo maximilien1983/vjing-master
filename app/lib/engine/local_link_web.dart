@@ -13,8 +13,12 @@ LocalEngineLink createPlatformLocalLink() => IframeLink();
 /// Pages tourne dans une iframe, messages échangés par postMessage.
 class IframeLink extends LocalEngineLink {
   static const _viewType = 'vjm-renderer-iframe';
-  static const _rendererUrl =
-      'https://maximilien1983.github.io/vjing-master/renderer/';
+
+  /// Par défaut le moteur publié sur Pages ; pour itérer sur le moteur en
+  /// local : `npm run dev` dans /renderer puis
+  /// `flutter run -d chrome --dart-define=RENDERER_URL=http://localhost:5173/`.
+  static const _rendererUrl = String.fromEnvironment('RENDERER_URL',
+      defaultValue: 'https://maximilien1983.github.io/vjing-master/renderer/');
 
   final web.HTMLIFrameElement _iframe = web.HTMLIFrameElement();
   bool _ready = false;
