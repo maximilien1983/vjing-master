@@ -43,7 +43,19 @@
     "danse": {
       "label": "Danse",
       "backgrounds": ["danse-spots", "danse-disco", "danse-foule"],
-      "pixabay": ["people dancing", "dancer silhouette", "disco party dance", "ballet dancer", "hip hop dance"],
+      "pixabay": [
+        "people dancing",
+        "dancer silhouette",
+        "disco party dance",
+        "ballet dancer",
+        "hip hop dance",
+        "dancehall dance",
+        "afro dance",
+        "reggae party",
+        "party crowd dancing",
+        "festival crowd night",
+        "concert crowd"
+      ],
       "note": "Remplace Campagne (2026-09-26) : boucles de danse dans des styles très variés. Les fonds shaders Campagne restent dans le moteur si on veut revenir en arrière."
     },
     "ville": {
