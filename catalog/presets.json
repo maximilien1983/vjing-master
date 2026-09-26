@@ -12,19 +12,19 @@
       "label": "70's",
       "filters": ["warmth"],
       "transition": { "kind": "crossfade", "beats": 8 },
-      "motifs": ["lightleak", "bokeh", "speaker"]
+      "motifs": ["lightleak", "bokeh", "ticks"]
     },
     "punk": {
       "label": "Punk",
       "filters": ["photocopy", "glitch"],
       "transition": { "kind": "cut", "beats": 1 },
-      "motifs": ["oscillo", "trame", "speaker"]
+      "motifs": ["oscillo", "trame", "hud"]
     },
     "retrofutur": {
       "label": "Retrofutur",
       "filters": ["bloom", "chroma"],
       "transition": { "kind": "crossfade", "beats": 2 },
-      "motifs": ["grid", "loop", "flare"]
+      "motifs": ["flare", "hud", "ticks"]
     },
     "vhs": {
       "label": "VHS",

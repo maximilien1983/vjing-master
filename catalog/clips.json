@@ -541,6 +541,57 @@
       "credit": "3L"
     },
     {
+      "id": "px-boombox",
+      "url": "loops/px-boombox.mp4",
+      "duree": 11,
+      "styles": [
+        "punk",
+        "retrofutur",
+        "vhs"
+      ],
+      "source": "Pixabay (vidéo 21707)",
+      "licence": "Pixabay Content License",
+      "credit": "yash2893 — ghetto blaster"
+    },
+    {
+      "id": "px-radio",
+      "url": "loops/px-radio.mp4",
+      "duree": 10,
+      "styles": [
+        "vintage",
+        "70s"
+      ],
+      "source": "Pixabay (vidéo 171435)",
+      "licence": "Pixabay Content License",
+      "credit": "Sertmidia — radio vintage"
+    },
+    {
+      "id": "px-turntable",
+      "url": "loops/px-turntable.mp4",
+      "duree": 14,
+      "styles": [
+        "70s",
+        "vhs",
+        "punk"
+      ],
+      "source": "Pixabay (vidéo 38387)",
+      "licence": "Pixabay Content License",
+      "credit": "Matthias_Groeneveld — platine vinyle"
+    },
+    {
+      "id": "px-woofer",
+      "url": "loops/px-woofer.mp4",
+      "duree": 14,
+      "styles": [
+        "70s",
+        "punk",
+        "vintage"
+      ],
+      "source": "Pixabay (vidéo 11723)",
+      "licence": "Pixabay Content License",
+      "credit": "Iconikmg — membrane de haut-parleur"
+    },
+    {
       "id": "vjzoo-criscros",
       "url": "loops/vjzoo-criscros.mp4",
       "duree": 6,

@@ -135,8 +135,11 @@ export class Engine {
 
   private currentBg: BgRef = { kind: 'shader', id: 'cosmos-sun' };
   private nextBg: BgRef | null = null;
+  /// Dernier fond shader affiché : filet de sécurité si un clip meurt
+  /// (jamais d'écran noir).
+  private lastShaderBg = 'cosmos-sun';
   /// Fond vidéo demandé mais pas encore décodable : la transition attend.
-  private pendingBg: { ref: BgRef; cut: boolean; beats: number } | null = null;
+  private pendingBg: { ref: BgRef; cut: boolean; beats: number; since: number } | null = null;
   private fadeStart = 0;
   private fadeDurMs = 0;
   private overlays: OverlayInstance[] = [];
@@ -350,7 +353,7 @@ export class Engine {
       if (ref.kind === 'video') {
         // Préchauffe le clip ; la transition démarre quand il est décodable.
         this.ensureVideo(ref);
-        this.pendingBg = { ref, cut, beats };
+        this.pendingBg = { ref, cut, beats, since: performance.now() };
       } else {
         this.pendingBg = null;
         this.startTransition(ref, cut, beats);
@@ -520,13 +523,19 @@ export class Engine {
       return !gone;
     });
 
-    // Fond vidéo en attente : la transition démarre dès qu'il est décodable.
+    // Fond vidéo en attente : la transition démarre dès qu'il est décodable ;
+    // au-delà de 8 s (réseau au point mort), on abandonne et on signale.
     if (this.pendingBg) {
       const entry = this.videos.get(this.pendingBg.ref.id);
       if (entry && entry.el.readyState >= 2) {
         const { ref, cut, beats } = this.pendingBg;
         this.pendingBg = null;
         this.startTransition(ref, cut, beats);
+      } else if (now - this.pendingBg.since > 8000) {
+        const id = this.pendingBg.ref.id;
+        this.pendingBg = null;
+        this.dropVideo(id);
+        this.onBgError?.(id, 'délai de chargement dépassé');
       }
     }
 
@@ -545,10 +554,20 @@ export class Engine {
     const gl = this.gl;
     const t0 = performance.now();
 
-    // 1. Scène dans le framebuffer.
+    // 1. Scène dans le framebuffer. Si le fond courant est un clip qui n'a
+    // pas (encore ou plus) de frame, on peint d'abord le dernier shader
+    // connu : jamais d'écran noir.
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFbo);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    if (this.currentBg.kind === 'shader') {
+      this.lastShaderBg = this.currentBg.id;
+    } else {
+      const entry = this.videos.get(this.currentBg.id);
+      if (!entry?.hasFrame) {
+        this.drawBackground({ kind: 'shader', id: this.lastShaderBg }, now, 1);
+      }
+    }
     this.drawBackground(this.currentBg, now, 1);
     if (this.nextBg) this.drawBackground(this.nextBg, now, fade);
 

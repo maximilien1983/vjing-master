@@ -1031,6 +1031,87 @@ void main() {
   outColor = vec4(col * uOpacity, 1.0);
 }`;
 
+// Micrographics : crochets d'angle + réticule fin, respiration sur le beat.
+const OV_HUD = `
+float seg2(vec2 p, vec2 a, vec2 b, float w) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return smoothstep(w, w * 0.35, length(pa - ba * h));
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  float w = 0.012;
+  float breathe = 0.78 + uBeat * uPulse * 0.03;
+  // Quatre crochets d'angle.
+  for (int sx = 0; sx < 2; sx++) {
+    for (int sy = 0; sy < 2; sy++) {
+      vec2 s = vec2(sx == 0 ? -1.0 : 1.0, sy == 0 ? -1.0 : 1.0);
+      vec2 c = s * breathe;
+      float m = seg2(uv, c, c - vec2(s.x * 0.22, 0.0), w)
+              + seg2(uv, c, c - vec2(0.0, s.y * 0.22), w);
+      col += vec3(0.92, 0.9, 0.82) * min(m, 1.0) * 0.5;
+    }
+  }
+  // Réticule central : croix fine + cercle discret.
+  float cross_ = seg2(uv, vec2(-0.07, 0.0), vec2(0.07, 0.0), w * 0.8)
+               + seg2(uv, vec2(0.0, -0.07), vec2(0.0, 0.07), w * 0.8);
+  float ring = smoothstep(0.008, 0.002, abs(length(uv) - 0.16));
+  // Tirets latéraux.
+  float dash = seg2(uv, vec2(-0.5, 0.0), vec2(-0.42, 0.0), w * 0.8)
+             + seg2(uv, vec2(0.42, 0.0), vec2(0.5, 0.0), w * 0.8);
+  col += vec3(0.92, 0.9, 0.82) * (min(cross_, 1.0) * 0.45 + ring * 0.3 + min(dash, 1.0) * 0.35);
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Micrographics : cadran gradué fin, index lumineux qui parcourt la mesure.
+const OV_TICKS = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float r = length(uv);
+  float ang = atan(uv.y, uv.x);
+  vec3 ink = vec3(0.92, 0.9, 0.82);
+  vec3 col = vec3(0.0);
+  // Cercle fin.
+  col += ink * smoothstep(0.006, 0.002, abs(r - 0.62)) * 0.35;
+  // Graduations : 60 fines, 12 longues.
+  float a60 = abs(fract(ang / 6.2831 * 60.0) - 0.5) * 2.0;
+  float a12 = abs(fract(ang / 6.2831 * 12.0) - 0.5) * 2.0;
+  float tickS = smoothstep(0.90, 0.99, a60) * smoothstep(0.03, 0.015, abs(r - 0.655));
+  float tickL = smoothstep(0.95, 0.995, a12) * smoothstep(0.05, 0.02, abs(r - 0.675));
+  col += ink * (tickS * 0.35 + tickL * 0.55);
+  // Index lumineux : parcourt le cadran en une mesure.
+  float target = uMeasure * 6.2831 - 1.5708;
+  vec2 ip = vec2(cos(target), sin(target)) * 0.62;
+  col += vec3(1.0, 0.85, 0.55) * smoothstep(0.05, 0.0, length(uv - ip)) * (0.5 + 0.4 * uBeat * uPulse);
+  // Petit compteur d'arc : les basses remplissent un arc interne.
+  float sweep = step(ang + 1.5708 < 0.0 ? ang + 7.854 : ang + 1.5708, uLow * 6.2831);
+  col += ink * smoothstep(0.005, 0.002, abs(r - 0.52)) * sweep * 0.3;
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Micrographics : semis de petites croix, quelques-unes s'allument en rythme.
+const OV_CROSSES = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  vec2 p = uv * 3.2;
+  vec2 cell = floor(p);
+  vec2 f = fract(p) - 0.5;
+  float w = 0.035;
+  float arm = 0.10;
+  float cross_ = max(
+    smoothstep(w, w * 0.4, abs(f.y)) * step(abs(f.x), arm),
+    smoothstep(w, w * 0.4, abs(f.x)) * step(abs(f.y), arm));
+  float h = hash(cell);
+  // Base à peine visible ; certaines croix s'allument tour à tour.
+  float lit = step(0.93, fract(h + uTime * 0.10)) * (0.6 + 0.4 * uBeat * uPulse);
+  col += vec3(0.92, 0.9, 0.82) * cross_ * (0.10 + lit * 0.55);
+  col *= smoothstep(1.4, 0.5, length(uv));
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
 export const OVERLAYS: Record<string, string> = {
   'lightleak': OV_LIGHTLEAK,
   'bokeh': OV_BOKEH,
@@ -1038,6 +1119,9 @@ export const OVERLAYS: Record<string, string> = {
   'speaker': OV_SPEAKER,
   'vumetre': OV_VUMETRE,
   'oscillo': OV_OSCILLO,
+  'hud': OV_HUD,
+  'ticks': OV_TICKS,
+  'crosses': OV_CROSSES,
   'grid': OV_GRID,
   'sun': OV_SUN,
   'loop': OV_LOOP,
