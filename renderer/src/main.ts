@@ -102,35 +102,54 @@ engine.start((stats) => {
     `${stats.fps} i/s  ${stats.renderMs} ms  perdu ${stats.droppedFrames}`;
 });
 
-// Test visuel direct : ?bg=cosmos-stars force un fond, ?demo=1 ajoute motifs
-// et filtres Retrofutur. Utilisé par les captures automatisées et le dev.
+// Test visuel direct, utilisé par les captures automatisées et le dev :
+//   ?bg=cosmos-stars                    force un fond
+//   ?motifs=grid,loop                   ajoute des motifs (positions fixes)
+//   ?filters=bloom:0.7,chroma:0.6       applique des filtres
+//   ?demo=1                             raccourci Retrofutur complet
+// Toute erreur (shader compris) remonte dans le titre de la page.
 {
+  window.addEventListener('error', (e) => {
+    document.title = `VJM-ERROR ${e.message}`;
+    // Visible aussi dans les captures automatisées.
+    debugEl.style.display = 'block';
+    debugEl.style.color = '#ff5040';
+    debugEl.textContent = `ERREUR : ${e.message}`;
+  });
   const params = new URLSearchParams(location.search);
   const bg = params.get('bg');
   const demo = params.get('demo');
-  if (bg || demo) {
+  const motifs = (params.get('motifs') ?? (demo ? 'grid,loop' : ''))
+    .split(',')
+    .filter(Boolean);
+  const filters = (params.get('filters') ?? (demo ? 'bloom:0.7,chroma:0.6' : ''))
+    .split(',')
+    .filter(Boolean)
+    .map((s) => {
+      const [id, i] = s.split(':');
+      return { id, intensity: i ? parseFloat(i) : 0.8 };
+    });
+  const slots = [
+    { x: -0.5, y: 0.3, scale: 0.5, rot: 0.4 },
+    { x: 0.55, y: -0.25, scale: 0.45, rot: 0 },
+    { x: 0.1, y: 0.1, scale: 0.6, rot: -0.3 },
+  ];
+  if (bg || demo || motifs.length || filters.length) {
     window.VJM.handleMessage({
       type: 'scene',
       state: {
         background: { kind: 'shader', id: bg ?? 'cosmos-sun' },
-        overlays: demo
-          ? [
-              { iid: 'a', motif: 'grid', x: -0.5, y: 0.3, scale: 0.5, rot: 0.4, pulse: 0.8 },
-              { iid: 'b', motif: 'loop', x: 0.55, y: -0.25, scale: 0.45, rot: 0, pulse: 0.6 },
-            ]
-          : [],
-        filters: demo
-          ? [
-              { id: 'bloom', intensity: 0.7 },
-              { id: 'chroma', intensity: 0.6 },
-            ]
-          : [],
+        overlays: motifs.map((motif, i) => ({
+          iid: `t${i}`,
+          motif,
+          ...slots[i % slots.length],
+          pulse: 0.8,
+        })),
+        filters,
         transition: { kind: 'cut', beats: 0 },
       },
     });
-    if (demo) {
-      window.VJM.handleMessage({ type: 'levels', low: 0.8, mid: 0.5, high: 0.4 });
-    }
+    window.VJM.handleMessage({ type: 'levels', low: 0.8, mid: 0.5, high: 0.4 });
   }
 }
 

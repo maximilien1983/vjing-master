@@ -225,7 +225,8 @@ class Autopilot {
   }
 
   OverlayState _randomOverlay() {
-    final motif = universe.motifs[rng.nextInt(universe.motifs.length)];
+    // Les motifs appartiennent au style (brief « Paramètres »).
+    final motif = style.motifs[rng.nextInt(style.motifs.length)];
     return OverlayState(
       'o${_overlaySeq++}',
       motif,

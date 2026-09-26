@@ -153,7 +153,7 @@ void main() {
           Autopilot(style: retrofutur, universe: cosmos, send: msgs.add);
       pilot.setEnergy(.5); // pousse une première scène
       msgs.clear();
-      const autre = StylePreset('essai', ['posterize'], 'cut', 1);
+      const autre = StylePreset('essai', ['posterize'], 'cut', 1, ['grid']);
       pilot.setStyle(autre);
       final scene = msgs.lastWhere((m) => m['type'] == 'scene');
       final filters =
@@ -169,7 +169,7 @@ void main() {
       expect(msgs, isEmpty);
     });
 
-    test('presets inconnus : repli sur Retrofutur × Cosmos (jalon 3)', () {
+    test('catalogue non chargé : repli sur Retrofutur × Cosmos', () {
       expect(stylePresetFor('vhs').id, 'retrofutur');
       expect(universePresetFor('miroir').id, 'cosmos');
       expect(stylePresetFor('retrofutur').id, 'retrofutur');

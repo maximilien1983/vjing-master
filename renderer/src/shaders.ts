@@ -1,7 +1,9 @@
-// Bibliothèque GLSL du jalon 2 : fonds Cosmos et motifs superposés.
+// Bibliothèque GLSL : fonds par univers, motifs par style, post-traitement.
 // Tous les fonds partagent les mêmes uniforms (voir engine.ts) ; les motifs
 // reçoivent en plus uOpacity et uPulse et rendent sur fond noir (fusion
 // additive, pas de canal alpha — conforme au brief).
+// Jalon 4 : fonds shaders des 6 univers (Miroir : placeholders en attendant
+// la caméra du jalon 5) et motifs des 6 styles (brief « Paramètres »).
 
 export const COMMON_UNIFORMS = `
 uniform float uTime;
@@ -30,7 +32,7 @@ float fbm(vec2 p) {
 }
 `;
 
-// --- Fonds -----------------------------------------------------------------
+// --- Fonds : Cosmos ----------------------------------------------------------
 
 // Soleil rétrofutur à bandes + grille en perspective (fond du jalon 1).
 const BG_SUN = `
@@ -131,17 +133,407 @@ void main() {
   outColor = vec4(col, 1.0);
 }`;
 
+// --- Fonds : Campagne --------------------------------------------------------
+
+// Collines en couches au crépuscule, soleil bas, brume qui respire.
+const BG_COLLINES = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 skyHi = mix(vec3(0.10, 0.06, 0.16), vec3(0.55, 0.55, 0.75), uLight);
+  vec3 skyLo = mix(vec3(0.55, 0.22, 0.12), vec3(1.0, 0.72, 0.40), uLight);
+  vec3 col = mix(skyLo, skyHi, clamp(uv.y * 1.6 + 0.5, 0.0, 1.0));
+  // Soleil bas qui pulse doucement sur le kick.
+  vec2 sunP = uv - vec2(0.22, -0.02);
+  float sd = length(sunP);
+  col += vec3(1.0, 0.62, 0.28) * smoothstep(0.10 + 0.02 * uBeat, 0.02, sd) * 1.1;
+  col += vec3(1.0, 0.5, 0.2) * pow(max(0.0, 1.0 - sd), 4.0) * (0.3 + 0.3 * uBeat);
+  // Trois plans de collines : silhouettes en bruit basse fréquence.
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float h = -0.08 - fi * 0.12
+            + noise(vec2(uv.x * (1.4 + fi * 0.8) + fi * 9.0 + uMeasure * 0.05 * (1.0 + fi), fi)) * 0.16;
+    float m = smoothstep(h + 0.006, h - 0.006, uv.y);
+    vec3 hill = mix(vec3(0.16, 0.13, 0.10), vec3(0.05, 0.06, 0.04), fi / 2.0);
+    hill *= 0.5 + 0.9 * uLight;
+    col = mix(col, hill, m * (0.75 + fi * 0.12));
+  }
+  // Brume au ras du sol qui respire avec les basses.
+  float mist = exp(-pow((uv.y + 0.30) * 5.0, 2.0)) * fbm(uv * 3.0 + vec2(uTime * 0.03, 0.0));
+  col += mist * vec3(0.5, 0.4, 0.35) * (0.15 + 0.25 * uLow);
+  col *= 0.6 + 0.8 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Champ de blé : tiges dorées ondulant au vent, vent calé sur la mesure.
+const BG_BLE = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Ciel de fin d'après-midi avec soleil bas et quelques nuages étirés.
+  vec3 sky = mix(vec3(0.45, 0.30, 0.14), vec3(0.80, 0.72, 0.52), uLight);
+  vec3 col = mix(sky * 0.55, sky, clamp(uv.y * 1.6 + 0.3, 0.0, 1.0));
+  float sd = length(uv - vec2(-0.28, 0.16));
+  col += vec3(1.0, 0.75, 0.35) * smoothstep(0.09 + 0.02 * uBeat, 0.02, sd);
+  col += vec3(1.0, 0.6, 0.25) * pow(max(0.0, 1.0 - sd), 4.0) * 0.35;
+  float wisp = fbm(vec2(uv.x * 2.0 + uTime * 0.02, uv.y * 8.0));
+  col += vec3(0.9, 0.75, 0.55) * smoothstep(0.55, 0.8, wisp) * step(0.05, uv.y) * 0.25;
+  float horizon = -0.02;
+  if (uv.y < horizon) {
+    // Profondeur du champ : plus près = tiges plus larges et plus sombres.
+    float depth = (horizon - uv.y) / (horizon + 0.5);
+    float wind = sin(uMeasure * 6.2831 + uv.x * 2.0) * (0.3 + 0.4 * uLow) + uTime * 0.05;
+    float x = uv.x * mix(60.0, 14.0, depth) + wind * depth * 4.0;
+    float stalk = abs(fract(x + noise(vec2(floor(x), 3.0))) - 0.5);
+    float body = smoothstep(0.32, 0.05, stalk);
+    vec3 gold = mix(vec3(0.75, 0.55, 0.16), vec3(0.95, 0.78, 0.30), noise(vec2(floor(x) * 0.37, 1.0)));
+    vec3 field = gold * (0.35 + 0.65 * (1.0 - depth)) * body
+               + vec3(0.30, 0.20, 0.06) * (1.0 - body);
+    col = mix(col, field, smoothstep(horizon + 0.01, horizon - 0.03, uv.y));
+    // Vague de lumière qui traverse le champ sur le kick.
+    float wave = exp(-pow((fract(uMeasure) * 2.4 - 1.2 - uv.x) * 3.0, 2.0));
+    col += wave * vec3(0.5, 0.38, 0.12) * uBeat * (1.0 - depth) * 0.6;
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Ciel de nuages fbm, dérive lente, éclaircies sur les mediums.
+const BG_NUAGES = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 skyTop = mix(vec3(0.06, 0.10, 0.22), vec3(0.30, 0.55, 0.85), uLight);
+  vec3 skyBot = mix(vec3(0.16, 0.12, 0.20), vec3(0.75, 0.80, 0.90), uLight);
+  vec3 col = mix(skyBot, skyTop, clamp(uv.y + 0.5, 0.0, 1.0));
+  vec2 drift = vec2(uTime * 0.02 + uMeasure * 0.05, 0.0);
+  float c1 = fbm(uv * vec2(1.6, 3.2) + drift);
+  float c2 = fbm(uv * vec2(2.8, 5.0) - drift * 1.7 + 4.0);
+  float cloud = smoothstep(0.42, 0.72, c1 * 0.65 + c2 * 0.45);
+  vec3 cloudCol = mix(vec3(0.55, 0.50, 0.55), vec3(1.0, 0.98, 0.94), uLight)
+                * (0.8 + 0.3 * c2 + 0.15 * uMid);
+  vec3 shade = cloudCol * 0.45;
+  col = mix(col, mix(shade, cloudCol, smoothstep(0.3, 0.9, c1)), cloud);
+  // Percée de lumière qui pulse doucement.
+  col += vec3(1.0, 0.9, 0.7) * pow(max(0.0, 1.0 - length(uv - vec2(-0.3, 0.25))), 3.0)
+       * (0.08 + 0.20 * uBeat) * uLight;
+  col *= 0.5 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// --- Fonds : Ville -----------------------------------------------------------
+
+// Skyline nocturne : immeubles en silhouettes, fenêtres qui clignotent.
+const BG_SKYLINE = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.02, 0.02, 0.06), vec3(0.10, 0.06, 0.16), clamp(uv.y + 0.6, 0.0, 1.0));
+  // Halo urbain à l'horizon.
+  col += vec3(0.30, 0.12, 0.28) * exp(-pow((uv.y + 0.18) * 4.0, 2.0)) * (0.5 + 0.3 * uLow);
+  // Deux plans d'immeubles.
+  for (int layer = 0; layer < 2; layer++) {
+    float fl = float(layer);
+    float scale = mix(7.0, 12.0, fl);
+    float x = uv.x * scale + fl * 37.0 + uMeasure * (0.3 + fl * 0.4);
+    float b = floor(x);
+    float h = hash(vec2(b, fl * 5.0)) * 0.45 + 0.05 - fl * 0.10;
+    float top = h - 0.18;
+    float inBld = step(uv.y, top) * step(abs(fract(x) - 0.5), 0.42);
+    vec3 bld = mix(vec3(0.05, 0.05, 0.09), vec3(0.02, 0.02, 0.04), fl);
+    // Fenêtres : grille fine, allumage aléatoire animé par les mediums.
+    vec2 win = vec2(fract(x * 6.0), fract((uv.y + 0.5) * 26.0));
+    float wOn = step(0.65, hash(vec2(floor(x * 6.0), floor((uv.y + 0.5) * 26.0)) + fl * 11.0)
+                 + 0.20 * sin(uTime * 2.0 + b * 3.0) * uMid);
+    float wMask = step(win.x, 0.55) * step(win.y, 0.5) * wOn;
+    vec3 warm = mix(vec3(1.0, 0.75, 0.35), vec3(0.5, 0.8, 1.0), hash(vec2(b, 9.0)));
+    col = mix(col, bld + warm * wMask * (0.5 + 0.5 * uBeat * (1.0 - fl)), inBld);
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Traînées de trafic en contre-plongée : phares blancs, feux rouges.
+const BG_TRAFIC = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.02, 0.02, 0.05);
+  // Route en perspective : point de fuite au centre-haut.
+  float py = 1.0 / (abs(uv.y - 0.15) + 0.05);
+  float lane = uv.x * py * 0.22;
+  // Traînées : chaque voie porte des lumières filantes calées sur la mesure.
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i) - 2.5;
+    float d = abs(lane - fi * 0.55);
+    float speed = 2.0 + hash(vec2(fi, 1.0)) * 2.0 + 3.0 * uEnergy;
+    float ph = fract(py * 0.15 - uMeasure * speed + hash(vec2(fi, 7.0)));
+    float streak = smoothstep(0.30, 0.0, d) * smoothstep(0.6, 0.0, ph);
+    vec3 tint = fi < 0.0 ? vec3(1.0, 0.95, 0.85) : vec3(1.0, 0.15, 0.10);
+    col += tint * streak * smoothstep(0.15, -0.4, uv.y) * (0.5 + 0.5 * uBeat);
+  }
+  // Néons flous au-dessus de la route.
+  float n = fbm(uv * 3.0 + vec2(uTime * 0.05, 0.0));
+  col += vec3(0.7, 0.2, 0.8) * n * smoothstep(0.0, 0.5, uv.y) * (0.20 + 0.15 * uMid);
+  col += vec3(0.1, 0.6, 0.9) * fbm(uv * 4.0 - 3.0) * smoothstep(0.1, 0.6, uv.y) * 0.15;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Pluie sur néons : rideau de gouttes devant des enseignes floues.
+const BG_PLUIE = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Enseignes floues : taches colorées fbm.
+  float n1 = fbm(uv * 2.4 + vec2(0.0, uTime * 0.01));
+  float n2 = fbm(uv * 3.1 + 7.0);
+  vec3 col = vec3(0.02, 0.02, 0.05);
+  col += vec3(0.9, 0.15, 0.55) * pow(n1, 3.0) * 1.2;
+  col += vec3(0.10, 0.65, 0.95) * pow(n2, 3.2) * 1.1;
+  col += vec3(1.0, 0.6, 0.15) * pow(fbm(uv * 2.0 - 11.0), 4.0);
+  col *= 0.5 + 0.4 * uMid + 0.4 * uBeat * 0.3;
+  // Rideaux de pluie : deux couches de stries verticales rapides.
+  for (int i = 0; i < 2; i++) {
+    float fi = float(i);
+    float sc = mix(40.0, 70.0, fi);
+    float x = uv.x * sc + hash(vec2(fi, 2.0)) * 40.0;
+    float colId = floor(x);
+    float speed = 1.4 + hash(vec2(colId, fi)) * 1.2;
+    float yph = fract(uv.y * (0.8 + fi * 0.5) - uTime * speed + hash(vec2(colId, 5.0)));
+    float drop = smoothstep(0.20, 0.0, abs(fract(x) - 0.5))
+               * smoothstep(0.25, 0.0, yph) * step(0.4, hash(vec2(colId, 8.0)));
+    col += vec3(0.6, 0.75, 0.9) * drop * (0.25 + 0.35 * uHigh);
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// --- Fonds : Machines --------------------------------------------------------
+
+// Engrenages : disques dentés qui tournent sur la mesure, kick = à-coup.
+const BG_ENGRENAGES = `
+${NOISE}
+float gear(vec2 p, float radius, float teeth, float spin) {
+  float a = atan(p.y, p.x) + spin;
+  float r = length(p);
+  float edge = radius + 0.035 * radius * sign(sin(a * teeth));
+  float body = smoothstep(edge + 0.008, edge - 0.008, r);
+  float hub = smoothstep(radius * 0.30, radius * 0.28, r);
+  float hole = smoothstep(radius * 0.14, radius * 0.16, r);
+  return clamp(body - hub + (1.0 - hole) * body, 0.0, 1.0) * step(radius * 0.16, r);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.03, 0.03, 0.04), vec3(0.08, 0.07, 0.07), fbm(uv * 3.0));
+  float spin = uMeasure * 6.2831 * 0.25 + uBeat * 0.10;
+  vec3 metal = vec3(0.55, 0.52, 0.48);
+  vec3 amber = vec3(1.0, 0.65, 0.20);
+  // Trois engrenages engrenés (sens alternés).
+  float g1 = gear(uv - vec2(-0.45, 0.12), 0.34, 12.0, spin);
+  float g2 = gear(uv - vec2(0.02, -0.18), 0.24, 9.0, -spin * 12.0 / 9.0 + 0.3);
+  float g3 = gear(uv - vec2(0.48, 0.16), 0.29, 11.0, spin * 12.0 / 11.0 + 0.1);
+  float g = max(g1, max(g2, g3));
+  float shade = 0.6 + 0.4 * sin(atan(uv.y, uv.x) * 2.0 + spin * 2.0);
+  col = mix(col, metal * shade * (0.5 + 0.5 * uLight), g);
+  // Reflet ambré industriel qui monte avec les basses.
+  col += amber * g * (0.10 + 0.35 * uLow + 0.25 * uBeat) * shade * 0.5;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Pistons : colonnes qui montent et descendent en opposition de phase.
+const BG_PISTONS = `
+${NOISE}
+void main() {
+  vec2 uv = vUv;
+  vec2 auv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.03, 0.03, 0.04), vec3(0.07, 0.06, 0.06), fbm(auv * 4.0));
+  float cols = 7.0;
+  float x = uv.x * cols;
+  float id = floor(x);
+  float fx = fract(x);
+  // Course sinusoïdale calée sur la mesure, phase alternée par colonne.
+  float phase = uMeasure * 6.2831 * 2.0 + id * 2.4;
+  float lift = 0.5 + 0.32 * sin(phase) * (0.5 + 0.5 * uEnergy);
+  float body = step(abs(fx - 0.5), 0.30) * step(uv.y, lift) * step(lift - 0.42, uv.y);
+  float rod = step(abs(fx - 0.5), 0.05) * step(uv.y, lift - 0.40) * step(0.08, uv.y);
+  vec3 metal = vec3(0.45, 0.44, 0.42) * (0.6 + 0.5 * fx * (1.0 - fx) * 4.0);
+  col = mix(col, metal * (0.5 + 0.5 * uLight), max(body, rod));
+  // Tête chauffée : lueur ambrée à l'impact du kick.
+  float head = smoothstep(0.05, 0.0, abs(uv.y - lift)) * step(abs(fx - 0.5), 0.30);
+  col += vec3(1.0, 0.45, 0.10) * head * (0.2 + 0.8 * uBeat);
+  // Vapeur au sol.
+  col += vec3(0.35, 0.33, 0.30) * exp(-uv.y * 6.0) * fbm(auv * 5.0 + vec2(0.0, uTime * 0.3)) * 0.4;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Circuits : pistes de cuivre, impulsions qui voyagent sur le beat.
+const BG_CIRCUITS = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.015, 0.03, 0.025);
+  float scale = 9.0;
+  vec2 p = uv * scale;
+  vec2 cell = floor(p);
+  vec2 f = fract(p);
+  // Pistes en L : chaque cellule route horizontalement ou verticalement.
+  float dir = step(0.5, hash(cell));
+  float trace = dir * smoothstep(0.10, 0.04, abs(f.y - 0.5))
+              + (1.0 - dir) * smoothstep(0.10, 0.04, abs(f.x - 0.5));
+  float pad = smoothstep(0.16, 0.10, length(f - 0.5));
+  vec3 copper = vec3(0.10, 0.45, 0.30);
+  col += copper * (trace * 0.5 + pad * 0.8);
+  // Impulsions lumineuses qui parcourent les pistes, cadencées sur la mesure.
+  float along = dir > 0.5 ? p.x : p.y;
+  float pulse = fract(along * 0.11 - uMeasure * 2.0 + hash(cell + 3.0));
+  float spark = smoothstep(0.12, 0.0, pulse) * trace;
+  col += vec3(0.4, 1.0, 0.7) * spark * (0.4 + 0.6 * uBeat);
+  col += vec3(0.9, 0.8, 0.3) * pad * smoothstep(0.10, 0.0, pulse) * uMid * 0.6;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// --- Fonds : Nature ----------------------------------------------------------
+
+// Eau : caustiques ondulantes, houle calée sur la mesure.
+const BG_EAU = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 p = uv * 5.0;
+  float t = uTime * 0.25 + uMeasure * 0.8;
+  // Caustiques : réseau de crêtes fines là où deux champs d'ondes se croisent.
+  float w1 = sin(p.x * 1.7 + t + sin(p.y * 2.3 + t * 0.7) * 1.4);
+  float w2 = sin(p.y * 2.1 - t * 0.8 + sin(p.x * 1.9 - t * 0.5) * 1.4);
+  float w3 = sin((p.x + p.y) * 1.3 + t * 0.6 + noise(p * 0.8 + t * 0.2) * 3.0);
+  float c = pow(1.0 - abs(w1 * 0.5 + w2 * 0.3 + w3 * 0.2), 6.0) * 1.4;
+  c += pow(max(0.0, 1.0 - abs(w2)), 8.0) * 0.5;
+  vec3 deep = mix(vec3(0.01, 0.05, 0.09), vec3(0.02, 0.14, 0.20), uLight);
+  vec3 caust = mix(vec3(0.15, 0.55, 0.60), vec3(0.45, 0.9, 0.85), uLight);
+  vec3 col = deep + caust * c * (0.55 + 0.45 * uBeat * 0.6 + 0.3 * uLow);
+  // Profondeur : plus sombre vers le bas.
+  col *= mix(0.6, 1.15, vUv.y);
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Fumée : volutes fbm qui montent, éclairées par en dessous.
+const BG_FUMEE = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 rise = vec2(uTime * 0.02, -uTime * 0.07 - uMeasure * 0.15);
+  float n1 = fbm(uv * 2.0 + rise);
+  float n2 = fbm(uv * 3.4 + rise * 1.6 + n1 * 1.5);
+  float plume = exp(-pow(uv.x * (1.8 - n1), 2.0)) * (0.4 + 0.6 * smoothstep(0.6, -0.5, uv.y));
+  float smoke = pow(n2, 1.6) * plume;
+  vec3 warm = vec3(1.0, 0.55, 0.25);
+  vec3 cold = vec3(0.5, 0.55, 0.65);
+  vec3 col = vec3(0.015, 0.012, 0.02);
+  col += mix(cold, warm, smoothstep(0.4, -0.6, uv.y)) * smoke * (0.8 + 0.5 * uLow + 0.4 * uBeat);
+  // Braise à la base.
+  col += warm * exp(-pow((uv.y + 0.52) * 6.0, 2.0)) * (0.15 + 0.35 * uBeat) * n1;
+  col *= 0.5 + 1.0 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Lucioles : particules chaudes dérivant dans un sous-bois sombre.
+const BG_LUCIOLES = `
+${NOISE}
+vec3 fireflyLayer(vec2 uv, float scale, float speed, float size) {
+  vec2 p = uv * scale + vec2(uTime * speed * 0.03, sin(uTime * 0.2) * 0.1);
+  vec2 cell = floor(p);
+  vec2 f = fract(p) - 0.5;
+  float h = hash(cell);
+  vec2 wander = 0.35 * vec2(sin(uTime * (0.4 + h) + h * 20.0), cos(uTime * (0.3 + h * 0.7) + h * 30.0));
+  float d = length(f - wander);
+  float blink = 0.4 + 0.6 * pow(0.5 + 0.5 * sin(uTime * (1.0 + h * 2.0) + h * 40.0), 3.0);
+  float fly = smoothstep(size, 0.0, d) * step(0.55, h) * blink;
+  return vec3(1.0, 0.85, 0.35) * fly;
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Sous-bois : troncs sombres suggérés par du bruit vertical.
+  float trees = fbm(vec2(uv.x * 4.0, uv.y * 0.5));
+  vec3 col = mix(vec3(0.01, 0.02, 0.015), vec3(0.03, 0.06, 0.04), trees) * (0.5 + 0.9 * uLight);
+  col += fireflyLayer(uv, 5.0, 1.0, 0.05) * (0.7 + 0.6 * uLow + 0.5 * uBeat);
+  col += fireflyLayer(uv + 3.7, 8.0, -0.7, 0.035) * (0.5 + 0.5 * uHigh);
+  col += fireflyLayer(uv + 9.1, 12.0, 0.4, 0.025) * 0.4;
+  // Clair de lune diffus en haut.
+  col += vec3(0.10, 0.14, 0.20) * exp(-pow((uv.y - 0.45) * 3.0, 2.0)) * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// --- Fonds : Miroir (placeholders — caméra du téléphone au jalon 5) ----------
+
+// Kaléidoscope de matière colorée, rotation lente sur la mesure.
+const BG_KALEIDO = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  float a = atan(uv.y, uv.x) + uMeasure * 0.8;
+  float r = length(uv);
+  float seg = 6.2831 / 8.0;
+  a = abs(mod(a, seg) - seg * 0.5);
+  vec2 p = vec2(cos(a), sin(a)) * r;
+  float n1 = fbm(p * 3.0 + vec2(uTime * 0.05, uMeasure * 0.3));
+  float n2 = fbm(p * 5.0 - uTime * 0.04);
+  vec3 col = vec3(0.02, 0.01, 0.04);
+  col += vec3(0.9, 0.2, 0.5) * pow(n1, 2.0) * (0.8 + 0.5 * uBeat);
+  col += vec3(0.2, 0.7, 0.9) * pow(n2, 2.4) * (0.7 + 0.5 * uMid);
+  col += vec3(1.0, 0.8, 0.3) * pow(n1 * n2, 4.0) * 2.0;
+  col *= smoothstep(1.2, 0.3, r) * (0.55 + 0.9 * uLight);
+  outColor = vec4(col, 1.0);
+}`;
+
+// Chrome liquide : reflets métalliques mouvants (esprit « miroir »).
+const BG_CHROME = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 flow = vec2(uTime * 0.03, uMeasure * 0.10);
+  float n = fbm(uv * 2.6 + flow + fbm(uv * 3.0 - flow) * 0.9);
+  // Pseudo-normale : dérivée du bruit -> bandes de reflets.
+  float band = sin(n * 12.0 + uv.y * 4.0 + uBeat * 1.5);
+  float sharp = pow(0.5 + 0.5 * band, 6.0);
+  vec3 dark = vec3(0.04, 0.05, 0.07);
+  vec3 steel = vec3(0.55, 0.60, 0.68);
+  vec3 warm = vec3(0.9, 0.75, 0.55);
+  vec3 col = mix(dark, steel, 0.35 + 0.65 * n);
+  col += mix(steel, warm, 0.5 + 0.5 * sin(uTime * 0.2)) * sharp * (0.6 + 0.4 * uBeat);
+  col *= 0.5 + 1.0 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
 export const BACKGROUNDS: Record<string, string> = {
   'cosmos-sun': BG_SUN,
   'cosmos-stars': BG_STARS,
   'cosmos-nebula': BG_NEBULA,
   'cosmos-rings': BG_RINGS,
+  'campagne-collines': BG_COLLINES,
+  'campagne-ble': BG_BLE,
+  'campagne-nuages': BG_NUAGES,
+  'ville-skyline': BG_SKYLINE,
+  'ville-trafic': BG_TRAFIC,
+  'ville-pluie': BG_PLUIE,
+  'machines-engrenages': BG_ENGRENAGES,
+  'machines-pistons': BG_PISTONS,
+  'machines-circuits': BG_CIRCUITS,
+  'nature-eau': BG_EAU,
+  'nature-fumee': BG_FUMEE,
+  'nature-lucioles': BG_LUCIOLES,
+  'miroir-kaleido': BG_KALEIDO,
+  'miroir-chrome': BG_CHROME,
 };
 
 // --- Motifs superposés (rendus sur noir, fusion additive) ------------------
 // Uniforms additionnels : uOpacity (fondu), uPulse (0..1, force de pulsation).
+// Les motifs appartiennent aux styles (brief) : chaque style a les siens.
 
-// Grille néon inclinée.
+// Retrofutur : grille néon inclinée.
 const OV_GRID = `
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
@@ -153,7 +545,7 @@ void main() {
   outColor = vec4(col * uOpacity, 1.0);
 }`;
 
-// Petit soleil / halo à bandes.
+// Retrofutur : petit soleil / halo à bandes.
 const OV_SUN = `
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
@@ -167,7 +559,7 @@ void main() {
   outColor = vec4(col * uOpacity * (0.6 + 0.4 * uLow), 1.0);
 }`;
 
-// Boucle néon (lissajous) qui tourne, épaisseur pulsée.
+// Retrofutur : boucle néon (lissajous) qui tourne, épaisseur pulsée.
 const OV_LOOP = `
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
@@ -184,28 +576,262 @@ void main() {
   outColor = vec4(col * line * uOpacity * (0.6 + 0.4 * uHigh), 1.0);
 }`;
 
+// Vintage : poussières et rayures de pellicule qui dérivent.
+const OV_POUSSIERES = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  // Grains qui flottent lentement.
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec2 p = uv * (4.0 + fi * 3.0) + vec2(uTime * (0.05 + fi * 0.04), -uTime * (0.08 + fi * 0.03));
+    vec2 cell = floor(p);
+    float h = hash(cell + fi * 17.0);
+    float d = length(fract(p) - 0.5 - 0.3 * vec2(hash(cell + 3.0) - 0.5, hash(cell + 5.0) - 0.5));
+    float speck = smoothstep(0.05 + h * 0.04, 0.0, d) * step(0.8, h);
+    col += vec3(1.0, 0.95, 0.85) * speck * (0.3 + 0.4 * h);
+  }
+  // Rayure verticale fugace.
+  float sx = fract(hash(vec2(floor(uTime * 1.3), 1.0)) + 0.0001);
+  float scratch = smoothstep(0.004, 0.0, abs(vUv.x - sx)) * step(0.7, hash(vec2(floor(uTime * 1.3), 2.0)));
+  col += vec3(0.9, 0.85, 0.75) * scratch * 0.5;
+  float mask = smoothstep(1.4, 0.5, length(uv));
+  outColor = vec4(col * mask * uOpacity * (0.5 + 0.5 * uPulse), 1.0);
+}`;
+
+// Vintage : formes simples — cercles concentriques qui respirent.
+const OV_CERCLES = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  float breathe = 1.0 + 0.10 * uPulse * uBeat + 0.05 * sin(uTime * 0.7);
+  float rings = abs(fract(d * 3.0 / breathe - uMeasure * 0.5) - 0.5);
+  float line = smoothstep(0.16, 0.02, rings) * smoothstep(1.0, 0.2, d);
+  vec3 warm = vec3(0.95, 0.80, 0.55);
+  outColor = vec4(warm * line * uOpacity * (0.4 + 0.3 * uLow), 1.0);
+}`;
+
+// 70's : spirale chaude qui tourne sur la mesure.
+const OV_SPIRALE = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float a = atan(uv.y, uv.x);
+  float r = length(uv) + 0.0001;
+  float twist = a + log(r) * 3.5 - uMeasure * 6.2831 * 0.5 - uTime * 0.2;
+  float arm = 0.5 + 0.5 * sin(twist * 3.0);
+  float band = pow(arm, 3.0 - uPulse * uBeat * 1.5);
+  vec3 orange = vec3(1.0, 0.55, 0.15);
+  vec3 brun = vec3(0.55, 0.30, 0.10);
+  vec3 col = mix(brun, orange, band) * band;
+  col *= smoothstep(1.1, 0.2, r);
+  outColor = vec4(col * uOpacity * (0.5 + 0.4 * uLow), 1.0);
+}`;
+
+// 70's : ondes concentriques moutarde, houle douce.
+const OV_ONDE = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  float wave = sin(d * 14.0 - uTime * 1.2 - uMeasure * 6.2831) * 0.5 + 0.5;
+  wave = pow(wave, 2.5 - uPulse * uBeat);
+  vec3 moutarde = vec3(0.90, 0.70, 0.20);
+  vec3 col = moutarde * wave * smoothstep(1.1, 0.15, d);
+  outColor = vec4(col * uOpacity * (0.4 + 0.4 * uMid), 1.0);
+}`;
+
+// Punk : trame de photocopie — points de demi-teinte grossiers.
+const OV_TRAME = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  // Grille tournée de 45°, taille de point pilotée par le kick.
+  vec2 p = mat2(0.707, -0.707, 0.707, 0.707) * uv * 14.0;
+  float cell = hash(floor(p + floor(uTime * 3.0)));
+  float d = length(fract(p) - 0.5);
+  float dot_ = step(d, 0.15 + 0.25 * cell * (0.5 + 0.8 * uPulse * uBeat));
+  float mask = smoothstep(1.2, 0.5, length(uv));
+  vec3 col = vec3(1.0) * dot_ * mask;
+  // Pointe de rouge punk sur certains points.
+  col = mix(col, vec3(1.0, 0.1, 0.1), step(0.85, cell) * dot_);
+  outColor = vec4(col * uOpacity * 0.5, 1.0);
+}`;
+
+// Punk : éclats — barres diagonales brutales qui claquent sur le kick.
+const OV_ECLATS = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float slot = floor(uTime * 4.0 + uBeat * 2.0);
+  float a = hash(vec2(slot, 1.0)) * 3.1416;
+  vec2 dir = vec2(cos(a), sin(a));
+  float stripe = fract(dot(uv, dir) * (3.0 + hash(vec2(slot, 2.0)) * 5.0) + hash(vec2(slot, 3.0)));
+  float bar = step(stripe, 0.18 + 0.20 * uPulse * uBeat) * step(0.35, hash(vec2(slot, 4.0)) + uBeat * 0.5);
+  vec3 col = mix(vec3(1.0), vec3(1.0, 0.08, 0.08), step(0.6, hash(vec2(slot, 5.0))));
+  float mask = smoothstep(1.3, 0.6, length(uv));
+  outColor = vec4(col * bar * mask * uOpacity * 0.55, 1.0);
+}`;
+
+// VHS : timecode incrusté — chiffres 7 segments qui défilent.
+const OV_TIMECODE = `
+float seg(vec2 p, vec2 a, vec2 b, float w) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return smoothstep(w, w * 0.4, length(pa - ba * h));
+}
+float digit(vec2 p, float n) {
+  // 7 segments dans un cadre [0,1]², n = 0..9.
+  float d = 0.0;
+  float w = 0.09;
+  bool s0 = n != 1.0 && n != 4.0;                              // haut
+  bool s1 = n != 1.0 && n != 2.0 && n != 3.0 && n != 7.0;      // haut gauche
+  bool s2 = n != 5.0 && n != 6.0;                              // haut droit
+  bool s3 = n != 0.0 && n != 1.0 && n != 7.0;                  // milieu
+  bool s4 = n == 0.0 || n == 2.0 || n == 6.0 || n == 8.0;      // bas gauche
+  bool s5 = n != 2.0;                                          // bas droit
+  bool s6 = n != 1.0 && n != 4.0 && n != 7.0;                  // bas
+  if (s0) d = max(d, seg(p, vec2(0.15, 0.95), vec2(0.85, 0.95), w));
+  if (s1) d = max(d, seg(p, vec2(0.10, 0.55), vec2(0.10, 0.90), w));
+  if (s2) d = max(d, seg(p, vec2(0.90, 0.55), vec2(0.90, 0.90), w));
+  if (s3) d = max(d, seg(p, vec2(0.15, 0.50), vec2(0.85, 0.50), w));
+  if (s4) d = max(d, seg(p, vec2(0.10, 0.10), vec2(0.10, 0.45), w));
+  if (s5) d = max(d, seg(p, vec2(0.90, 0.10), vec2(0.90, 0.45), w));
+  if (s6) d = max(d, seg(p, vec2(0.15, 0.05), vec2(0.85, 0.05), w));
+  return d;
+}
+void main() {
+  vec2 uv = vUv;
+  vec3 col = vec3(0.0);
+  // « HH:MM:SS » sommaire : compteur qui tourne, secondes réelles.
+  float total = floor(uTime);
+  float sec = mod(total, 60.0);
+  float mn = mod(floor(total / 60.0), 60.0);
+  float digits[4];
+  digits[0] = floor(mn / 10.0); digits[1] = mod(mn, 10.0);
+  digits[2] = floor(sec / 10.0); digits[3] = mod(sec, 10.0);
+  float glyph = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float xo = 0.16 + float(i) * 0.17 + (i > 1 ? 0.08 : 0.0);
+    vec2 p = (uv - vec2(xo, 0.38)) / vec2(0.13, 0.26);
+    if (p.x >= 0.0 && p.x <= 1.0 && p.y >= 0.0 && p.y <= 1.0) glyph = max(glyph, digit(p, digits[i]));
+  }
+  // Deux-points clignotant.
+  float blink = step(0.5, fract(uTime));
+  float dots = (smoothstep(0.02, 0.008, length(uv - vec2(0.55, 0.52)))
+              + smoothstep(0.02, 0.008, length(uv - vec2(0.55, 0.44)))) * blink;
+  // Pastille REC qui pulse sur le kick.
+  float rec = smoothstep(0.05, 0.03, length((uv - vec2(0.16, 0.78)) * vec2(1.8, 1.0)));
+  col += vec3(0.95) * max(glyph, dots);
+  col += vec3(1.0, 0.15, 0.10) * rec * (0.5 + 0.5 * uBeat * uPulse);
+  outColor = vec4(col * uOpacity * 0.8, 1.0);
+}`;
+
+// VHS : barre de tracking — bande de neige qui dérive.
+const OV_TRACKING = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = vUv;
+  float y = fract(0.5 + uTime * 0.07 + 0.2 * sin(uTime * 0.5));
+  float band = smoothstep(0.10, 0.02, abs(uv.y - y));
+  float snow = hash(vec2(floor(uv.x * 240.0), floor(uv.y * 140.0) + floor(uTime * 30.0)));
+  float tear = step(0.85, hash(vec2(floor(uv.y * 60.0), floor(uTime * 8.0))));
+  vec3 col = vec3(0.9) * band * snow * (0.5 + 0.5 * uPulse);
+  col += vec3(0.8) * tear * band * 0.4;
+  outColor = vec4(col * uOpacity * 0.6, 1.0);
+}`;
+
+// Psyché : mandala à symétrie radiale, pétales qui tournent.
+const OV_MANDALA = `
+vec3 hue2rgb(float h) {
+  vec3 k = mod(vec3(5.0, 3.0, 1.0) + h * 6.0, 6.0);
+  return 1.0 - clamp(min(k, 4.0 - k), 0.0, 1.0);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float a = atan(uv.y, uv.x) + uMeasure * 1.5;
+  float r = length(uv);
+  float petals = 0.5 + 0.5 * cos(a * 8.0 + r * 6.0 - uTime * 0.8);
+  float rings = 0.5 + 0.5 * cos(r * 18.0 - uTime * 1.5 - uBeat * uPulse * 2.0);
+  float m = pow(petals * rings, 2.0) * smoothstep(1.0, 0.15, r);
+  vec3 col = hue2rgb(fract(a / 6.2831 + r * 0.5 + uTime * 0.05)) * m;
+  outColor = vec4(col * uOpacity * (0.5 + 0.4 * uMid), 1.0);
+}`;
+
+// Psyché : fluide — marbrures arc-en-ciel qui coulent.
+const OV_FLUIDE = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
+  return v;
+}
+vec3 hue2rgb(float h) {
+  vec3 k = mod(vec3(5.0, 3.0, 1.0) + h * 6.0, 6.0);
+  return 1.0 - clamp(min(k, 4.0 - k), 0.0, 1.0);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec2 flow = vec2(uTime * 0.06, -uTime * 0.04);
+  float n = fbm(uv * 2.0 + flow + fbm(uv * 3.0 - flow) * (1.0 + uPulse * uBeat));
+  vec3 col = hue2rgb(fract(n * 1.4 + uTime * 0.04)) * pow(n, 1.5);
+  col *= smoothstep(1.3, 0.4, length(uv));
+  outColor = vec4(col * uOpacity * 0.7, 1.0);
+}`;
+
 export const OVERLAYS: Record<string, string> = {
   'grid': OV_GRID,
   'sun': OV_SUN,
   'loop': OV_LOOP,
+  'poussieres': OV_POUSSIERES,
+  'cercles': OV_CERCLES,
+  'spirale': OV_SPIRALE,
+  'onde': OV_ONDE,
+  'trame': OV_TRAME,
+  'eclats': OV_ECLATS,
+  'timecode': OV_TIMECODE,
+  'tracking': OV_TRACKING,
+  'mandala': OV_MANDALA,
+  'fluide': OV_FLUIDE,
 };
 
 // --- Post-traitement -------------------------------------------------------
 // Chaîne unique paramétrée : chaque filtre a une intensité 0..1 (0 = inactif).
-// Suffisant pour Retrofutur (bloom + décalage chromatique) ; extensible.
+// Un preset de style = un sous-ensemble de ces filtres (voir /catalog).
+// Ordre : déformations d'échantillonnage (kaléido, glitch, vhs), chroma,
+// bloom, couleur (chaleur, sépia, photocopie, posterize, teinte), texture
+// (lignes vhs, grain, vignettage), puis noir / flash.
 
 export const POST_FRAGMENT = `#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outColor;
 uniform sampler2D uScene;
+uniform float uTime;
+uniform float uBeat;
 uniform float uBloom;
 uniform float uChroma;
 uniform float uPosterize;
 uniform float uHue;
+uniform float uGrain;
+uniform float uVignette;
+uniform float uSepia;
+uniform float uWarmth;
+uniform float uPhotocopy;
+uniform float uGlitch;
+uniform float uVhs;
+uniform float uKaleido;
+uniform float uHueRot;
 uniform float uFlash;
 uniform float uBlack;
 uniform vec2 uRes;
+
+float phash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
 vec3 hueShift(vec3 c, float a) {
   const vec3 k = vec3(0.57735);
@@ -214,26 +840,112 @@ vec3 hueShift(vec3 c, float a) {
 
 void main() {
   vec2 px = 1.0 / uRes;
-  // Décalage chromatique radial.
-  vec2 dir = (vUv - 0.5) * uChroma * 0.02;
+  vec2 uv = vUv;
+
+  // Kaléidoscope : repli radial, fondu avec l'image droite selon l'intensité.
+  if (uKaleido > 0.001) {
+    vec2 c = uv - 0.5;
+    c.x *= uRes.x / uRes.y;
+    float a = atan(c.y, c.x) + uTime * 0.05;
+    float r = length(c);
+    float seg = 6.2831 / 6.0;
+    a = abs(mod(a, seg) - seg * 0.5);
+    vec2 k = vec2(cos(a), sin(a)) * r;
+    k.x /= uRes.x / uRes.y;
+    uv = mix(uv, clamp(k + 0.5, 0.0, 1.0), clamp(uKaleido, 0.0, 1.0));
+  }
+
+  // Glitch punk : tranches horizontales déplacées au hasard.
+  if (uGlitch > 0.001) {
+    float slice = floor(uv.y * 14.0 + floor(uTime * 6.0) * 3.0);
+    float h = phash(vec2(slice, floor(uTime * 6.0)));
+    float on = step(1.0 - 0.45 * uGlitch * (0.4 + 0.6 * uBeat), h);
+    uv.x = fract(uv.x + on * (phash(vec2(slice, 7.0)) - 0.5) * 0.18 * uGlitch);
+  }
+
+  // VHS : ondulation des lignes et saut d'image occasionnel.
+  if (uVhs > 0.001) {
+    float line = floor(uv.y * uRes.y);
+    uv.x += (phash(vec2(line, floor(uTime * 15.0))) - 0.5) * 0.004 * uVhs;
+    uv.x += sin(uv.y * 90.0 + uTime * 12.0) * 0.0015 * uVhs;
+    float jump = step(0.94, phash(vec2(floor(uTime * 2.0), 3.0))) * uVhs;
+    uv.y = fract(uv.y + jump * 0.05 * sin(uTime * 40.0));
+  }
+
+  // Décalage chromatique : radial (retrofutur) + horizontal (bavure VHS).
+  vec2 dir = (uv - 0.5) * uChroma * 0.02 + vec2(0.0035, 0.0) * uVhs;
   vec3 col;
-  col.r = texture(uScene, vUv + dir).r;
-  col.g = texture(uScene, vUv).g;
-  col.b = texture(uScene, vUv - dir).b;
+  col.r = texture(uScene, uv + dir).r;
+  col.g = texture(uScene, uv).g;
+  col.b = texture(uScene, uv - dir).b;
+
   // Bloom approché : moyenne élargie des voisins brillants.
-  if (uBloom > 0.001) {
+  float bloomAmt = max(uBloom, uWarmth * 0.5); // le halo 70's passe par là
+  if (bloomAmt > 0.001) {
     vec3 acc = vec3(0.0);
     for (int x = -2; x <= 2; x++)
       for (int y = -2; y <= 2; y++)
-        acc += texture(uScene, vUv + vec2(float(x), float(y)) * px * 2.5).rgb;
+        acc += texture(uScene, uv + vec2(float(x), float(y)) * px * 2.5).rgb;
     acc /= 25.0;
-    col += max(acc - 0.35, 0.0) * uBloom * 1.6;
+    vec3 boost = max(acc - 0.35, 0.0) * bloomAmt * 1.6;
+    if (uWarmth > 0.001) boost *= vec3(1.15, 0.95, 0.7); // halo chaud
+    col += boost;
   }
+
+  // 70's : tons chauds, saturation douce.
+  if (uWarmth > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 warm = col * vec3(1.12, 0.98, 0.78) + vec3(0.05, 0.02, 0.0) * luma;
+    warm = mix(vec3(luma), warm, 0.85); // désature légèrement
+    col = mix(col, warm, uWarmth);
+  }
+
+  // Vintage : sépia délavé.
+  if (uSepia > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 sep = vec3(luma) * vec3(1.05, 0.90, 0.68) + vec3(0.04, 0.02, 0.0);
+    col = mix(col, sep, uSepia * 0.85);
+  }
+
+  // Punk : photocopie — seuillage noir/blanc dur, accent rouge.
+  if (uPhotocopy > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    float th = 0.30 + 0.15 * sin(uTime * 0.7);
+    float bw = smoothstep(th - 0.04, th + 0.04, luma);
+    vec3 photo = vec3(bw);
+    // Les zones les plus brillantes virent au rouge sur le kick.
+    photo = mix(photo, vec3(1.0, 0.05, 0.05), step(0.75, luma) * (0.4 + 0.6 * uBeat));
+    col = mix(col, photo, uPhotocopy);
+  }
+
   if (uPosterize > 0.001) {
     float levels = mix(24.0, 4.0, uPosterize);
     col = floor(col * levels) / levels;
   }
   if (abs(uHue) > 0.001) col = hueShift(col, uHue);
+  // Psyché : rotation de teinte continue, vitesse = intensité.
+  if (uHueRot > 0.001) col = hueShift(col, uTime * uHueRot * 1.5);
+
+  // VHS : lignes de balayage, bruit, couleurs baveuses (désaturation légère).
+  if (uVhs > 0.001) {
+    float scan = 0.82 + 0.18 * sin(uv.y * uRes.y * 3.1416);
+    col *= mix(1.0, scan, uVhs * 0.8);
+    col += (phash(uv * uRes + uTime * 60.0) - 0.5) * 0.10 * uVhs;
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, mix(vec3(luma), col, 0.75), uVhs);
+  }
+
+  // Vintage : grain animé.
+  if (uGrain > 0.001) {
+    col += (phash(uv * uRes * 0.5 + floor(uTime * 24.0)) - 0.5) * 0.22 * uGrain;
+  }
+
+  // Vignettage.
+  if (uVignette > 0.001) {
+    vec2 v = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+    col *= 1.0 - dot(v, v) * 0.9 * uVignette;
+  }
+
   col = mix(col, vec3(0.0), clamp(uBlack, 0.0, 1.0));
   col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));
   outColor = vec4(col, 1.0);

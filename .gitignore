@@ -4,6 +4,9 @@ dist/
 dist-embed/
 *.local
 
+# Captures de validation visuelle (générées en headless)
+renderer/shots/
+
 # Copie embarquée du moteur (générée par renderer `npm run build:embed`)
 app/assets/renderer/
 

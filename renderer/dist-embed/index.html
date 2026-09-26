@@ -19,7 +19,7 @@
       pointer-events: none;
     }
   </style>
-  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))a(o);new MutationObserver(o=>{for(const i of o)if(i.type==="childList")for(const n of i.addedNodes)n.tagName==="LINK"&&n.rel==="modulepreload"&&a(n)}).observe(document,{childList:!0,subtree:!0});function e(o){const i={};return o.integrity&&(i.integrity=o.integrity),o.referrerPolicy&&(i.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?i.credentials="include":o.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function a(o){if(o.ep)return;o.ep=!0;const i=e(o);fetch(o.href,i)}})();class I{constructor(){this.bpm=0,this.phaseAtT0=0,this.t0=0,this.offsetMs=0,this.clockSkewMs=0,this.hasSkew=!1}update(t){const e=Date.now()-t.t0;!this.hasSkew||t.bpm!==this.bpm?(this.clockSkewMs=e,this.hasSkew=!0):this.clockSkewMs+=(e-this.clockSkewMs)*.1,this.bpm=t.bpm,this.phaseAtT0=t.phase,this.t0=t.t0,this.offsetMs=t.offsetMs}get hasBeat(){return this.bpm>0}get currentBpm(){return this.bpm}measurePhase(t=Date.now()){if(this.bpm<=0)return-1;const o=(t-this.clockSkewMs-this.t0-this.offsetMs)/6e4*(this.bpm/4),i=(this.phaseAtT0+o)%1;return i<0?i+1:i}beatPhase(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:e*4%1}beatIndex(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:Math.floor(e*4)%4}}const C=`
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))i(s);new MutationObserver(s=>{for(const a of s)if(a.type==="childList")for(const l of a.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&i(l)}).observe(document,{childList:!0,subtree:!0});function e(s){const a={};return s.integrity&&(a.integrity=s.integrity),s.referrerPolicy&&(a.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?a.credentials="include":s.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function i(s){if(s.ep)return;s.ep=!0;const a=e(s);fetch(s.href,a)}})();class V{constructor(){this.bpm=0,this.phaseAtT0=0,this.t0=0,this.offsetMs=0,this.clockSkewMs=0,this.hasSkew=!1}update(t){const e=Date.now()-t.t0;!this.hasSkew||t.bpm!==this.bpm?(this.clockSkewMs=e,this.hasSkew=!0):this.clockSkewMs+=(e-this.clockSkewMs)*.1,this.bpm=t.bpm,this.phaseAtT0=t.phase,this.t0=t.t0,this.offsetMs=t.offsetMs}get hasBeat(){return this.bpm>0}get currentBpm(){return this.bpm}measurePhase(t=Date.now()){if(this.bpm<=0)return-1;const s=(t-this.clockSkewMs-this.t0-this.offsetMs)/6e4*(this.bpm/4),a=(this.phaseAtT0+s)%1;return a<0?a+1:a}beatPhase(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:e*4%1}beatIndex(t=Date.now()){const e=this.measurePhase(t);return e<0?-1:Math.floor(e*4)%4}}const I=`
 uniform float uTime;
 uniform float uBeat;
 uniform float uMeasure;
@@ -29,7 +29,7 @@ uniform float uHigh;
 uniform float uLight;   // 0 dark .. 1 lumineux
 uniform float uEnergy;  // 0 .. 1
 uniform vec2 uRes;
-`,k=`
+`,n=`
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -42,7 +42,7 @@ float fbm(vec2 p) {
   for (int i = 0; i < 5; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
   return v;
 }
-`,D=`
+`,N=`
 void main() {
   vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
   float d = length(uv);
@@ -70,8 +70,8 @@ void main() {
   col += pow(max(0.0, 1.0 - d), 3.0) * magenta * (0.10 + 0.35 * uBeat + 0.2 * uLow);
   col *= 0.55 + 0.9 * uLight;
   outColor = vec4(col, 1.0);
-}`,V=`
-${k}
+}`,G=`
+${n}
 vec3 starLayer(vec2 uv, float scale, float speed, float brightness) {
   vec2 p = uv * scale + vec2(uTime * speed * 0.02, uMeasure * speed * 0.05);
   vec2 cell = floor(p);
@@ -95,8 +95,8 @@ void main() {
   col += band * vec3(0.10, 0.07, 0.16) * (0.5 + 0.5 * uLow + 0.4 * uBeat);
   col *= 0.55 + 0.9 * uLight;
   outColor = vec4(col, 1.0);
-}`,G=`
-${k}
+}`,D=`
+${n}
 void main() {
   vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
   vec2 drift = vec2(uTime * 0.015, uMeasure * 0.08);
@@ -129,7 +129,330 @@ void main() {
   col += vec3(1.0, 0.8, 0.9) * smoothstep(0.05, 0.0, d) * uBeat * 0.6;
   col *= 0.55 + 0.9 * uLight;
   outColor = vec4(col, 1.0);
-}`,A={"cosmos-sun":D,"cosmos-stars":V,"cosmos-nebula":G,"cosmos-rings":$},H=`
+}`,H=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 skyHi = mix(vec3(0.10, 0.06, 0.16), vec3(0.55, 0.55, 0.75), uLight);
+  vec3 skyLo = mix(vec3(0.55, 0.22, 0.12), vec3(1.0, 0.72, 0.40), uLight);
+  vec3 col = mix(skyLo, skyHi, clamp(uv.y * 1.6 + 0.5, 0.0, 1.0));
+  // Soleil bas qui pulse doucement sur le kick.
+  vec2 sunP = uv - vec2(0.22, -0.02);
+  float sd = length(sunP);
+  col += vec3(1.0, 0.62, 0.28) * smoothstep(0.10 + 0.02 * uBeat, 0.02, sd) * 1.1;
+  col += vec3(1.0, 0.5, 0.2) * pow(max(0.0, 1.0 - sd), 4.0) * (0.3 + 0.3 * uBeat);
+  // Trois plans de collines : silhouettes en bruit basse fréquence.
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float h = -0.08 - fi * 0.12
+            + noise(vec2(uv.x * (1.4 + fi * 0.8) + fi * 9.0 + uMeasure * 0.05 * (1.0 + fi), fi)) * 0.16;
+    float m = smoothstep(h + 0.006, h - 0.006, uv.y);
+    vec3 hill = mix(vec3(0.16, 0.13, 0.10), vec3(0.05, 0.06, 0.04), fi / 2.0);
+    hill *= 0.5 + 0.9 * uLight;
+    col = mix(col, hill, m * (0.75 + fi * 0.12));
+  }
+  // Brume au ras du sol qui respire avec les basses.
+  float mist = exp(-pow((uv.y + 0.30) * 5.0, 2.0)) * fbm(uv * 3.0 + vec2(uTime * 0.03, 0.0));
+  col += mist * vec3(0.5, 0.4, 0.35) * (0.15 + 0.25 * uLow);
+  col *= 0.6 + 0.8 * uLight;
+  outColor = vec4(col, 1.0);
+}`,q=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Ciel de fin d'après-midi avec soleil bas et quelques nuages étirés.
+  vec3 sky = mix(vec3(0.45, 0.30, 0.14), vec3(0.80, 0.72, 0.52), uLight);
+  vec3 col = mix(sky * 0.55, sky, clamp(uv.y * 1.6 + 0.3, 0.0, 1.0));
+  float sd = length(uv - vec2(-0.28, 0.16));
+  col += vec3(1.0, 0.75, 0.35) * smoothstep(0.09 + 0.02 * uBeat, 0.02, sd);
+  col += vec3(1.0, 0.6, 0.25) * pow(max(0.0, 1.0 - sd), 4.0) * 0.35;
+  float wisp = fbm(vec2(uv.x * 2.0 + uTime * 0.02, uv.y * 8.0));
+  col += vec3(0.9, 0.75, 0.55) * smoothstep(0.55, 0.8, wisp) * step(0.05, uv.y) * 0.25;
+  float horizon = -0.02;
+  if (uv.y < horizon) {
+    // Profondeur du champ : plus près = tiges plus larges et plus sombres.
+    float depth = (horizon - uv.y) / (horizon + 0.5);
+    float wind = sin(uMeasure * 6.2831 + uv.x * 2.0) * (0.3 + 0.4 * uLow) + uTime * 0.05;
+    float x = uv.x * mix(60.0, 14.0, depth) + wind * depth * 4.0;
+    float stalk = abs(fract(x + noise(vec2(floor(x), 3.0))) - 0.5);
+    float body = smoothstep(0.32, 0.05, stalk);
+    vec3 gold = mix(vec3(0.75, 0.55, 0.16), vec3(0.95, 0.78, 0.30), noise(vec2(floor(x) * 0.37, 1.0)));
+    vec3 field = gold * (0.35 + 0.65 * (1.0 - depth)) * body
+               + vec3(0.30, 0.20, 0.06) * (1.0 - body);
+    col = mix(col, field, smoothstep(horizon + 0.01, horizon - 0.03, uv.y));
+    // Vague de lumière qui traverse le champ sur le kick.
+    float wave = exp(-pow((fract(uMeasure) * 2.4 - 1.2 - uv.x) * 3.0, 2.0));
+    col += wave * vec3(0.5, 0.38, 0.12) * uBeat * (1.0 - depth) * 0.6;
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,z=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 skyTop = mix(vec3(0.06, 0.10, 0.22), vec3(0.30, 0.55, 0.85), uLight);
+  vec3 skyBot = mix(vec3(0.16, 0.12, 0.20), vec3(0.75, 0.80, 0.90), uLight);
+  vec3 col = mix(skyBot, skyTop, clamp(uv.y + 0.5, 0.0, 1.0));
+  vec2 drift = vec2(uTime * 0.02 + uMeasure * 0.05, 0.0);
+  float c1 = fbm(uv * vec2(1.6, 3.2) + drift);
+  float c2 = fbm(uv * vec2(2.8, 5.0) - drift * 1.7 + 4.0);
+  float cloud = smoothstep(0.42, 0.72, c1 * 0.65 + c2 * 0.45);
+  vec3 cloudCol = mix(vec3(0.55, 0.50, 0.55), vec3(1.0, 0.98, 0.94), uLight)
+                * (0.8 + 0.3 * c2 + 0.15 * uMid);
+  vec3 shade = cloudCol * 0.45;
+  col = mix(col, mix(shade, cloudCol, smoothstep(0.3, 0.9, c1)), cloud);
+  // Percée de lumière qui pulse doucement.
+  col += vec3(1.0, 0.9, 0.7) * pow(max(0.0, 1.0 - length(uv - vec2(-0.3, 0.25))), 3.0)
+       * (0.08 + 0.20 * uBeat) * uLight;
+  col *= 0.5 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,W=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.02, 0.02, 0.06), vec3(0.10, 0.06, 0.16), clamp(uv.y + 0.6, 0.0, 1.0));
+  // Halo urbain à l'horizon.
+  col += vec3(0.30, 0.12, 0.28) * exp(-pow((uv.y + 0.18) * 4.0, 2.0)) * (0.5 + 0.3 * uLow);
+  // Deux plans d'immeubles.
+  for (int layer = 0; layer < 2; layer++) {
+    float fl = float(layer);
+    float scale = mix(7.0, 12.0, fl);
+    float x = uv.x * scale + fl * 37.0 + uMeasure * (0.3 + fl * 0.4);
+    float b = floor(x);
+    float h = hash(vec2(b, fl * 5.0)) * 0.45 + 0.05 - fl * 0.10;
+    float top = h - 0.18;
+    float inBld = step(uv.y, top) * step(abs(fract(x) - 0.5), 0.42);
+    vec3 bld = mix(vec3(0.05, 0.05, 0.09), vec3(0.02, 0.02, 0.04), fl);
+    // Fenêtres : grille fine, allumage aléatoire animé par les mediums.
+    vec2 win = vec2(fract(x * 6.0), fract((uv.y + 0.5) * 26.0));
+    float wOn = step(0.65, hash(vec2(floor(x * 6.0), floor((uv.y + 0.5) * 26.0)) + fl * 11.0)
+                 + 0.20 * sin(uTime * 2.0 + b * 3.0) * uMid);
+    float wMask = step(win.x, 0.55) * step(win.y, 0.5) * wOn;
+    vec3 warm = mix(vec3(1.0, 0.75, 0.35), vec3(0.5, 0.8, 1.0), hash(vec2(b, 9.0)));
+    col = mix(col, bld + warm * wMask * (0.5 + 0.5 * uBeat * (1.0 - fl)), inBld);
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,X=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.02, 0.02, 0.05);
+  // Route en perspective : point de fuite au centre-haut.
+  float py = 1.0 / (abs(uv.y - 0.15) + 0.05);
+  float lane = uv.x * py * 0.22;
+  // Traînées : chaque voie porte des lumières filantes calées sur la mesure.
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i) - 2.5;
+    float d = abs(lane - fi * 0.55);
+    float speed = 2.0 + hash(vec2(fi, 1.0)) * 2.0 + 3.0 * uEnergy;
+    float ph = fract(py * 0.15 - uMeasure * speed + hash(vec2(fi, 7.0)));
+    float streak = smoothstep(0.30, 0.0, d) * smoothstep(0.6, 0.0, ph);
+    vec3 tint = fi < 0.0 ? vec3(1.0, 0.95, 0.85) : vec3(1.0, 0.15, 0.10);
+    col += tint * streak * smoothstep(0.15, -0.4, uv.y) * (0.5 + 0.5 * uBeat);
+  }
+  // Néons flous au-dessus de la route.
+  float n = fbm(uv * 3.0 + vec2(uTime * 0.05, 0.0));
+  col += vec3(0.7, 0.2, 0.8) * n * smoothstep(0.0, 0.5, uv.y) * (0.20 + 0.15 * uMid);
+  col += vec3(0.1, 0.6, 0.9) * fbm(uv * 4.0 - 3.0) * smoothstep(0.1, 0.6, uv.y) * 0.15;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,K=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Enseignes floues : taches colorées fbm.
+  float n1 = fbm(uv * 2.4 + vec2(0.0, uTime * 0.01));
+  float n2 = fbm(uv * 3.1 + 7.0);
+  vec3 col = vec3(0.02, 0.02, 0.05);
+  col += vec3(0.9, 0.15, 0.55) * pow(n1, 3.0) * 1.2;
+  col += vec3(0.10, 0.65, 0.95) * pow(n2, 3.2) * 1.1;
+  col += vec3(1.0, 0.6, 0.15) * pow(fbm(uv * 2.0 - 11.0), 4.0);
+  col *= 0.5 + 0.4 * uMid + 0.4 * uBeat * 0.3;
+  // Rideaux de pluie : deux couches de stries verticales rapides.
+  for (int i = 0; i < 2; i++) {
+    float fi = float(i);
+    float sc = mix(40.0, 70.0, fi);
+    float x = uv.x * sc + hash(vec2(fi, 2.0)) * 40.0;
+    float colId = floor(x);
+    float speed = 1.4 + hash(vec2(colId, fi)) * 1.2;
+    float yph = fract(uv.y * (0.8 + fi * 0.5) - uTime * speed + hash(vec2(colId, 5.0)));
+    float drop = smoothstep(0.20, 0.0, abs(fract(x) - 0.5))
+               * smoothstep(0.25, 0.0, yph) * step(0.4, hash(vec2(colId, 8.0)));
+    col += vec3(0.6, 0.75, 0.9) * drop * (0.25 + 0.35 * uHigh);
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,J=`
+${n}
+float gear(vec2 p, float radius, float teeth, float spin) {
+  float a = atan(p.y, p.x) + spin;
+  float r = length(p);
+  float edge = radius + 0.035 * radius * sign(sin(a * teeth));
+  float body = smoothstep(edge + 0.008, edge - 0.008, r);
+  float hub = smoothstep(radius * 0.30, radius * 0.28, r);
+  float hole = smoothstep(radius * 0.14, radius * 0.16, r);
+  return clamp(body - hub + (1.0 - hole) * body, 0.0, 1.0) * step(radius * 0.16, r);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.03, 0.03, 0.04), vec3(0.08, 0.07, 0.07), fbm(uv * 3.0));
+  float spin = uMeasure * 6.2831 * 0.25 + uBeat * 0.10;
+  vec3 metal = vec3(0.55, 0.52, 0.48);
+  vec3 amber = vec3(1.0, 0.65, 0.20);
+  // Trois engrenages engrenés (sens alternés).
+  float g1 = gear(uv - vec2(-0.45, 0.12), 0.34, 12.0, spin);
+  float g2 = gear(uv - vec2(0.02, -0.18), 0.24, 9.0, -spin * 12.0 / 9.0 + 0.3);
+  float g3 = gear(uv - vec2(0.48, 0.16), 0.29, 11.0, spin * 12.0 / 11.0 + 0.1);
+  float g = max(g1, max(g2, g3));
+  float shade = 0.6 + 0.4 * sin(atan(uv.y, uv.x) * 2.0 + spin * 2.0);
+  col = mix(col, metal * shade * (0.5 + 0.5 * uLight), g);
+  // Reflet ambré industriel qui monte avec les basses.
+  col += amber * g * (0.10 + 0.35 * uLow + 0.25 * uBeat) * shade * 0.5;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,Y=`
+${n}
+void main() {
+  vec2 uv = vUv;
+  vec2 auv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = mix(vec3(0.03, 0.03, 0.04), vec3(0.07, 0.06, 0.06), fbm(auv * 4.0));
+  float cols = 7.0;
+  float x = uv.x * cols;
+  float id = floor(x);
+  float fx = fract(x);
+  // Course sinusoïdale calée sur la mesure, phase alternée par colonne.
+  float phase = uMeasure * 6.2831 * 2.0 + id * 2.4;
+  float lift = 0.5 + 0.32 * sin(phase) * (0.5 + 0.5 * uEnergy);
+  float body = step(abs(fx - 0.5), 0.30) * step(uv.y, lift) * step(lift - 0.42, uv.y);
+  float rod = step(abs(fx - 0.5), 0.05) * step(uv.y, lift - 0.40) * step(0.08, uv.y);
+  vec3 metal = vec3(0.45, 0.44, 0.42) * (0.6 + 0.5 * fx * (1.0 - fx) * 4.0);
+  col = mix(col, metal * (0.5 + 0.5 * uLight), max(body, rod));
+  // Tête chauffée : lueur ambrée à l'impact du kick.
+  float head = smoothstep(0.05, 0.0, abs(uv.y - lift)) * step(abs(fx - 0.5), 0.30);
+  col += vec3(1.0, 0.45, 0.10) * head * (0.2 + 0.8 * uBeat);
+  // Vapeur au sol.
+  col += vec3(0.35, 0.33, 0.30) * exp(-uv.y * 6.0) * fbm(auv * 5.0 + vec2(0.0, uTime * 0.3)) * 0.4;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,j=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.015, 0.03, 0.025);
+  float scale = 9.0;
+  vec2 p = uv * scale;
+  vec2 cell = floor(p);
+  vec2 f = fract(p);
+  // Pistes en L : chaque cellule route horizontalement ou verticalement.
+  float dir = step(0.5, hash(cell));
+  float trace = dir * smoothstep(0.10, 0.04, abs(f.y - 0.5))
+              + (1.0 - dir) * smoothstep(0.10, 0.04, abs(f.x - 0.5));
+  float pad = smoothstep(0.16, 0.10, length(f - 0.5));
+  vec3 copper = vec3(0.10, 0.45, 0.30);
+  col += copper * (trace * 0.5 + pad * 0.8);
+  // Impulsions lumineuses qui parcourent les pistes, cadencées sur la mesure.
+  float along = dir > 0.5 ? p.x : p.y;
+  float pulse = fract(along * 0.11 - uMeasure * 2.0 + hash(cell + 3.0));
+  float spark = smoothstep(0.12, 0.0, pulse) * trace;
+  col += vec3(0.4, 1.0, 0.7) * spark * (0.4 + 0.6 * uBeat);
+  col += vec3(0.9, 0.8, 0.3) * pad * smoothstep(0.10, 0.0, pulse) * uMid * 0.6;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,Q=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 p = uv * 5.0;
+  float t = uTime * 0.25 + uMeasure * 0.8;
+  // Caustiques : réseau de crêtes fines là où deux champs d'ondes se croisent.
+  float w1 = sin(p.x * 1.7 + t + sin(p.y * 2.3 + t * 0.7) * 1.4);
+  float w2 = sin(p.y * 2.1 - t * 0.8 + sin(p.x * 1.9 - t * 0.5) * 1.4);
+  float w3 = sin((p.x + p.y) * 1.3 + t * 0.6 + noise(p * 0.8 + t * 0.2) * 3.0);
+  float c = pow(1.0 - abs(w1 * 0.5 + w2 * 0.3 + w3 * 0.2), 6.0) * 1.4;
+  c += pow(max(0.0, 1.0 - abs(w2)), 8.0) * 0.5;
+  vec3 deep = mix(vec3(0.01, 0.05, 0.09), vec3(0.02, 0.14, 0.20), uLight);
+  vec3 caust = mix(vec3(0.15, 0.55, 0.60), vec3(0.45, 0.9, 0.85), uLight);
+  vec3 col = deep + caust * c * (0.55 + 0.45 * uBeat * 0.6 + 0.3 * uLow);
+  // Profondeur : plus sombre vers le bas.
+  col *= mix(0.6, 1.15, vUv.y);
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`,Z=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 rise = vec2(uTime * 0.02, -uTime * 0.07 - uMeasure * 0.15);
+  float n1 = fbm(uv * 2.0 + rise);
+  float n2 = fbm(uv * 3.4 + rise * 1.6 + n1 * 1.5);
+  float plume = exp(-pow(uv.x * (1.8 - n1), 2.0)) * (0.4 + 0.6 * smoothstep(0.6, -0.5, uv.y));
+  float smoke = pow(n2, 1.6) * plume;
+  vec3 warm = vec3(1.0, 0.55, 0.25);
+  vec3 cold = vec3(0.5, 0.55, 0.65);
+  vec3 col = vec3(0.015, 0.012, 0.02);
+  col += mix(cold, warm, smoothstep(0.4, -0.6, uv.y)) * smoke * (0.8 + 0.5 * uLow + 0.4 * uBeat);
+  // Braise à la base.
+  col += warm * exp(-pow((uv.y + 0.52) * 6.0, 2.0)) * (0.15 + 0.35 * uBeat) * n1;
+  col *= 0.5 + 1.0 * uLight;
+  outColor = vec4(col, 1.0);
+}`,ee=`
+${n}
+vec3 fireflyLayer(vec2 uv, float scale, float speed, float size) {
+  vec2 p = uv * scale + vec2(uTime * speed * 0.03, sin(uTime * 0.2) * 0.1);
+  vec2 cell = floor(p);
+  vec2 f = fract(p) - 0.5;
+  float h = hash(cell);
+  vec2 wander = 0.35 * vec2(sin(uTime * (0.4 + h) + h * 20.0), cos(uTime * (0.3 + h * 0.7) + h * 30.0));
+  float d = length(f - wander);
+  float blink = 0.4 + 0.6 * pow(0.5 + 0.5 * sin(uTime * (1.0 + h * 2.0) + h * 40.0), 3.0);
+  float fly = smoothstep(size, 0.0, d) * step(0.55, h) * blink;
+  return vec3(1.0, 0.85, 0.35) * fly;
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Sous-bois : troncs sombres suggérés par du bruit vertical.
+  float trees = fbm(vec2(uv.x * 4.0, uv.y * 0.5));
+  vec3 col = mix(vec3(0.01, 0.02, 0.015), vec3(0.03, 0.06, 0.04), trees) * (0.5 + 0.9 * uLight);
+  col += fireflyLayer(uv, 5.0, 1.0, 0.05) * (0.7 + 0.6 * uLow + 0.5 * uBeat);
+  col += fireflyLayer(uv + 3.7, 8.0, -0.7, 0.035) * (0.5 + 0.5 * uHigh);
+  col += fireflyLayer(uv + 9.1, 12.0, 0.4, 0.025) * 0.4;
+  // Clair de lune diffus en haut.
+  col += vec3(0.10, 0.14, 0.20) * exp(-pow((uv.y - 0.45) * 3.0, 2.0)) * uLight;
+  outColor = vec4(col, 1.0);
+}`,te=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  float a = atan(uv.y, uv.x) + uMeasure * 0.8;
+  float r = length(uv);
+  float seg = 6.2831 / 8.0;
+  a = abs(mod(a, seg) - seg * 0.5);
+  vec2 p = vec2(cos(a), sin(a)) * r;
+  float n1 = fbm(p * 3.0 + vec2(uTime * 0.05, uMeasure * 0.3));
+  float n2 = fbm(p * 5.0 - uTime * 0.04);
+  vec3 col = vec3(0.02, 0.01, 0.04);
+  col += vec3(0.9, 0.2, 0.5) * pow(n1, 2.0) * (0.8 + 0.5 * uBeat);
+  col += vec3(0.2, 0.7, 0.9) * pow(n2, 2.4) * (0.7 + 0.5 * uMid);
+  col += vec3(1.0, 0.8, 0.3) * pow(n1 * n2, 4.0) * 2.0;
+  col *= smoothstep(1.2, 0.3, r) * (0.55 + 0.9 * uLight);
+  outColor = vec4(col, 1.0);
+}`,oe=`
+${n}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 flow = vec2(uTime * 0.03, uMeasure * 0.10);
+  float n = fbm(uv * 2.6 + flow + fbm(uv * 3.0 - flow) * 0.9);
+  // Pseudo-normale : dérivée du bruit -> bandes de reflets.
+  float band = sin(n * 12.0 + uv.y * 4.0 + uBeat * 1.5);
+  float sharp = pow(0.5 + 0.5 * band, 6.0);
+  vec3 dark = vec3(0.04, 0.05, 0.07);
+  vec3 steel = vec3(0.55, 0.60, 0.68);
+  vec3 warm = vec3(0.9, 0.75, 0.55);
+  vec3 col = mix(dark, steel, 0.35 + 0.65 * n);
+  col += mix(steel, warm, 0.5 + 0.5 * sin(uTime * 0.2)) * sharp * (0.6 + 0.4 * uBeat);
+  col *= 0.5 + 1.0 * uLight;
+  outColor = vec4(col, 1.0);
+}`,M={"cosmos-sun":N,"cosmos-stars":G,"cosmos-nebula":D,"cosmos-rings":$,"campagne-collines":H,"campagne-ble":q,"campagne-nuages":z,"ville-skyline":W,"ville-trafic":X,"ville-pluie":K,"machines-engrenages":J,"machines-pistons":Y,"machines-circuits":j,"nature-eau":Q,"nature-fumee":Z,"nature-lucioles":ee,"miroir-kaleido":te,"miroir-chrome":oe},se=`
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
   float pulse = 1.0 + uPulse * uBeat * 0.5;
@@ -138,7 +461,7 @@ void main() {
   float mask = smoothstep(1.3, 0.4, length(uv));
   vec3 col = vec3(0.15, 0.85, 1.0) * line * mask * (0.5 + 0.5 * uMid);
   outColor = vec4(col * uOpacity, 1.0);
-}`,X=`
+}`,ae=`
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
   float d = length(uv);
@@ -149,7 +472,7 @@ void main() {
   float halo = pow(max(0.0, 1.0 - d), 2.5) * 0.6;
   vec3 col = vec3(1.0, 0.55, 0.20) * disc + vec3(1.0, 0.3, 0.5) * halo;
   outColor = vec4(col * uOpacity * (0.6 + 0.4 * uLow), 1.0);
-}`,q=`
+}`,ie=`
 void main() {
   vec2 uv = (vUv - 0.5) * 2.0;
   float t = uTime * 0.3 + uMeasure * 6.2831;
@@ -163,18 +486,209 @@ void main() {
   float line = smoothstep(w, w * 0.3, best);
   vec3 col = mix(vec3(1.0, 0.15, 0.65), vec3(0.15, 0.85, 1.0), sin(t) * 0.5 + 0.5);
   outColor = vec4(col * line * uOpacity * (0.6 + 0.4 * uHigh), 1.0);
-}`,M={grid:H,sun:X,loop:q},W=`#version 300 es
+}`,ce=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  // Grains qui flottent lentement.
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec2 p = uv * (4.0 + fi * 3.0) + vec2(uTime * (0.05 + fi * 0.04), -uTime * (0.08 + fi * 0.03));
+    vec2 cell = floor(p);
+    float h = hash(cell + fi * 17.0);
+    float d = length(fract(p) - 0.5 - 0.3 * vec2(hash(cell + 3.0) - 0.5, hash(cell + 5.0) - 0.5));
+    float speck = smoothstep(0.05 + h * 0.04, 0.0, d) * step(0.8, h);
+    col += vec3(1.0, 0.95, 0.85) * speck * (0.3 + 0.4 * h);
+  }
+  // Rayure verticale fugace.
+  float sx = fract(hash(vec2(floor(uTime * 1.3), 1.0)) + 0.0001);
+  float scratch = smoothstep(0.004, 0.0, abs(vUv.x - sx)) * step(0.7, hash(vec2(floor(uTime * 1.3), 2.0)));
+  col += vec3(0.9, 0.85, 0.75) * scratch * 0.5;
+  float mask = smoothstep(1.4, 0.5, length(uv));
+  outColor = vec4(col * mask * uOpacity * (0.5 + 0.5 * uPulse), 1.0);
+}`,le=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  float breathe = 1.0 + 0.10 * uPulse * uBeat + 0.05 * sin(uTime * 0.7);
+  float rings = abs(fract(d * 3.0 / breathe - uMeasure * 0.5) - 0.5);
+  float line = smoothstep(0.16, 0.02, rings) * smoothstep(1.0, 0.2, d);
+  vec3 warm = vec3(0.95, 0.80, 0.55);
+  outColor = vec4(warm * line * uOpacity * (0.4 + 0.3 * uLow), 1.0);
+}`,ue=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float a = atan(uv.y, uv.x);
+  float r = length(uv) + 0.0001;
+  float twist = a + log(r) * 3.5 - uMeasure * 6.2831 * 0.5 - uTime * 0.2;
+  float arm = 0.5 + 0.5 * sin(twist * 3.0);
+  float band = pow(arm, 3.0 - uPulse * uBeat * 1.5);
+  vec3 orange = vec3(1.0, 0.55, 0.15);
+  vec3 brun = vec3(0.55, 0.30, 0.10);
+  vec3 col = mix(brun, orange, band) * band;
+  col *= smoothstep(1.1, 0.2, r);
+  outColor = vec4(col * uOpacity * (0.5 + 0.4 * uLow), 1.0);
+}`,re=`
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  float wave = sin(d * 14.0 - uTime * 1.2 - uMeasure * 6.2831) * 0.5 + 0.5;
+  wave = pow(wave, 2.5 - uPulse * uBeat);
+  vec3 moutarde = vec3(0.90, 0.70, 0.20);
+  vec3 col = moutarde * wave * smoothstep(1.1, 0.15, d);
+  outColor = vec4(col * uOpacity * (0.4 + 0.4 * uMid), 1.0);
+}`,ne=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  // Grille tournée de 45°, taille de point pilotée par le kick.
+  vec2 p = mat2(0.707, -0.707, 0.707, 0.707) * uv * 14.0;
+  float cell = hash(floor(p + floor(uTime * 3.0)));
+  float d = length(fract(p) - 0.5);
+  float dot_ = step(d, 0.15 + 0.25 * cell * (0.5 + 0.8 * uPulse * uBeat));
+  float mask = smoothstep(1.2, 0.5, length(uv));
+  vec3 col = vec3(1.0) * dot_ * mask;
+  // Pointe de rouge punk sur certains points.
+  col = mix(col, vec3(1.0, 0.1, 0.1), step(0.85, cell) * dot_);
+  outColor = vec4(col * uOpacity * 0.5, 1.0);
+}`,ve=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float slot = floor(uTime * 4.0 + uBeat * 2.0);
+  float a = hash(vec2(slot, 1.0)) * 3.1416;
+  vec2 dir = vec2(cos(a), sin(a));
+  float stripe = fract(dot(uv, dir) * (3.0 + hash(vec2(slot, 2.0)) * 5.0) + hash(vec2(slot, 3.0)));
+  float bar = step(stripe, 0.18 + 0.20 * uPulse * uBeat) * step(0.35, hash(vec2(slot, 4.0)) + uBeat * 0.5);
+  vec3 col = mix(vec3(1.0), vec3(1.0, 0.08, 0.08), step(0.6, hash(vec2(slot, 5.0))));
+  float mask = smoothstep(1.3, 0.6, length(uv));
+  outColor = vec4(col * bar * mask * uOpacity * 0.55, 1.0);
+}`,fe=`
+float seg(vec2 p, vec2 a, vec2 b, float w) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return smoothstep(w, w * 0.4, length(pa - ba * h));
+}
+float digit(vec2 p, float n) {
+  // 7 segments dans un cadre [0,1]², n = 0..9.
+  float d = 0.0;
+  float w = 0.09;
+  bool s0 = n != 1.0 && n != 4.0;                              // haut
+  bool s1 = n != 1.0 && n != 2.0 && n != 3.0 && n != 7.0;      // haut gauche
+  bool s2 = n != 5.0 && n != 6.0;                              // haut droit
+  bool s3 = n != 0.0 && n != 1.0 && n != 7.0;                  // milieu
+  bool s4 = n == 0.0 || n == 2.0 || n == 6.0 || n == 8.0;      // bas gauche
+  bool s5 = n != 2.0;                                          // bas droit
+  bool s6 = n != 1.0 && n != 4.0 && n != 7.0;                  // bas
+  if (s0) d = max(d, seg(p, vec2(0.15, 0.95), vec2(0.85, 0.95), w));
+  if (s1) d = max(d, seg(p, vec2(0.10, 0.55), vec2(0.10, 0.90), w));
+  if (s2) d = max(d, seg(p, vec2(0.90, 0.55), vec2(0.90, 0.90), w));
+  if (s3) d = max(d, seg(p, vec2(0.15, 0.50), vec2(0.85, 0.50), w));
+  if (s4) d = max(d, seg(p, vec2(0.10, 0.10), vec2(0.10, 0.45), w));
+  if (s5) d = max(d, seg(p, vec2(0.90, 0.10), vec2(0.90, 0.45), w));
+  if (s6) d = max(d, seg(p, vec2(0.15, 0.05), vec2(0.85, 0.05), w));
+  return d;
+}
+void main() {
+  vec2 uv = vUv;
+  vec3 col = vec3(0.0);
+  // « HH:MM:SS » sommaire : compteur qui tourne, secondes réelles.
+  float total = floor(uTime);
+  float sec = mod(total, 60.0);
+  float mn = mod(floor(total / 60.0), 60.0);
+  float digits[4];
+  digits[0] = floor(mn / 10.0); digits[1] = mod(mn, 10.0);
+  digits[2] = floor(sec / 10.0); digits[3] = mod(sec, 10.0);
+  float glyph = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float xo = 0.16 + float(i) * 0.17 + (i > 1 ? 0.08 : 0.0);
+    vec2 p = (uv - vec2(xo, 0.38)) / vec2(0.13, 0.26);
+    if (p.x >= 0.0 && p.x <= 1.0 && p.y >= 0.0 && p.y <= 1.0) glyph = max(glyph, digit(p, digits[i]));
+  }
+  // Deux-points clignotant.
+  float blink = step(0.5, fract(uTime));
+  float dots = (smoothstep(0.02, 0.008, length(uv - vec2(0.55, 0.52)))
+              + smoothstep(0.02, 0.008, length(uv - vec2(0.55, 0.44)))) * blink;
+  // Pastille REC qui pulse sur le kick.
+  float rec = smoothstep(0.05, 0.03, length((uv - vec2(0.16, 0.78)) * vec2(1.8, 1.0)));
+  col += vec3(0.95) * max(glyph, dots);
+  col += vec3(1.0, 0.15, 0.10) * rec * (0.5 + 0.5 * uBeat * uPulse);
+  outColor = vec4(col * uOpacity * 0.8, 1.0);
+}`,he=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = vUv;
+  float y = fract(0.5 + uTime * 0.07 + 0.2 * sin(uTime * 0.5));
+  float band = smoothstep(0.10, 0.02, abs(uv.y - y));
+  float snow = hash(vec2(floor(uv.x * 240.0), floor(uv.y * 140.0) + floor(uTime * 30.0)));
+  float tear = step(0.85, hash(vec2(floor(uv.y * 60.0), floor(uTime * 8.0))));
+  vec3 col = vec3(0.9) * band * snow * (0.5 + 0.5 * uPulse);
+  col += vec3(0.8) * tear * band * 0.4;
+  outColor = vec4(col * uOpacity * 0.6, 1.0);
+}`,me=`
+vec3 hue2rgb(float h) {
+  vec3 k = mod(vec3(5.0, 3.0, 1.0) + h * 6.0, 6.0);
+  return 1.0 - clamp(min(k, 4.0 - k), 0.0, 1.0);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float a = atan(uv.y, uv.x) + uMeasure * 1.5;
+  float r = length(uv);
+  float petals = 0.5 + 0.5 * cos(a * 8.0 + r * 6.0 - uTime * 0.8);
+  float rings = 0.5 + 0.5 * cos(r * 18.0 - uTime * 1.5 - uBeat * uPulse * 2.0);
+  float m = pow(petals * rings, 2.0) * smoothstep(1.0, 0.15, r);
+  vec3 col = hue2rgb(fract(a / 6.2831 + r * 0.5 + uTime * 0.05)) * m;
+  outColor = vec4(col * uOpacity * (0.5 + 0.4 * uMid), 1.0);
+}`,de=`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
+  return v;
+}
+vec3 hue2rgb(float h) {
+  vec3 k = mod(vec3(5.0, 3.0, 1.0) + h * 6.0, 6.0);
+  return 1.0 - clamp(min(k, 4.0 - k), 0.0, 1.0);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec2 flow = vec2(uTime * 0.06, -uTime * 0.04);
+  float n = fbm(uv * 2.0 + flow + fbm(uv * 3.0 - flow) * (1.0 + uPulse * uBeat));
+  vec3 col = hue2rgb(fract(n * 1.4 + uTime * 0.04)) * pow(n, 1.5);
+  col *= smoothstep(1.3, 0.4, length(uv));
+  outColor = vec4(col * uOpacity * 0.7, 1.0);
+}`,A={grid:se,sun:ae,loop:ie,poussieres:ce,cercles:le,spirale:ue,onde:re,trame:ne,eclats:ve,timecode:fe,tracking:he,mandala:me,fluide:de},pe=`#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outColor;
 uniform sampler2D uScene;
+uniform float uTime;
+uniform float uBeat;
 uniform float uBloom;
 uniform float uChroma;
 uniform float uPosterize;
 uniform float uHue;
+uniform float uGrain;
+uniform float uVignette;
+uniform float uSepia;
+uniform float uWarmth;
+uniform float uPhotocopy;
+uniform float uGlitch;
+uniform float uVhs;
+uniform float uKaleido;
+uniform float uHueRot;
 uniform float uFlash;
 uniform float uBlack;
 uniform vec2 uRes;
+
+float phash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
 vec3 hueShift(vec3 c, float a) {
   const vec3 k = vec3(0.57735);
@@ -183,36 +697,122 @@ vec3 hueShift(vec3 c, float a) {
 
 void main() {
   vec2 px = 1.0 / uRes;
-  // Décalage chromatique radial.
-  vec2 dir = (vUv - 0.5) * uChroma * 0.02;
+  vec2 uv = vUv;
+
+  // Kaléidoscope : repli radial, fondu avec l'image droite selon l'intensité.
+  if (uKaleido > 0.001) {
+    vec2 c = uv - 0.5;
+    c.x *= uRes.x / uRes.y;
+    float a = atan(c.y, c.x) + uTime * 0.05;
+    float r = length(c);
+    float seg = 6.2831 / 6.0;
+    a = abs(mod(a, seg) - seg * 0.5);
+    vec2 k = vec2(cos(a), sin(a)) * r;
+    k.x /= uRes.x / uRes.y;
+    uv = mix(uv, clamp(k + 0.5, 0.0, 1.0), clamp(uKaleido, 0.0, 1.0));
+  }
+
+  // Glitch punk : tranches horizontales déplacées au hasard.
+  if (uGlitch > 0.001) {
+    float slice = floor(uv.y * 14.0 + floor(uTime * 6.0) * 3.0);
+    float h = phash(vec2(slice, floor(uTime * 6.0)));
+    float on = step(1.0 - 0.45 * uGlitch * (0.4 + 0.6 * uBeat), h);
+    uv.x = fract(uv.x + on * (phash(vec2(slice, 7.0)) - 0.5) * 0.18 * uGlitch);
+  }
+
+  // VHS : ondulation des lignes et saut d'image occasionnel.
+  if (uVhs > 0.001) {
+    float line = floor(uv.y * uRes.y);
+    uv.x += (phash(vec2(line, floor(uTime * 15.0))) - 0.5) * 0.004 * uVhs;
+    uv.x += sin(uv.y * 90.0 + uTime * 12.0) * 0.0015 * uVhs;
+    float jump = step(0.94, phash(vec2(floor(uTime * 2.0), 3.0))) * uVhs;
+    uv.y = fract(uv.y + jump * 0.05 * sin(uTime * 40.0));
+  }
+
+  // Décalage chromatique : radial (retrofutur) + horizontal (bavure VHS).
+  vec2 dir = (uv - 0.5) * uChroma * 0.02 + vec2(0.0035, 0.0) * uVhs;
   vec3 col;
-  col.r = texture(uScene, vUv + dir).r;
-  col.g = texture(uScene, vUv).g;
-  col.b = texture(uScene, vUv - dir).b;
+  col.r = texture(uScene, uv + dir).r;
+  col.g = texture(uScene, uv).g;
+  col.b = texture(uScene, uv - dir).b;
+
   // Bloom approché : moyenne élargie des voisins brillants.
-  if (uBloom > 0.001) {
+  float bloomAmt = max(uBloom, uWarmth * 0.5); // le halo 70's passe par là
+  if (bloomAmt > 0.001) {
     vec3 acc = vec3(0.0);
     for (int x = -2; x <= 2; x++)
       for (int y = -2; y <= 2; y++)
-        acc += texture(uScene, vUv + vec2(float(x), float(y)) * px * 2.5).rgb;
+        acc += texture(uScene, uv + vec2(float(x), float(y)) * px * 2.5).rgb;
     acc /= 25.0;
-    col += max(acc - 0.35, 0.0) * uBloom * 1.6;
+    vec3 boost = max(acc - 0.35, 0.0) * bloomAmt * 1.6;
+    if (uWarmth > 0.001) boost *= vec3(1.15, 0.95, 0.7); // halo chaud
+    col += boost;
   }
+
+  // 70's : tons chauds, saturation douce.
+  if (uWarmth > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 warm = col * vec3(1.12, 0.98, 0.78) + vec3(0.05, 0.02, 0.0) * luma;
+    warm = mix(vec3(luma), warm, 0.85); // désature légèrement
+    col = mix(col, warm, uWarmth);
+  }
+
+  // Vintage : sépia délavé.
+  if (uSepia > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 sep = vec3(luma) * vec3(1.05, 0.90, 0.68) + vec3(0.04, 0.02, 0.0);
+    col = mix(col, sep, uSepia * 0.85);
+  }
+
+  // Punk : photocopie — seuillage noir/blanc dur, accent rouge.
+  if (uPhotocopy > 0.001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    float th = 0.30 + 0.15 * sin(uTime * 0.7);
+    float bw = smoothstep(th - 0.04, th + 0.04, luma);
+    vec3 photo = vec3(bw);
+    // Les zones les plus brillantes virent au rouge sur le kick.
+    photo = mix(photo, vec3(1.0, 0.05, 0.05), step(0.75, luma) * (0.4 + 0.6 * uBeat));
+    col = mix(col, photo, uPhotocopy);
+  }
+
   if (uPosterize > 0.001) {
     float levels = mix(24.0, 4.0, uPosterize);
     col = floor(col * levels) / levels;
   }
   if (abs(uHue) > 0.001) col = hueShift(col, uHue);
+  // Psyché : rotation de teinte continue, vitesse = intensité.
+  if (uHueRot > 0.001) col = hueShift(col, uTime * uHueRot * 1.5);
+
+  // VHS : lignes de balayage, bruit, couleurs baveuses (désaturation légère).
+  if (uVhs > 0.001) {
+    float scan = 0.82 + 0.18 * sin(uv.y * uRes.y * 3.1416);
+    col *= mix(1.0, scan, uVhs * 0.8);
+    col += (phash(uv * uRes + uTime * 60.0) - 0.5) * 0.10 * uVhs;
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, mix(vec3(luma), col, 0.75), uVhs);
+  }
+
+  // Vintage : grain animé.
+  if (uGrain > 0.001) {
+    col += (phash(uv * uRes * 0.5 + floor(uTime * 24.0)) - 0.5) * 0.22 * uGrain;
+  }
+
+  // Vignettage.
+  if (uVignette > 0.001) {
+    vec2 v = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+    col *= 1.0 - dot(v, v) * 0.9 * uVignette;
+  }
+
   col = mix(col, vec3(0.0), clamp(uBlack, 0.0, 1.0));
   col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));
   outColor = vec4(col, 1.0);
-}`,d=854,m=480,S=`#version 300 es
+}`,m=854,d=480,S=`#version 300 es
 layout(location = 0) in vec2 aPos;
 out vec2 vUv;
 void main() {
   vUv = aPos * 0.5 + 0.5;
   gl_Position = vec4(aPos, 0.0, 1.0);
-}`,J=`#version 300 es
+}`,ge=`#version 300 es
 layout(location = 0) in vec2 aPos;
 out vec2 vUv;
 uniform vec2 uOffset;
@@ -224,19 +824,19 @@ void main() {
   vec2 p = aPos * uScale;
   p = vec2(p.x * c - p.y * s, p.x * s + p.y * c);
   gl_Position = vec4(p + uOffset, 0.0, 1.0);
-}`;function L(s){return`#version 300 es
+}`;function P(o){return`#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outColor;
-${C}
+${I}
 uniform float uOpacity;
 uniform float uPulse;
-${s}`}function F(s,t,e){const a=s.createShader(t);if(s.shaderSource(a,e),s.compileShader(a),!s.getShaderParameter(a,s.COMPILE_STATUS))throw new Error(`Shader: ${s.getShaderInfoLog(a)}
-${e.slice(0,400)}`);return a}function x(s,t,e){const a=s.createProgram();if(s.attachShader(a,F(s,s.VERTEX_SHADER,t)),s.attachShader(a,F(s,s.FRAGMENT_SHADER,e)),s.linkProgram(a),!s.getProgramParameter(a,s.LINK_STATUS))throw new Error(`Program: ${s.getProgramInfoLog(a)}`);const o=new Map,i=s.getProgramParameter(a,s.ACTIVE_UNIFORMS);for(let n=0;n<i;n++){const l=s.getActiveUniform(a,n);o.set(l.name,s.getUniformLocation(a,l.name))}return{program:a,uniforms:o}}class Y{constructor(t){this.bgPrograms=new Map,this.overlayPrograms=new Map,this.clock=new I,this.levels={low:0,mid:0,high:0},this.light=.5,this.energy=.5,this.currentBg="cosmos-sun",this.nextBg=null,this.fadeStart=0,this.fadeDurMs=0,this.overlays=[],this.filters=new Map,this.beatEnv=0,this.lastBeatIndex=-1,this.flashArmed=!1,this.flashLevel=0,this.blackLevel=0,this.startTime=performance.now(),this.lastFrame=performance.now(),this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=performance.now(),this.lastStats={fps:0,renderMs:0,droppedFrames:0,bg:this.currentBg},this.running=!1,t.width=d,t.height=m;const e=t.getContext("webgl2",{antialias:!1,alpha:!1});if(!e)throw new Error("WebGL2 indisponible");this.gl=e,this.fullscreenVao=e.createVertexArray(),e.bindVertexArray(this.fullscreenVao);const a=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,a),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),this.quadVao=e.createVertexArray(),e.bindVertexArray(this.quadVao);const o=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,o),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),e.bindVertexArray(null),this.sceneTex=e.createTexture(),e.bindTexture(e.TEXTURE_2D,this.sceneTex),e.texImage2D(e.TEXTURE_2D,0,e.RGBA8,d,m,0,e.RGBA,e.UNSIGNED_BYTE,null),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MIN_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MAG_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_S,e.CLAMP_TO_EDGE),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_T,e.CLAMP_TO_EDGE),this.sceneFbo=e.createFramebuffer(),e.bindFramebuffer(e.FRAMEBUFFER,this.sceneFbo),e.framebufferTexture2D(e.FRAMEBUFFER,e.COLOR_ATTACHMENT0,e.TEXTURE_2D,this.sceneTex,0),e.bindFramebuffer(e.FRAMEBUFFER,null),this.post=x(e,S,W),e.viewport(0,0,d,m)}bgProgram(t){let e=this.bgPrograms.get(t);if(!e){const a=A[t]??A["cosmos-sun"];e=x(this.gl,S,L(a)),this.bgPrograms.set(t,e)}return e}overlayProgram(t){let e=this.overlayPrograms.get(t);if(!e){const a=M[t]??M.grid;e=x(this.gl,J,L(a)),this.overlayPrograms.set(t,e)}return e}handle(t){switch(t.type){case"beat":this.clock.update(t);break;case"levels":this.smoothLevels(t);break;case"trigger":t.id==="flash"?this.clock.hasBeat?this.flashArmed=!0:this.flashLevel=1:t.id==="drop"&&(this.blackLevel=1);break;case"scene":this.applyScene(t.state);break;case"config":t.energy!==void 0&&(this.energy=t.energy),t.light!==void 0&&(this.light=t.light);break}}applyScene(t){const e=t.background;if(e&&e.kind==="shader"&&e.id!==(this.nextBg??this.currentBg)){const i=t.transition?.beats??4,n=this.clock.hasBeat?6e4/this.clock.currentBpm:500;t.transition?.kind==="cut"?(this.currentBg=e.id,this.nextBg=null):(this.nextBg&&(this.currentBg=this.nextBg),this.nextBg=e.id,this.fadeStart=performance.now(),this.fadeDurMs=i*n)}const a=t.overlays??[],o=new Set(a.map(i=>i.iid));for(const i of this.overlays)o.has(i.iid)||(i.fadingOut=!0);for(const i of a){const n=this.overlays.find(l=>l.iid===i.iid);n?Object.assign(n,i,{fadingOut:!1}):this.overlays.push({...i,opacity:0,fadingOut:!1})}this.filters.clear();for(const i of t.filters??[])this.filters.set(i.id,i.intensity)}smoothLevels(t){this.levels.low+=(t.low-this.levels.low)*.5,this.levels.mid+=(t.mid-this.levels.mid)*.5,this.levels.high+=(t.high-this.levels.high)*.5}get clockRef(){return this.clock}get levelsRef(){return this.levels}get stats(){return this.lastStats}start(t){if(this.running)return;this.running=!0;const e=()=>{this.running&&(this.frame(t),requestAnimationFrame(e))};requestAnimationFrame(e)}setCommonUniforms(t,e){const a=this.gl,o=(l,r)=>{const g=t.uniforms.get(l);g&&a.uniform1f(g,r)};o("uTime",(e-this.startTime)/1e3),o("uBeat",this.clock.hasBeat?this.beatEnv:.08+.06*Math.sin(e/900));const i=this.clock.measurePhase();o("uMeasure",i<0?(e-this.startTime)/8e3%1:i),o("uLow",this.levels.low),o("uMid",this.levels.mid),o("uHigh",this.levels.high),o("uLight",this.light),o("uEnergy",this.energy);const n=t.uniforms.get("uRes");n&&a.uniform2f(n,d,m)}drawBackground(t,e,a){const o=this.gl,i=this.bgProgram(t);o.useProgram(i.program),this.setCommonUniforms(i,e),o.bindVertexArray(this.fullscreenVao),a<1?(o.enable(o.BLEND),o.blendColor(0,0,0,a),o.blendFunc(o.CONSTANT_ALPHA,o.ONE_MINUS_CONSTANT_ALPHA)):o.disable(o.BLEND),o.drawArrays(o.TRIANGLES,0,3),o.disable(o.BLEND)}frame(t){const e=performance.now(),a=(e-this.lastFrame)/1e3;e-this.lastFrame>50&&this.dropped++,this.lastFrame=e;const o=this.clock.hasBeat?60/this.clock.currentBpm:.5,i=this.clock.beatIndex();i>=0&&i!==this.lastBeatIndex&&(this.lastBeatIndex=i,this.beatEnv=.5+.5*Math.min(1,this.levels.low*1.4),this.flashArmed&&(this.flashArmed=!1,this.flashLevel=1)),this.beatEnv=Math.max(0,this.beatEnv-a*5.5),this.flashLevel>0&&(this.flashLevel=Math.max(0,this.flashLevel-a/o)),this.blackLevel>0&&(this.blackLevel=Math.max(0,this.blackLevel-a/o));const n=a/(o*4);this.overlays=this.overlays.filter(c=>(c.opacity+=c.fadingOut?-n:n,c.opacity=Math.min(1,Math.max(0,c.opacity)),!(c.fadingOut&&c.opacity<=0)));let l=0;this.nextBg&&(l=(e-this.fadeStart)/this.fadeDurMs,l>=1&&(this.currentBg=this.nextBg,this.nextBg=null,l=0));const r=this.gl,g=performance.now();if(r.bindFramebuffer(r.FRAMEBUFFER,this.sceneFbo),r.clearColor(0,0,0,1),r.clear(r.COLOR_BUFFER_BIT),this.drawBackground(this.currentBg,e,1),this.nextBg&&this.drawBackground(this.nextBg,e,l),this.overlays.length>0){r.enable(r.BLEND),r.blendFunc(r.ONE,r.ONE),r.bindVertexArray(this.quadVao);const c=d/m;for(const u of this.overlays){const h=this.overlayProgram(u.motif);r.useProgram(h.program),this.setCommonUniforms(h,e);const y=(O,N)=>{const T=h.uniforms.get(O);T&&r.uniform1f(T,N)};y("uOpacity",u.opacity),y("uPulse",u.pulse),y("uRot",u.rot);const B=h.uniforms.get("uOffset");B&&r.uniform2f(B,u.x,u.y);const R=h.uniforms.get("uScale");R&&r.uniform2f(R,u.scale/c,u.scale),r.drawArrays(r.TRIANGLE_STRIP,0,4)}r.disable(r.BLEND)}r.bindFramebuffer(r.FRAMEBUFFER,null),r.useProgram(this.post.program),r.activeTexture(r.TEXTURE0),r.bindTexture(r.TEXTURE_2D,this.sceneTex);const f=(c,u)=>{const h=this.post.uniforms.get(c);h&&r.uniform1f(h,u)};r.uniform1i(this.post.uniforms.get("uScene"),0),f("uBloom",this.filters.get("bloom")??0),f("uChroma",this.filters.get("chroma")??0),f("uPosterize",this.filters.get("posterize")??0),f("uHue",this.filters.get("hue")??0),f("uFlash",this.flashLevel),f("uBlack",this.blackLevel);const E=this.post.uniforms.get("uRes");if(E&&r.uniform2f(E,d,m),r.bindVertexArray(this.fullscreenVao),r.drawArrays(r.TRIANGLES,0,3),this.renderMsAccum+=performance.now()-g,this.frameCount++,e-this.statsWindowStart>=1e3){const c=(e-this.statsWindowStart)/1e3;this.lastStats={fps:Math.round(this.frameCount/c*10)/10,renderMs:Math.round(this.renderMsAccum/Math.max(1,this.frameCount)*100)/100,droppedFrames:this.dropped,bg:this.currentBg},this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=e,t?.(this.lastStats)}}}const j=document.getElementById("vjm-canvas"),P=document.getElementById("vjm-debug"),v=document.getElementById("vjm-beatbar"),p=new Y(j);let w=!1,b=!1;function U(){if(b){const s=p.clockRef.beatPhase();if(s<0)v.style.height="0";else{const t=1-s;v.style.height=`${(t*100).toFixed(1)}%`;const e=s<.12;v.style.filter=e?"brightness(1.5)":"none",v.style.boxShadow=e&&p.clockRef.beatIndex()===0?"0 0 26px rgba(255, 60, 30, .95)":"0 0 12px rgba(255, 40, 20, .6)"}}requestAnimationFrame(U)}requestAnimationFrame(U);function _(s){window.VJM.onFeedback?.(s),window.VjmFeedback?.postMessage(JSON.stringify(s)),window.parent&&window.parent!==window&&window.parent.postMessage(JSON.stringify(s),"*")}window.addEventListener("message",s=>{typeof s.data=="string"&&s.data.startsWith("{")&&window.VJM.handleMessage(s.data)});window.VJM={onFeedback:null,handleMessage(s){let t;try{t=typeof s=="string"?JSON.parse(s):s}catch(e){console.error("VJM: message illisible",s,e);return}if(t.type==="config"&&(t.debug!==void 0&&(w=t.debug,P.style.display=w?"block":"none"),t.beatBar!==void 0&&(b=t.beatBar,v.style.display=b?"block":"none",b||(v.style.height="0"))),t.type==="ping"){_({type:"pong",t:t.t,tr:Date.now()});return}p.handle(t)}};p.start(s=>{if(!w)return;_({...s,type:"stats",t:Date.now()});const t=p.clockRef,e=p.levelsRef;P.textContent=`BPM    ${t.hasBeat?t.currentBpm.toFixed(1):"—"}
+${o}`}function U(o,t,e){const i=o.createShader(t);if(o.shaderSource(i,e),o.compileShader(i),!o.getShaderParameter(i,o.COMPILE_STATUS))throw new Error(`Shader: ${o.getShaderInfoLog(i)}
+${e.slice(0,400)}`);return i}function T(o,t,e){const i=o.createProgram();if(o.attachShader(i,U(o,o.VERTEX_SHADER,t)),o.attachShader(i,U(o,o.FRAGMENT_SHADER,e)),o.linkProgram(i),!o.getProgramParameter(i,o.LINK_STATUS))throw new Error(`Program: ${o.getProgramInfoLog(i)}`);const s=new Map,a=o.getProgramParameter(i,o.ACTIVE_UNIFORMS);for(let l=0;l<a;l++){const r=o.getActiveUniform(i,l);s.set(r.name,o.getUniformLocation(i,r.name))}return{program:i,uniforms:s}}class be{constructor(t){this.bgPrograms=new Map,this.overlayPrograms=new Map,this.clock=new V,this.levels={low:0,mid:0,high:0},this.light=.5,this.energy=.5,this.currentBg="cosmos-sun",this.nextBg=null,this.fadeStart=0,this.fadeDurMs=0,this.overlays=[],this.filters=new Map,this.beatEnv=0,this.lastBeatIndex=-1,this.flashArmed=!1,this.flashLevel=0,this.blackLevel=0,this.startTime=performance.now(),this.lastFrame=performance.now(),this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=performance.now(),this.lastStats={fps:0,renderMs:0,droppedFrames:0,bg:this.currentBg},this.running=!1,t.width=m,t.height=d;const e=t.getContext("webgl2",{antialias:!1,alpha:!1});if(!e)throw new Error("WebGL2 indisponible");this.gl=e,this.fullscreenVao=e.createVertexArray(),e.bindVertexArray(this.fullscreenVao);const i=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,i),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),this.quadVao=e.createVertexArray(),e.bindVertexArray(this.quadVao);const s=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,s),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW),e.enableVertexAttribArray(0),e.vertexAttribPointer(0,2,e.FLOAT,!1,0,0),e.bindVertexArray(null),this.sceneTex=e.createTexture(),e.bindTexture(e.TEXTURE_2D,this.sceneTex),e.texImage2D(e.TEXTURE_2D,0,e.RGBA8,m,d,0,e.RGBA,e.UNSIGNED_BYTE,null),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MIN_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MAG_FILTER,e.LINEAR),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_S,e.CLAMP_TO_EDGE),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_T,e.CLAMP_TO_EDGE),this.sceneFbo=e.createFramebuffer(),e.bindFramebuffer(e.FRAMEBUFFER,this.sceneFbo),e.framebufferTexture2D(e.FRAMEBUFFER,e.COLOR_ATTACHMENT0,e.TEXTURE_2D,this.sceneTex,0),e.bindFramebuffer(e.FRAMEBUFFER,null),this.post=T(e,S,pe),e.viewport(0,0,m,d)}bgProgram(t){let e=this.bgPrograms.get(t);if(!e){const i=M[t]??M["cosmos-sun"];e=T(this.gl,S,P(i)),this.bgPrograms.set(t,e)}return e}overlayProgram(t){let e=this.overlayPrograms.get(t);if(!e){const i=A[t]??A.grid;e=T(this.gl,ge,P(i)),this.overlayPrograms.set(t,e)}return e}handle(t){switch(t.type){case"beat":this.clock.update(t);break;case"levels":this.smoothLevels(t);break;case"trigger":t.id==="flash"?this.clock.hasBeat?this.flashArmed=!0:this.flashLevel=1:t.id==="drop"&&(this.blackLevel=1);break;case"scene":this.applyScene(t.state);break;case"config":t.energy!==void 0&&(this.energy=t.energy),t.light!==void 0&&(this.light=t.light);break}}applyScene(t){const e=t.background;if(e&&e.kind==="shader"&&e.id!==(this.nextBg??this.currentBg)){const a=t.transition?.beats??4,l=this.clock.hasBeat?6e4/this.clock.currentBpm:500;t.transition?.kind==="cut"?(this.currentBg=e.id,this.nextBg=null):(this.nextBg&&(this.currentBg=this.nextBg),this.nextBg=e.id,this.fadeStart=performance.now(),this.fadeDurMs=a*l)}const i=t.overlays??[],s=new Set(i.map(a=>a.iid));for(const a of this.overlays)s.has(a.iid)||(a.fadingOut=!0);for(const a of i){const l=this.overlays.find(r=>r.iid===a.iid);l?Object.assign(l,a,{fadingOut:!1}):this.overlays.push({...a,opacity:0,fadingOut:!1})}this.filters.clear();for(const a of t.filters??[])this.filters.set(a.id,a.intensity)}smoothLevels(t){this.levels.low+=(t.low-this.levels.low)*.5,this.levels.mid+=(t.mid-this.levels.mid)*.5,this.levels.high+=(t.high-this.levels.high)*.5}get clockRef(){return this.clock}get levelsRef(){return this.levels}get stats(){return this.lastStats}start(t){if(this.running)return;this.running=!0;const e=()=>{this.running&&(this.frame(t),requestAnimationFrame(e))};requestAnimationFrame(e)}setCommonUniforms(t,e){const i=this.gl,s=(r,c)=>{const y=t.uniforms.get(r);y&&i.uniform1f(y,c)};s("uTime",(e-this.startTime)/1e3),s("uBeat",this.clock.hasBeat?this.beatEnv:.08+.06*Math.sin(e/900));const a=this.clock.measurePhase();s("uMeasure",a<0?(e-this.startTime)/8e3%1:a),s("uLow",this.levels.low),s("uMid",this.levels.mid),s("uHigh",this.levels.high),s("uLight",this.light),s("uEnergy",this.energy);const l=t.uniforms.get("uRes");l&&i.uniform2f(l,m,d)}drawBackground(t,e,i){const s=this.gl,a=this.bgProgram(t);s.useProgram(a.program),this.setCommonUniforms(a,e),s.bindVertexArray(this.fullscreenVao),i<1?(s.enable(s.BLEND),s.blendColor(0,0,0,i),s.blendFunc(s.CONSTANT_ALPHA,s.ONE_MINUS_CONSTANT_ALPHA)):s.disable(s.BLEND),s.drawArrays(s.TRIANGLES,0,3),s.disable(s.BLEND)}frame(t){const e=performance.now(),i=(e-this.lastFrame)/1e3;e-this.lastFrame>50&&this.dropped++,this.lastFrame=e;const s=this.clock.hasBeat?60/this.clock.currentBpm:.5,a=this.clock.beatIndex();a>=0&&a!==this.lastBeatIndex&&(this.lastBeatIndex=a,this.beatEnv=.5+.5*Math.min(1,this.levels.low*1.4),this.flashArmed&&(this.flashArmed=!1,this.flashLevel=1)),this.beatEnv=Math.max(0,this.beatEnv-i*5.5),this.flashLevel>0&&(this.flashLevel=Math.max(0,this.flashLevel-i/s)),this.blackLevel>0&&(this.blackLevel=Math.max(0,this.blackLevel-i/s));const l=i/(s*4);this.overlays=this.overlays.filter(v=>(v.opacity+=v.fadingOut?-l:l,v.opacity=Math.min(1,Math.max(0,v.opacity)),!(v.fadingOut&&v.opacity<=0)));let r=0;this.nextBg&&(r=(e-this.fadeStart)/this.fadeDurMs,r>=1&&(this.currentBg=this.nextBg,this.nextBg=null,r=0));const c=this.gl,y=performance.now();if(c.bindFramebuffer(c.FRAMEBUFFER,this.sceneFbo),c.clearColor(0,0,0,1),c.clear(c.COLOR_BUFFER_BIT),this.drawBackground(this.currentBg,e,1),this.nextBg&&this.drawBackground(this.nextBg,e,r),this.overlays.length>0){c.enable(c.BLEND),c.blendFunc(c.ONE,c.ONE),c.bindVertexArray(this.quadVao);const v=m/d;for(const f of this.overlays){const h=this.overlayProgram(f.motif);c.useProgram(h.program),this.setCommonUniforms(h,e);const w=(_,F)=>{const L=h.uniforms.get(_);L&&c.uniform1f(L,F)};w("uOpacity",f.opacity),w("uPulse",f.pulse),w("uRot",f.rot);const k=h.uniforms.get("uOffset");k&&c.uniform2f(k,f.x,f.y);const E=h.uniforms.get("uScale");E&&c.uniform2f(E,f.scale/v,f.scale),c.drawArrays(c.TRIANGLE_STRIP,0,4)}c.disable(c.BLEND)}c.bindFramebuffer(c.FRAMEBUFFER,null),c.useProgram(this.post.program),c.activeTexture(c.TEXTURE0),c.bindTexture(c.TEXTURE_2D,this.sceneTex);const u=(v,f)=>{const h=this.post.uniforms.get(v);h&&c.uniform1f(h,f)};c.uniform1i(this.post.uniforms.get("uScene"),0),u("uTime",(e-this.startTime)/1e3),u("uBeat",this.clock.hasBeat?this.beatEnv:0),u("uBloom",this.filters.get("bloom")??0),u("uChroma",this.filters.get("chroma")??0),u("uPosterize",this.filters.get("posterize")??0),u("uHue",this.filters.get("hue")??0),u("uGrain",this.filters.get("grain")??0),u("uVignette",this.filters.get("vignette")??0),u("uSepia",this.filters.get("sepia")??0),u("uWarmth",this.filters.get("warmth")??0),u("uPhotocopy",this.filters.get("photocopy")??0),u("uGlitch",this.filters.get("glitch")??0),u("uVhs",this.filters.get("vhs")??0),u("uKaleido",this.filters.get("kaleido")??0),u("uHueRot",this.filters.get("huerot")??0),u("uFlash",this.flashLevel),u("uBlack",this.blackLevel);const B=this.post.uniforms.get("uRes");if(B&&c.uniform2f(B,m,d),c.bindVertexArray(this.fullscreenVao),c.drawArrays(c.TRIANGLES,0,3),this.renderMsAccum+=performance.now()-y,this.frameCount++,e-this.statsWindowStart>=1e3){const v=(e-this.statsWindowStart)/1e3;this.lastStats={fps:Math.round(this.frameCount/v*10)/10,renderMs:Math.round(this.renderMsAccum/Math.max(1,this.frameCount)*100)/100,droppedFrames:this.dropped,bg:this.currentBg},this.frameCount=0,this.renderMsAccum=0,this.dropped=0,this.statsWindowStart=e,t?.(this.lastStats)}}}const ye=document.getElementById("vjm-canvas"),b=document.getElementById("vjm-debug"),p=document.getElementById("vjm-beatbar"),g=new be(ye);let R=!1,x=!1;function C(){if(x){const o=g.clockRef.beatPhase();if(o<0)p.style.height="0";else{const t=1-o;p.style.height=`${(t*100).toFixed(1)}%`;const e=o<.12;p.style.filter=e?"brightness(1.5)":"none",p.style.boxShadow=e&&g.clockRef.beatIndex()===0?"0 0 26px rgba(255, 60, 30, .95)":"0 0 12px rgba(255, 40, 20, .6)"}}requestAnimationFrame(C)}requestAnimationFrame(C);function O(o){window.VJM.onFeedback?.(o),window.VjmFeedback?.postMessage(JSON.stringify(o)),window.parent&&window.parent!==window&&window.parent.postMessage(JSON.stringify(o),"*")}window.addEventListener("message",o=>{typeof o.data=="string"&&o.data.startsWith("{")&&window.VJM.handleMessage(o.data)});window.VJM={onFeedback:null,handleMessage(o){let t;try{t=typeof o=="string"?JSON.parse(o):o}catch(e){console.error("VJM: message illisible",o,e);return}if(t.type==="config"&&(t.debug!==void 0&&(R=t.debug,b.style.display=R?"block":"none"),t.beatBar!==void 0&&(x=t.beatBar,p.style.display=x?"block":"none",x||(p.style.height="0"))),t.type==="ping"){O({type:"pong",t:t.t,tr:Date.now()});return}g.handle(t)}};g.start(o=>{if(!R)return;O({...o,type:"stats",t:Date.now()});const t=g.clockRef,e=g.levelsRef;b.textContent=`BPM    ${t.hasBeat?t.currentBpm.toFixed(1):"—"}
 mesure ${t.hasBeat?t.measurePhase().toFixed(2):"—"}  temps ${t.hasBeat?t.beatIndex()+1:"—"}
 L ${e.low.toFixed(2)}  M ${e.mid.toFixed(2)}  H ${e.high.toFixed(2)}
-fond ${s.bg}
-${s.fps} i/s  ${s.renderMs} ms  perdu ${s.droppedFrames}`});{const s=new URLSearchParams(location.search),t=s.get("bg"),e=s.get("demo");(t||e)&&(window.VJM.handleMessage({type:"scene",state:{background:{kind:"shader",id:t??"cosmos-sun"},overlays:e?[{iid:"a",motif:"grid",x:-.5,y:.3,scale:.5,rot:.4,pulse:.8},{iid:"b",motif:"loop",x:.55,y:-.25,scale:.45,rot:0,pulse:.6}]:[],filters:e?[{id:"bloom",intensity:.7},{id:"chroma",intensity:.6}]:[],transition:{kind:"cut",beats:0}}}),e&&window.VJM.handleMessage({type:"levels",low:.8,mid:.5,high:.4}))}</script>
+fond ${o.bg}
+${o.fps} i/s  ${o.renderMs} ms  perdu ${o.droppedFrames}`});{window.addEventListener("error",l=>{document.title=`VJM-ERROR ${l.message}`,b.style.display="block",b.style.color="#ff5040",b.textContent=`ERREUR : ${l.message}`});const o=new URLSearchParams(location.search),t=o.get("bg"),e=o.get("demo"),i=(o.get("motifs")??(e?"grid,loop":"")).split(",").filter(Boolean),s=(o.get("filters")??(e?"bloom:0.7,chroma:0.6":"")).split(",").filter(Boolean).map(l=>{const[r,c]=l.split(":");return{id:r,intensity:c?parseFloat(c):.8}}),a=[{x:-.5,y:.3,scale:.5,rot:.4},{x:.55,y:-.25,scale:.45,rot:0},{x:.1,y:.1,scale:.6,rot:-.3}];(t||e||i.length||s.length)&&(window.VJM.handleMessage({type:"scene",state:{background:{kind:"shader",id:t??"cosmos-sun"},overlays:i.map((l,r)=>({iid:`t${r}`,motif:l,...a[r%a.length],pulse:.8})),filters:s,transition:{kind:"cut",beats:0}}}),window.VJM.handleMessage({type:"levels",low:.8,mid:.5,high:.4}))}</script>
 </head>
 <body>
   <canvas id="vjm-canvas"></canvas>

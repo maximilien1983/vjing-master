@@ -27,8 +27,27 @@ Le moteur remonte des infos (stats, clips en cours pour les aperçus console) vi
 }}
 ```
 
-`background.kind` : `shader` | `video` (V1 jalon 1 : `shader` uniquement).
-`overlays`, `filters` : vides au jalon 1, schéma détaillé au jalon 2+.
+`background.kind` : `shader` | `video` (jalon 4 en cours : `shader` uniquement).
+
+`background.id` (shaders, par univers) :
+- Cosmos : `cosmos-sun`, `cosmos-stars`, `cosmos-nebula`, `cosmos-rings`
+- Campagne : `campagne-collines`, `campagne-ble`, `campagne-nuages`
+- Ville : `ville-skyline`, `ville-trafic`, `ville-pluie`
+- Machines : `machines-engrenages`, `machines-pistons`, `machines-circuits`
+- Nature : `nature-eau`, `nature-fumee`, `nature-lucioles`
+- Miroir (placeholders, caméra au jalon 5) : `miroir-kaleido`, `miroir-chrome`
+
+`overlays[]` : `{iid, motif, x, y, scale, rot, pulse}`. Motifs (par style) :
+`grid`, `sun`, `loop` (Retrofutur) ; `poussieres`, `cercles` (Vintage) ;
+`spirale`, `onde` (70's) ; `trame`, `eclats` (Punk) ; `timecode`, `tracking`
+(VHS) ; `mandala`, `fluide` (Psyché). Id inconnu ⇒ repli `grid`.
+
+`filters[]` : `{id, intensity}` avec `intensity` ∈ [0, 1]. Ids :
+`bloom`, `chroma` (Retrofutur) ; `grain`, `vignette`, `sepia` (Vintage) ;
+`warmth` (70's, inclut le halo) ; `photocopy`, `glitch` (Punk) ; `vhs`
+(lignes + bruit + bavure + sauts) ; `kaleido`, `huerot` (Psyché — `huerot`
+est une vitesse de rotation de teinte) ; `posterize`, `hue` (génériques).
+Id inconnu ⇒ ignoré.
 
 ### `beat` — horloge musicale
 

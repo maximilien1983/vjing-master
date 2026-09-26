@@ -34,6 +34,9 @@ flutter:
   assets:
     # Copie single-file du moteur (générée par `npm run build:embed` dans /renderer).
     - assets/renderer/
+    # Copie des presets styles/univers (référence : /catalog/presets.json,
+    # synchronisation vérifiée par app/test/presets_test.dart).
+    - assets/catalog/
   # Polices embarquées (licence OFL, fichiers OFL-*.txt à côté) : pas de
   # dépendance réseau en soirée (cf. DESIGN.md §3).
   fonts:

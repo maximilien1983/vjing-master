@@ -65,6 +65,12 @@ class Session {
 
   Session() {
     pilot = Autopilot(style: retrofutur, universe: cosmos, send: _sendAll);
+    // Catalogue des presets : chargé en tâche de fond, puis réappliqué pour
+    // que les crans choisis avant le chargement prennent effet.
+    PresetCatalog.load().then((_) {
+      pilot.setStyle(stylePresetFor(styleId.value));
+      pilot.setUniverse(universePresetFor(universeId.value));
+    });
   }
 
   List<EngineLink> get _links => [

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "commentaire": "Presets des styles et univers (brief, section Paramètres). Fichier de référence ; copie embarquée dans app/assets/catalog/presets.json (test de synchronisation dans app/test/presets_test.dart). Les ids de filtres, motifs et fonds sont documentés dans renderer/PROTOCOL.md.",
+  "styles": {
+    "vintage": {
+      "label": "Vintage",
+      "filters": ["grain", "vignette", "sepia"],
+      "transition": { "kind": "crossfade", "beats": 8 },
+      "motifs": ["poussieres", "cercles"]
+    },
+    "70s": {
+      "label": "70's",
+      "filters": ["warmth"],
+      "transition": { "kind": "crossfade", "beats": 8 },
+      "motifs": ["spirale", "onde"]
+    },
+    "punk": {
+      "label": "Punk",
+      "filters": ["photocopy", "glitch"],
+      "transition": { "kind": "cut", "beats": 1 },
+      "motifs": ["trame", "eclats"]
+    },
+    "retrofutur": {
+      "label": "Retrofutur",
+      "filters": ["bloom", "chroma"],
+      "transition": { "kind": "crossfade", "beats": 2 },
+      "motifs": ["grid", "sun", "loop"]
+    },
+    "vhs": {
+      "label": "VHS",
+      "filters": ["vhs", "chroma"],
+      "transition": { "kind": "cut", "beats": 1 },
+      "motifs": ["timecode", "tracking"]
+    },
+    "psyche": {
+      "label": "Psyché",
+      "filters": ["kaleido", "huerot", "bloom"],
+      "transition": { "kind": "crossfade", "beats": 16 },
+      "motifs": ["mandala", "fluide"]
+    }
+  },
+  "universes": {
+    "campagne": {
+      "label": "Campagne",
+      "backgrounds": ["campagne-collines", "campagne-ble", "campagne-nuages"]
+    },
+    "ville": {
+      "label": "Ville",
+      "backgrounds": ["ville-skyline", "ville-trafic", "ville-pluie"]
+    },
+    "cosmos": {
+      "label": "Cosmos",
+      "backgrounds": ["cosmos-sun", "cosmos-stars", "cosmos-nebula", "cosmos-rings"]
+    },
+    "machines": {
+      "label": "Machines",
+      "backgrounds": ["machines-engrenages", "machines-pistons", "machines-circuits"]
+    },
+    "nature": {
+      "label": "Nature",
+      "backgrounds": ["nature-eau", "nature-fumee", "nature-lucioles"]
+    },
+    "miroir": {
+      "label": "Miroir",
+      "backgrounds": ["miroir-kaleido", "miroir-chrome"],
+      "note": "Caméra du téléphone au jalon 5 ; fonds génératifs en attendant."
+    }
+  }
+}
