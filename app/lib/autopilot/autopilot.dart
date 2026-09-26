@@ -68,8 +68,8 @@ class OverlayState {
 }
 
 class Autopilot {
-  final StylePreset style;
-  final UniversePreset universe;
+  StylePreset style;
+  UniversePreset universe;
   final Random rng;
   final void Function(Map<String, dynamic> msg) send;
 
@@ -135,6 +135,23 @@ class Autopilot {
 
   void setHold(bool v) {
     hold = v;
+  }
+
+  /// Changement de style : les filtres et transitions suivent immédiatement.
+  void setStyle(StylePreset s) {
+    if (s.id == style.id) return;
+    style = s;
+    _pushScene();
+  }
+
+  /// Changement d'univers : nouveau bassin de fonds et de motifs, nouvelle
+  /// scène quantifiée au prochain temps 1 (comme le bouton Scène).
+  void setUniverse(UniversePreset u) {
+    if (u.id == universe.id) return;
+    universe = u;
+    history.clear();
+    banned.clear();
+    _sceneRequested = true;
   }
 
   /// Suivant : zappe le fond en cours et l'écarte pour la session.

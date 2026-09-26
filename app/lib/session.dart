@@ -9,6 +9,7 @@ import 'autopilot/presets.dart';
 import 'cast/cast_link.dart';
 import 'engine/engine_link.dart';
 import 'engine/local_link.dart';
+import 'sources/sources_model.dart';
 
 /// Session jalon 2 : micro -> analyse -> autopilote -> moteur(s).
 /// Le même flux de messages part vers le moteur local (WebView sur mobile,
@@ -32,6 +33,18 @@ class Session {
   final energy = ValueNotifier<double>(0.5);
   final light = ValueNotifier<double>(0.5);
   final hold = ValueNotifier<bool>(false);
+
+  /// Crans choisis sur les rotacteurs (ids de presets.dart). Seuls
+  /// Retrofutur × Cosmos ont un preset moteur au jalon 3.
+  final styleId = ValueNotifier<String>('retrofutur');
+  final universeId = ValueNotifier<String>('cosmos');
+
+  /// Sources vidéo de la session (données factices au jalon 3).
+  final sourcesModel = SourcesModel();
+
+  /// Vrai une fois start() exécuté (bouton Lancer).
+  bool get started => _started;
+  bool _started = false;
 
   /// Décalage de calibration en ms. Négatif = avancer les visuels (compense
   /// la latence de capture micro), positif = les retarder (son du téléphone
@@ -59,6 +72,8 @@ class Session {
       ];
 
   Future<void> start() async {
+    if (_started) return;
+    _started = true;
     _subs.add(analyzer.levels.listen((l) {
       levels.value = l;
       _sendAll({'type': 'levels', 'low': l.low, 'mid': l.mid, 'high': l.high});
@@ -176,6 +191,20 @@ class Session {
   void scene() => pilot.triggerScene();
   void next() => pilot.triggerNext();
 
+  void setStyle(String id) {
+    styleId.value = id;
+    pilot.setStyle(stylePresetFor(id));
+  }
+
+  void setUniverse(String id) {
+    universeId.value = id;
+    pilot.setUniverse(universePresetFor(id));
+  }
+
+  /// Phase du temps courant [0,1) pour la LED tempo, calée sur l'horloge de
+  /// détection (pas sur un timer libre).
+  double beatPhase() => (pilot.clock.measurePhase() * 4) % 1;
+
   void setDebug(bool value) {
     debug = value;
     _sendAll({'type': 'config', 'debug': value});
@@ -189,6 +218,7 @@ class Session {
   Future<void> dispose() async {
     _pingTimer?.cancel();
     pilot.stop();
+    sourcesModel.dispose();
     for (final s in _subs) {
       await s.cancel();
     }
