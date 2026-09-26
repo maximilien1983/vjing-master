@@ -4,11 +4,8 @@ Mis à jour au 2026-09-26 (jalons 1-3 codés, jalon 4 en cours).
 
 ## À configurer (comptes et sites tiers)
 
-- [ ] **Push GitHub** — 5 commits locaux sur `main` (jalon 3 complet + jalon 4
-  tranches 1-2). Tant que ce n'est pas poussé, GitHub Pages sert l'**ancien
-  moteur** : la préviz web doit pointer un moteur local et le Chromecast
-  recevra l'ancien receiver. Faire : `git push origin main` (ou me dire
-  « pousse »). Après le push, compter ~10 min de cache Pages.
+- [x] **Push GitHub** — fait le 2026-09-26 : Pages republie moteur, receiver
+  et catalogue automatiquement (workflow, ~30 s + cache ~10 min).
 - [ ] **Google Cast Developer Console** (5 $ une fois,
   <https://cast.google.com/publish>) — nécessaire pour valider le jalon 1 sur
   Chromecast réel et tester la console en mode TV. Guide pas à pas :
@@ -21,26 +18,18 @@ Mis à jour au 2026-09-26 (jalons 1-3 codés, jalon 4 en cours).
   (99 $/an) pour TestFlight.
 - [ ] *(jalon 6)* **Google Play Console** (25 $ une fois) pour le test interne.
 
-## Commandes de lancement (préviz PC)
+## Commandes de lancement
 
-```powershell
-# 1. Moteur local (tant que Pages n'est pas à jour)
-cd C:\Claude\vj\vjing-master\renderer
-npx http-server dist -p 8123
-
-# 2. App en préviz Chrome, avec les vidéos Pixabay
-cd C:\Claude\vj\vjing-master\app
-flutter run -d chrome `
-  --dart-define=RENDERER_URL=http://localhost:8123/ `
-  --dart-define=PIXABAY_KEY=$(Get-Content ..\secrets\pixabay-key.txt)
-```
-
-Sur téléphone Android (moteur embarqué déjà à jour, pas besoin du serveur) :
+Depuis le push, Pages sert moteur + catalogue : **une seule commande**, sur
+PC comme sur téléphone (seule la cible `-d chrome` change) :
 
 ```powershell
 cd C:\Claude\vj\vjing-master\app
-flutter run --dart-define=PIXABAY_KEY=$(Get-Content ..\secrets\pixabay-key.txt)
+flutter run -d chrome --dart-define=PIXABAY_KEY=$(Get-Content ..\secrets\pixabay-key.txt)
 ```
+
+(Les serveurs locaux 8123/8124 et RENDERER_URL/CATALOG_URL ne servent plus
+qu'à tester des modifs du moteur ou du catalogue avant un push.)
 
 Ouvrir un écran précis pour comparer aux maquettes :
 `--dart-define=SCREEN=console|local|sources`.
