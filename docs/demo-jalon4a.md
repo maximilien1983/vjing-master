@@ -1,4 +1,26 @@
-# Démo du jalon 4 — tranches 1 et 2 : styles, univers, fonds Pixabay
+# Démo du jalon 4 — tranches 1 à 3 : styles, univers, Pixabay, FedFlix
+
+## Tranche 3 : extraits FedFlix et catalogue de clips
+
+- 20 extraits (~12 s) de 4 films domaine public découpés par
+  `tools/prepare-clips.mjs` (voir tools/README.md) et hébergés dans
+  `catalog/clips/` (servis par Pages) :
+  - Machines : « The Drama of Steel » (1946, Bureau of Mines) — coulées,
+    laminoir, halle aux fours.
+  - Cosmos : « The Eagle Has Landed » (1969, NASA) — décollage Saturn V,
+    Lune, la Terre depuis l'espace.
+  - Campagne : « A Rural Community: Holtville » (années 40) — fermes,
+    chemins, récoltes.
+  - Ville : « The City » (1939, musique d'Aaron Copland à l'origine) —
+    cheminées, gratte-ciels, trafic.
+- `catalog/clips.json` : catalogue tagué généré (univers, époque,
+  **luminosité mesurée**, couleur dominante, licence, crédit).
+- L'autopilote ne pioche que les clips du catalogue dont la luminosité
+  colle au fader **Lumière** (règle du brief) — bouger le fader change le
+  bassin de clips.
+- Préviz locale avant push : servir aussi le catalogue en local :
+  `npx http-server . -p 8124` depuis `catalog/`, et passer
+  `--dart-define=CATALOG_URL=http://localhost:8124/`.
 
 Les rotacteurs de la console pilotent maintenant de vrais presets : chaque
 cran change réellement le rendu. Et les univers piochent de **vrais clips

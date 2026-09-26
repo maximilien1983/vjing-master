@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'clips.dart';
+
 /// Client de l'API vidéos Pixabay (jalon 4).
 ///
 /// Conditions d'utilisation vérifiées (docs API, 2026) : clé obligatoire,
@@ -12,12 +14,11 @@ import 'package:http/http.dart' as http;
 /// WebGL. Lecture directe depuis le CDN assumée pour cet usage perso ;
 /// à re-évaluer avant toute publication (jalon 6) — bascule possible vers
 /// des copies hébergées (R2), comme pour FedFlix.
-class PixabayClip {
-  final String id; // 'px-<id pixabay>'
-  final String url; // mp4 ~960×540 (tiny), adapté au rendu interne 854×480
+class PixabayClip extends EngineClip {
   final int duration; // secondes
   final String tags;
-  const PixabayClip(this.id, this.url, this.duration, this.tags);
+  // id 'px-<id pixabay>', url mp4 ~960×540 (tiny), adaptée au 854×480.
+  const PixabayClip(super.id, super.url, this.duration, this.tags);
 }
 
 class PixabayClient {

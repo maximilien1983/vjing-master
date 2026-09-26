@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "commentaire": "Catalogue de clips généré par tools/prepare-clips.mjs — ne pas éditer à la main. Schéma : brief « Tagging et catalogue ».",
+  "clips": [
+    {
+      "id": "apollo-01",
+      "url": "clips/apollo-01.mp4",
+      "vignette": "clips/apollo-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "cosmos",
+        "epoque": "1969",
+        "luminosite": 0.47,
+        "couleur": "#8e9a95",
+        "extra": "décollage Saturn V"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "apollo-02",
+      "url": "clips/apollo-02.mp4",
+      "vignette": "clips/apollo-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "cosmos",
+        "epoque": "1969",
+        "luminosite": 0.24,
+        "couleur": "#312d40",
+        "extra": "cratères en orbite"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "apollo-03",
+      "url": "clips/apollo-03.mp4",
+      "vignette": "clips/apollo-03.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "cosmos",
+        "epoque": "1969",
+        "luminosite": 0.36,
+        "couleur": "#605a63",
+        "extra": "astronautes et drapeau"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "apollo-04",
+      "url": "clips/apollo-04.mp4",
+      "vignette": "clips/apollo-04.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "cosmos",
+        "epoque": "1969",
+        "luminosite": 0.17,
+        "couleur": "#2a2225",
+        "extra": "module au-dessus de la Lune"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "apollo-05",
+      "url": "clips/apollo-05.mp4",
+      "vignette": "clips/apollo-05.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "cosmos",
+        "epoque": "1969",
+        "luminosite": 0.2,
+        "couleur": "#2e3d2c",
+        "extra": "la Terre depuis l'espace"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "city-01",
+      "url": "clips/city-01.mp4",
+      "vignette": "clips/city-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "ville",
+        "epoque": "1939",
+        "luminosite": 0.35,
+        "couleur": "#726e72",
+        "extra": "cheminées industrielles"
+      },
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "city-02",
+      "url": "clips/city-02.mp4",
+      "vignette": "clips/city-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "ville",
+        "epoque": "1939",
+        "luminosite": 0.22,
+        "couleur": "#423f43",
+        "extra": "gratte-ciels"
+      },
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "city-03",
+      "url": "clips/city-03.mp4",
+      "vignette": "clips/city-03.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "ville",
+        "epoque": "1939",
+        "luminosite": 0.31,
+        "couleur": "#383538",
+        "extra": "rue et camions"
+      },
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "city-04",
+      "url": "clips/city-04.mp4",
+      "vignette": "clips/city-04.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "ville",
+        "epoque": "1939",
+        "luminosite": 0.34,
+        "couleur": "#5c595c",
+        "extra": "feu de circulation"
+      },
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "city-05",
+      "url": "clips/city-05.mp4",
+      "vignette": "clips/city-05.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "ville",
+        "epoque": "1939",
+        "luminosite": 0.34,
+        "couleur": "#767276",
+        "extra": "vie de rue"
+      },
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "holtville-01",
+      "url": "clips/holtville-01.mp4",
+      "vignette": "clips/holtville-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "campagne",
+        "epoque": "1940s",
+        "luminosite": 0.3,
+        "couleur": "#545155",
+        "extra": "ferme"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "holtville-02",
+      "url": "clips/holtville-02.mp4",
+      "vignette": "clips/holtville-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "campagne",
+        "epoque": "1940s",
+        "luminosite": 0.27,
+        "couleur": "#3f3b3f",
+        "extra": "chemin de campagne"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "holtville-03",
+      "url": "clips/holtville-03.mp4",
+      "vignette": "clips/holtville-03.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "campagne",
+        "epoque": "1940s",
+        "luminosite": 0.32,
+        "couleur": "#1b181c",
+        "extra": "grange en rondins"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "holtville-04",
+      "url": "clips/holtville-04.mp4",
+      "vignette": "clips/holtville-04.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "campagne",
+        "epoque": "1940s",
+        "luminosite": 0.31,
+        "couleur": "#413d41",
+        "extra": "nuages sur la route"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "holtville-05",
+      "url": "clips/holtville-05.mp4",
+      "vignette": "clips/holtville-05.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "campagne",
+        "epoque": "1940s",
+        "luminosite": 0.35,
+        "couleur": "#514d51",
+        "extra": "récolte au tracteur"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "steel-01",
+      "url": "clips/steel-01.mp4",
+      "vignette": "clips/steel-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "machines",
+        "epoque": "1946",
+        "luminosite": 0.26,
+        "couleur": "#464646",
+        "extra": "coulée en fusion"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines"
+    },
+    {
+      "id": "steel-02",
+      "url": "clips/steel-02.mp4",
+      "vignette": "clips/steel-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "machines",
+        "epoque": "1946",
+        "luminosite": 0.45,
+        "couleur": "#7a7a79",
+        "extra": "chevalement minier"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines"
+    },
+    {
+      "id": "steel-03",
+      "url": "clips/steel-03.mp4",
+      "vignette": "clips/steel-03.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "machines",
+        "epoque": "1946",
+        "luminosite": 0.4,
+        "couleur": "#5f5f5f",
+        "extra": "halle aux fours"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines"
+    },
+    {
+      "id": "steel-04",
+      "url": "clips/steel-04.mp4",
+      "vignette": "clips/steel-04.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "machines",
+        "epoque": "1946",
+        "luminosite": 0.44,
+        "couleur": "#727272",
+        "extra": "poche de coulée"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines"
+    },
+    {
+      "id": "steel-05",
+      "url": "clips/steel-05.mp4",
+      "vignette": "clips/steel-05.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "machines",
+        "epoque": "1946",
+        "luminosite": 0.45,
+        "couleur": "#868686",
+        "extra": "laminoir"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines"
+    }
+  ]
+}

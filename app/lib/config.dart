@@ -19,3 +19,8 @@ const castNamespace = 'urn:x-cast:fr.vjm.control';
 
 /// Version du protocole app -> moteur (voir renderer/PROTOCOL.md).
 const protocolVersion = 1;
+
+/// Racine du catalogue statique (clips.json + clips/). Surchargable pour la
+/// préviz locale : --dart-define=CATALOG_URL=http://localhost:8124/
+const catalogUrl = String.fromEnvironment('CATALOG_URL',
+    defaultValue: 'https://maximilien1983.github.io/vjing-master/catalog/');

@@ -7,6 +7,9 @@ dist-embed/
 # Captures de validation visuelle (générées en headless)
 renderer/shots/
 
+# Planches-contact de sélection des extraits (fichiers de travail)
+tools/sheets/
+
 # Copie embarquée du moteur (générée par renderer `npm run build:embed`)
 app/assets/renderer/
 

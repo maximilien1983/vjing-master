@@ -10,6 +10,7 @@ import 'cast/cast_link.dart';
 import 'config.dart';
 import 'engine/engine_link.dart';
 import 'engine/local_link.dart';
+import 'sources/clip_catalog.dart';
 import 'sources/pixabay.dart';
 import 'sources/sources_model.dart';
 
@@ -48,6 +49,11 @@ class Session {
   final PixabayClient? _pixabay =
       pixabayKey.isEmpty ? null : PixabayClient(pixabayKey);
 
+  /// Catalogue hébergé (extraits FedFlix). Chargé une fois par session.
+  List<CatalogClip> _catalog = const [];
+  List<PixabayClip> _pixabayClips = const [];
+  int _lightBucket = -1;
+
   /// Vrai une fois start() exécuté (bouton Lancer).
   bool get started => _started;
   bool _started = false;
@@ -78,17 +84,37 @@ class Session {
       pilot.setUniverse(universePresetFor(universeId.value));
       _loadClips(universeId.value);
     });
+    ClipCatalog.load(catalogUrl).then((clips) {
+      _catalog = clips;
+      _pushPool(universeId.value);
+    });
   }
 
-  /// Charge les clips Pixabay de l'univers et les donne à l'autopilote,
+  /// Charge les clips Pixabay de l'univers puis reconstruit le pool,
   /// sauf si l'utilisateur a déjà changé d'univers entre-temps.
   Future<void> _loadClips(String id) async {
+    _pixabayClips = const [];
+    _pushPool(id);
     final client = _pixabay;
     if (client == null) return;
     final queries = universePresetFor(id).queries;
     if (queries.isEmpty) return;
     final clips = await clipsForQueries(client, queries);
-    if (universeId.value == id) pilot.setClips(clips);
+    if (universeId.value == id) {
+      _pixabayClips = clips;
+      _pushPool(id);
+    }
+  }
+
+  /// Pool de clips de l'autopilote : Pixabay de l'univers + catalogue
+  /// hébergé filtré par univers et par lumière (règle du brief).
+  void _pushPool(String universeId) {
+    final light = this.light.value;
+    pilot.setClips([
+      ..._pixabayClips,
+      ..._catalog.where(
+          (c) => c.univers == universeId && clipMatchesLight(c, light)),
+    ]);
   }
 
   List<EngineLink> get _links => [
@@ -208,6 +234,13 @@ class Session {
   void setLight(double v) {
     light.value = v;
     pilot.setLight(v);
+    // Re-filtre le catalogue par tranche de lumière (évite de reconstruire
+    // le pool à chaque cran du fader).
+    final bucket = (v * 3).round();
+    if (bucket != _lightBucket) {
+      _lightBucket = bucket;
+      _pushPool(universeId.value);
+    }
   }
 
   void setHold(bool v) {

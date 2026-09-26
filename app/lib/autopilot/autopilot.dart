@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import '../audio/audio_analyzer.dart';
-import '../sources/pixabay.dart';
+import '../sources/clips.dart';
 import 'beat_clock.dart';
 import 'presets.dart';
 
@@ -159,9 +159,9 @@ class Autopilot {
     _sceneRequested = true;
   }
 
-  /// Clips vidéo de l'univers courant (Pixabay au jalon 4), fusionnés aux
-  /// fonds shaders dans le tirage.
-  void setClips(List<PixabayClip> clips) {
+  /// Clips vidéo de l'univers courant (Pixabay, catalogue FedFlix…),
+  /// fusionnés aux fonds shaders dans le tirage.
+  void setClips(List<EngineClip> clips) {
     _clipUrls
       ..clear()
       ..addEntries(clips.map((c) => MapEntry(c.id, c.url)));

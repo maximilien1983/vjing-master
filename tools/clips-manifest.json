@@ -1,0 +1,76 @@
+{
+  "commentaire": "Manifeste de découpe des extraits (tools/prepare-clips.mjs). Les start sont en secondes dans le dérivé 512kb mp4 d'archive.org ; ffmpeg ne télécharge que les plages nécessaires. Segments choisis sur planches-contact (tools/sheets/, non versionné).",
+  "output": "../catalog/clips",
+  "catalog": "../catalog/clips.json",
+  "baseUrl": "clips/",
+  "sources": [
+    {
+      "id": "steel",
+      "title": "The Drama of Steel (1946)",
+      "url": "https://archive.org/download/gov.archives.arc.12505/gov.archives.arc.12505_512kb.mp4",
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
+      "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
+      "credit": "U.S. National Archives / Bureau of Mines",
+      "epoque": "1946",
+      "univers": "machines",
+      "segments": [
+        { "start": "542", "dur": 12, "tags": "coulée en fusion" },
+        { "start": "793", "dur": 12, "tags": "chevalement minier" },
+        { "start": "1044", "dur": 12, "tags": "halle aux fours" },
+        { "start": "1211", "dur": 12, "tags": "poche de coulée" },
+        { "start": "1295", "dur": 12, "tags": "laminoir" }
+      ]
+    },
+    {
+      "id": "apollo",
+      "title": "The Eagle Has Landed — The Flight of Apollo 11 (1969)",
+      "url": "https://archive.org/download/gov.archives.arc.45017/gov.archives.arc.45017_512kb.mp4",
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
+      "licence": "Domaine public (NASA, CC0)",
+      "credit": "U.S. National Archives / NASA",
+      "epoque": "1969",
+      "univers": "cosmos",
+      "segments": [
+        { "start": "317", "dur": 12, "tags": "décollage Saturn V" },
+        { "start": "673", "dur": 12, "tags": "cratères en orbite" },
+        { "start": "886", "dur": 12, "tags": "astronautes et drapeau" },
+        { "start": "1312", "dur": 12, "tags": "module au-dessus de la Lune" },
+        { "start": "1667", "dur": 12, "tags": "la Terre depuis l'espace" }
+      ]
+    },
+    {
+      "id": "holtville",
+      "title": "A Rural Community: Holtville, Alabama (ca. 1940s)",
+      "url": "https://archive.org/download/gov.archives.arc.47087/gov.archives.arc.47087_512kb.mp4",
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives",
+      "epoque": "1940s",
+      "univers": "campagne",
+      "segments": [
+        { "start": "253", "dur": 12, "tags": "ferme" },
+        { "start": "593", "dur": 12, "tags": "chemin de campagne" },
+        { "start": "1443", "dur": 12, "tags": "grange en rondins" },
+        { "start": "3314", "dur": 12, "tags": "nuages sur la route" },
+        { "start": "3654", "dur": 12, "tags": "récolte au tracteur" }
+      ]
+    },
+    {
+      "id": "city",
+      "title": "The City (1939)",
+      "url": "https://archive.org/download/gov.fdr.353.3.2/gov.fdr.353.3.2_512kb.mp4",
+      "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
+      "licence": "Domaine public (CC0)",
+      "credit": "American Documentary Films / FDR Presidential Library",
+      "epoque": "1939",
+      "univers": "ville",
+      "segments": [
+        { "start": "678", "dur": 12, "tags": "cheminées industrielles" },
+        { "start": "758", "dur": 12, "tags": "gratte-ciels" },
+        { "start": "998", "dur": 12, "tags": "rue et camions" },
+        { "start": "1158", "dur": 12, "tags": "feu de circulation" },
+        { "start": "1238", "dur": 12, "tags": "vie de rue" }
+      ]
+    }
+  ]
+}
