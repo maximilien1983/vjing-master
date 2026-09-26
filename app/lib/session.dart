@@ -54,8 +54,9 @@ class Session {
   final offsetMs = ValueNotifier<int>(kIsWeb ? 70 : 0);
 
   /// Barre de calibration du moteur (flash sur chaque temps extrapolé).
-  /// Activée d'office en préviz web, où la calibration SYNC est nécessaire.
-  final beatBar = ValueNotifier<bool>(kIsWeb);
+  /// Servait aux tests des jalons 1-2 ; désactivée par défaut depuis le
+  /// jalon 3 (réutilisable pour la calibration auto du jalon 2b).
+  final beatBar = ValueNotifier<bool>(false);
   BeatEstimate? _lastBeat;
   bool debug = true;
 

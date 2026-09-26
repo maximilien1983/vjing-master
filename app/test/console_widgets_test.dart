@@ -1,4 +1,5 @@
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vjing_master/autopilot/autopilot.dart';
@@ -27,6 +28,34 @@ void main() {
       expect(nearestNotch(210), 0); // 210 - 360 = -150
       expect(nearestNotch(-210), 5); // -210 + 360 = 150
       expect(nearestNotch(450), 4); // 450 - 360 = 90
+    });
+
+    testWidgets('toucher un cran sélectionne, la rotation est animée',
+        (tester) async {
+      var selected = 3;
+      await tester.pumpWidget(MaterialApp(
+        home: Center(
+          child: StatefulBuilder(
+            builder: (_, setState) => RotarySelector(
+              geometry: RotaryGeometry.console,
+              labels: const ['A', 'B', 'C', 'D', 'E', 'F'],
+              selected: selected,
+              onChanged: (i) => setState(() => selected = i),
+              semanticsLabel: 'Style',
+            ),
+          ),
+        ),
+      ));
+      // Toucher à gauche du bouton = cran à -90° (index 1).
+      final center = tester.getCenter(find.byType(RotarySelector));
+      // Centre du cadran (76,50) dans un widget 156×106 : le centre
+      // géométrique du widget est (78,53) ; on vise 60 pt à gauche du bouton.
+      await tester.tapAt(center + const Offset(-62, -3));
+      await tester.pump(); // début de l'animation de rotation
+      expect(selected, 1);
+      await tester.pump(const Duration(milliseconds: 110)); // mi-course
+      await tester.pumpAndSettle(); // fin d'animation sans erreur
+      expect(selected, 1);
     });
   });
 

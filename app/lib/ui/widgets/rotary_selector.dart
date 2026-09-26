@@ -117,8 +117,37 @@ class RotarySelector extends StatefulWidget {
   State<RotarySelector> createState() => _RotarySelectorState();
 }
 
-class _RotarySelectorState extends State<RotarySelector> {
+class _RotarySelectorState extends State<RotarySelector>
+    with SingleTickerProviderStateMixin {
   double? _dragAngle;
+
+  /// Le bouton tourne physiquement d'un cran à l'autre (pas de saut) :
+  /// l'angle affiché suit l'angle du cran choisi avec une courte animation.
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  late Animation<double> _angle = AlwaysStoppedAnimation(
+    rotaryAngles[widget.selected],
+  );
+
+  @override
+  void didUpdateWidget(covariant RotarySelector old) {
+    super.didUpdateWidget(old);
+    if (old.selected != widget.selected) {
+      _angle = Tween(
+        begin: _angle.value,
+        end: rotaryAngles[widget.selected],
+      ).animate(CurvedAnimation(parent: _spin, curve: Curves.easeOutCubic));
+      _spin.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
 
   double _angleAt(Offset local) {
     final d = local - widget.geometry.center;
@@ -145,12 +174,16 @@ class _RotarySelectorState extends State<RotarySelector> {
         },
         onPanEnd: (_) => _dragAngle = null,
         onTapUp: (d) => _select(nearestNotch(_angleAt(d.localPosition))),
-        child: CustomPaint(
-          size: g.size,
-          painter: _RotaryPainter(
-            geometry: g,
-            labels: widget.labels,
-            selected: widget.selected,
+        child: AnimatedBuilder(
+          animation: _angle,
+          builder: (_, _) => CustomPaint(
+            size: g.size,
+            painter: _RotaryPainter(
+              geometry: g,
+              labels: widget.labels,
+              selected: widget.selected,
+              pointerAngle: _angle.value,
+            ),
           ),
         ),
       ),
@@ -162,8 +195,13 @@ class _RotaryPainter extends CustomPainter {
   final RotaryGeometry geometry;
   final List<String> labels;
   final int selected;
-  _RotaryPainter(
-      {required this.geometry, required this.labels, required this.selected});
+  final double pointerAngle; // angle affiché (animé), en degrés depuis le haut
+  _RotaryPainter({
+    required this.geometry,
+    required this.labels,
+    required this.selected,
+    required this.pointerAngle,
+  });
 
   Offset _polar(double radius, double angleDeg) {
     final rad = angleDeg * math.pi / 180;
@@ -260,12 +298,16 @@ class _RotaryPainter extends CustomPainter {
         ..color = Colors.black.withValues(alpha: .65)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
+    // La jupe et le chapeau tournent avec le cran choisi : leurs reflets
+    // pivotent avec l'index pendant l'animation.
+    final spin = GradientRotation(pointerAngle * math.pi / 180);
     canvas.drawCircle(
       g.center,
       knobR,
       Paint()
-        ..shader = SweepGradient(colors: skirtColors, stops: skirtStops)
-            .createShader(Rect.fromCircle(center: g.center, radius: knobR)),
+        ..shader =
+            SweepGradient(colors: skirtColors, stops: skirtStops, transform: spin)
+                .createShader(Rect.fromCircle(center: g.center, radius: knobR)),
     );
     // Chapeau métal (conic clair / foncé).
     final capR = knobR * 2 / 3;
@@ -273,9 +315,9 @@ class _RotaryPainter extends CustomPainter {
       g.center,
       capR,
       Paint()
-        ..shader = const SweepGradient(
-          transform: GradientRotation(20 * math.pi / 180),
-          colors: [
+        ..shader = SweepGradient(
+          transform: GradientRotation((20 + pointerAngle) * math.pi / 180),
+          colors: const [
             Color(0xFF55575B), Color(0xFF9A9CA0), Color(0xFF4F5155),
             Color(0xFF8E9094), Color(0xFF4A4C50), Color(0xFF9EA0A4),
             Color(0xFF515357), Color(0xFF8A8C90), Color(0xFF55575B),
@@ -292,8 +334,8 @@ class _RotaryPainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: .2),
     );
 
-    // Index (trait crème) tourné sur le cran choisi.
-    final angle = rotaryAngles[selected];
+    // Index (trait crème) tourné sur l'angle affiché.
+    final angle = pointerAngle;
     final ptrOuter = _polar(knobR - (g.knobDiameter > 60 ? 4 : 3), angle);
     final ptrInner =
         _polar(knobR - (g.knobDiameter > 60 ? 4 : 3) - g.knobDiameter * .39, angle);
@@ -318,6 +360,7 @@ class _RotaryPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RotaryPainter old) =>
       old.selected != selected ||
+      old.pointerAngle != pointerAngle ||
       old.labels != labels ||
       old.geometry != geometry;
 }
