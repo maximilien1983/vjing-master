@@ -3,6 +3,7 @@ import {
   BACKGROUNDS,
   COMMON_UNIFORMS,
   OVERLAYS,
+  OVERLAY_VIDEO_FRAGMENT,
   POST_FRAGMENT,
   VIDEO_FRAGMENT,
 } from './shaders';
@@ -80,7 +81,9 @@ function link(gl: WebGL2RenderingContext, vs: string, fs: string): GlProgram {
 
 interface OverlaySpec {
   iid: string; // identifiant d'instance, choisi par l'app
-  motif: string; // clé dans OVERLAYS
+  motif?: string; // clé dans OVERLAYS (kind shader)
+  kind?: 'shader' | 'video';
+  url?: string; // kind video : boucle VJ sur fond noir
   x: number; // -1..1
   y: number;
   scale: number; // ~0.1..1
@@ -140,6 +143,7 @@ export class Engine {
   private filters = new Map<string, number>();
   private videos = new Map<string, VideoEntry>();
   private videoProgram: GlProgram | null = null;
+  private overlayVideoProgram: GlProgram | null = null;
 
   /// Clip illisible (réseau, CORS, format) : l'app bannit et rejoue.
   onBgError: ((id: string, reason: string) => void) | null = null;
@@ -276,16 +280,31 @@ export class Engine {
     this.videos.delete(id);
   }
 
-  /// Deux vidéos décodées au maximum (brief) : celles encore utiles.
+  /// Vidéos encore utiles : fonds actifs + boucles en surimpression.
   private releaseUnusedVideos(): void {
     const keep = new Set(
       [this.currentBg, this.nextBg, this.pendingBg?.ref]
         .filter((r): r is BgRef => !!r && r.kind === 'video')
         .map((r) => r.id),
     );
+    for (const o of this.overlays) {
+      if (o.kind === 'video') keep.add(`ov:${o.iid}`);
+    }
     for (const id of [...this.videos.keys()]) {
       if (!keep.has(id)) this.dropVideo(id);
     }
+  }
+
+  /// Nombre de fonds vidéo actifs (budget de décodage, brief : 2 max).
+  private bgVideoCount(): number {
+    return [this.currentBg, this.nextBg, this.pendingBg?.ref].filter(
+      (r) => r?.kind === 'video',
+    ).length;
+  }
+
+  private getOverlayVideoProgram(): GlProgram {
+    this.overlayVideoProgram ??= link(this.gl, OVERLAY_VERTEX, OVERLAY_VIDEO_FRAGMENT);
+    return this.overlayVideoProgram;
   }
 
   private getVideoProgram(): GlProgram {
@@ -351,6 +370,9 @@ export class Engine {
         Object.assign(existing, spec, { fadingOut: false });
       } else {
         this.overlays.push({ ...spec, opacity: 0, fadingOut: false });
+        if (spec.kind === 'video' && spec.url) {
+          this.ensureVideo({ kind: 'video', id: `ov:${spec.iid}`, url: spec.url });
+        }
       }
     }
 
@@ -493,7 +515,9 @@ export class Engine {
     this.overlays = this.overlays.filter((o) => {
       o.opacity += o.fadingOut ? -overlayFade : overlayFade;
       o.opacity = Math.min(1, Math.max(0, o.opacity));
-      return !(o.fadingOut && o.opacity <= 0);
+      const gone = o.fadingOut && o.opacity <= 0;
+      if (gone && o.kind === 'video') this.dropVideo(`ov:${o.iid}`);
+      return !gone;
     });
 
     // Fond vidéo en attente : la transition démarre dès qu'il est décodable.
@@ -528,16 +552,53 @@ export class Engine {
     this.drawBackground(this.currentBg, now, 1);
     if (this.nextBg) this.drawBackground(this.nextBg, now, fade);
 
-    // 2. Motifs en fusion additive.
+    // 2. Motifs en fusion additive (shaders et boucles vidéo).
     if (this.overlays.length > 0) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
       gl.bindVertexArray(this.quadVao);
       const aspect = INTERNAL_WIDTH / INTERNAL_HEIGHT;
+      // Budget de décodage : les fonds sont prioritaires (2 vidéos max).
+      let videoBudget = Math.max(0, 2 - this.bgVideoCount());
       for (const o of this.overlays) {
-        const p = this.overlayProgram(o.motif);
-        gl.useProgram(p.program);
-        this.setCommonUniforms(p, now);
+        let p: GlProgram;
+        if (o.kind === 'video') {
+          const entry = this.videos.get(`ov:${o.iid}`);
+          if (!entry) continue;
+          if (videoBudget <= 0) {
+            // Plus de budget : boucle en pause (dernière frame conservée).
+            if (!entry.el.paused) entry.el.pause();
+          } else {
+            videoBudget--;
+            if (entry.el.paused) void entry.el.play().catch(() => {});
+            if (entry.el.readyState >= 2 && entry.el.currentTime !== entry.lastUpload) {
+              gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+              try {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, entry.el);
+                entry.lastUpload = entry.el.currentTime;
+                entry.hasFrame = true;
+              } catch {
+                this.dropVideo(`ov:${o.iid}`);
+                continue;
+              }
+            }
+          }
+          if (!entry.hasFrame) continue;
+          p = this.getOverlayVideoProgram();
+          gl.useProgram(p.program);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+          gl.uniform1i(p.uniforms.get('uTex')!, 0);
+          const setB = (name: string, v: number) => {
+            const loc = p.uniforms.get(name);
+            if (loc) gl.uniform1f(loc, v);
+          };
+          setB('uBeat', this.clock.hasBeat ? this.beatEnv : 0);
+        } else {
+          p = this.overlayProgram(o.motif ?? 'grid');
+          gl.useProgram(p.program);
+          this.setCommonUniforms(p, now);
+        }
         const set1 = (name: string, v: number) => {
           const loc = p.uniforms.get(name);
           if (loc) gl.uniform1f(loc, v);

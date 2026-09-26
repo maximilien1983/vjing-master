@@ -1,5 +1,21 @@
 # Démo du jalon 4 — tranches 1 à 3 : styles, univers, Pixabay, FedFlix
 
+## Tranche 4 : boucles VJ (packs Creative Commons)
+
+- 13 boucles « motifs lumineux sur fond noir » dans `catalog/loops/`
+  (5,4 Mo), jouées **en surimpression additive** par le moteur, mélangées
+  aux motifs shaders (une boucle vidéo max à la fois ; les fonds gardent la
+  priorité du budget 2 vidéos décodées).
+- **Licences à confirmer (décision produit : validation pack par pack)** :
+  - « 3L vj loops series 1 » (archive.org : 3L_sampler_01) — **domaine
+    public** (CC Public Domain Dedication). 10 boucles retenues.
+  - « 68 Vintage Fairlight VJ Loops » par **VJzoo** (archive.org) —
+    **CC-BY 2.5**, attribution à prévoir dans l'écran crédits (jalon 6).
+    3 boucles retenues (dont la « photocopie », inversée pour l'additif).
+- Chaque boucle est taguée par styles dans le catalogue (ex. spirales →
+  70's/Psyché, photocopie → Punk, blocs 8-bit → Retrofutur/VHS).
+- Test direct : `?bg=cosmos-stars&loop=<url mp4 encodée>`.
+
 ## Tranche 3 : extraits FedFlix et catalogue de clips
 
 - 20 extraits (~12 s) de 4 films domaine public découpés par

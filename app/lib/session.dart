@@ -49,8 +49,8 @@ class Session {
   final PixabayClient? _pixabay =
       pixabayKey.isEmpty ? null : PixabayClient(pixabayKey);
 
-  /// Catalogue hébergé (extraits FedFlix). Chargé une fois par session.
-  List<CatalogClip> _catalog = const [];
+  /// Catalogue hébergé (extraits FedFlix + boucles VJ). Chargé une fois.
+  CatalogData _catalog = CatalogData.empty;
   List<PixabayClip> _pixabayClips = const [];
   int _lightBucket = -1;
 
@@ -84,9 +84,10 @@ class Session {
       pilot.setUniverse(universePresetFor(universeId.value));
       _loadClips(universeId.value);
     });
-    ClipCatalog.load(catalogUrl).then((clips) {
-      _catalog = clips;
+    ClipCatalog.load(catalogUrl).then((data) {
+      _catalog = data;
       _pushPool(universeId.value);
+      _pushLoops(styleId.value);
     });
   }
 
@@ -112,9 +113,15 @@ class Session {
     final light = this.light.value;
     pilot.setClips([
       ..._pixabayClips,
-      ..._catalog.where(
+      ..._catalog.clips.where(
           (c) => c.univers == universeId && clipMatchesLight(c, light)),
     ]);
+  }
+
+  /// Boucles VJ du style courant (les motifs appartiennent aux styles).
+  void _pushLoops(String styleId) {
+    pilot.setLoops(
+        _catalog.loops.where((l) => l.styles.contains(styleId)).toList());
   }
 
   List<EngineLink> get _links => [
@@ -256,6 +263,7 @@ class Session {
   void setStyle(String id) {
     styleId.value = id;
     pilot.setStyle(stylePresetFor(id));
+    _pushLoops(id);
   }
 
   void setUniverse(String id) {

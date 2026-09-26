@@ -322,5 +322,163 @@
       "licence": "Domaine public (US Bureau of Mines, CC Public Domain Mark)",
       "credit": "U.S. National Archives / Bureau of Mines"
     }
+  ],
+  "loops": [
+    {
+      "id": "3l-blox",
+      "url": "loops/3l-blox.mp4",
+      "duree": 2,
+      "styles": [
+        "retrofutur",
+        "vhs"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-discs",
+      "url": "loops/3l-discs.mp4",
+      "duree": 10,
+      "styles": [
+        "psyche",
+        "70s"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-dot",
+      "url": "loops/3l-dot.mp4",
+      "duree": 4,
+      "styles": [
+        "vintage",
+        "70s"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-dotray",
+      "url": "loops/3l-dotray.mp4",
+      "duree": 4,
+      "styles": [
+        "retrofutur",
+        "70s"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-ovals",
+      "url": "loops/3l-ovals.mp4",
+      "duree": 9,
+      "styles": [
+        "psyche",
+        "retrofutur"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-quark",
+      "url": "loops/3l-quark.mp4",
+      "duree": 2,
+      "styles": [
+        "psyche",
+        "punk"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-ringstar",
+      "url": "loops/3l-ringstar.mp4",
+      "duree": 1,
+      "styles": [
+        "vintage",
+        "retrofutur"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-spiral",
+      "url": "loops/3l-spiral.mp4",
+      "duree": 2,
+      "styles": [
+        "70s",
+        "psyche"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-spiraldisc",
+      "url": "loops/3l-spiraldisc.mp4",
+      "duree": 3,
+      "styles": [
+        "70s",
+        "psyche"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "3l-sqrings",
+      "url": "loops/3l-sqrings.mp4",
+      "duree": 5,
+      "styles": [
+        "retrofutur",
+        "punk"
+      ],
+      "source": "3L vj loops series 1 — archive.org : 3L_sampler_01",
+      "licence": "Domaine public (CC Public Domain Dedication)",
+      "credit": "3L"
+    },
+    {
+      "id": "vjzoo-criscros",
+      "url": "loops/vjzoo-criscros.mp4",
+      "duree": 6,
+      "styles": [
+        "punk",
+        "vhs"
+      ],
+      "source": "68 Vintage Fairlight VJ Loops — archive.org : 68_Vintage_Fairlight_VJ_Loops_by_VJzoo_smaller_versions",
+      "licence": "CC-BY 2.5 (attribution VJzoo à l'écran crédits, jalon 6)",
+      "credit": "VJzoo (Fairlight CVI)"
+    },
+    {
+      "id": "vjzoo-photocopy",
+      "url": "loops/vjzoo-photocopy.mp4",
+      "duree": 7,
+      "styles": [
+        "punk",
+        "vintage"
+      ],
+      "source": "68 Vintage Fairlight VJ Loops — archive.org : 68_Vintage_Fairlight_VJ_Loops_by_VJzoo_smaller_versions",
+      "licence": "CC-BY 2.5 (attribution VJzoo à l'écran crédits, jalon 6)",
+      "credit": "VJzoo (Fairlight CVI) — inversé pour la fusion additive"
+    },
+    {
+      "id": "vjzoo-redlava",
+      "url": "loops/vjzoo-redlava.mp4",
+      "duree": 3,
+      "styles": [
+        "psyche",
+        "70s"
+      ],
+      "source": "68 Vintage Fairlight VJ Loops — archive.org : 68_Vintage_Fairlight_VJ_Loops_by_VJzoo_smaller_versions",
+      "licence": "CC-BY 2.5 (attribution VJzoo à l'écran crédits, jalon 6)",
+      "credit": "VJzoo (Fairlight CVI)"
+    }
   ]
 }

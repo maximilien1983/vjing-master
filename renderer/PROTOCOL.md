@@ -49,6 +49,11 @@ illisible ⇒ message sortant `bgerror` (l'app bannit et rejoue).
 `spirale`, `onde` (70's) ; `trame`, `eclats` (Punk) ; `timecode`, `tracking`
 (VHS) ; `mandala`, `fluide` (Psyché). Id inconnu ⇒ repli `grid`.
 
+Motif vidéo (boucle VJ sur fond noir, fusion additive) :
+`{iid, kind: "video", url, x, y, scale, rot, pulse}`. Le budget de décodage
+privilégie les fonds : au-delà de 2 vidéos actives, la boucle est mise en
+pause sur sa dernière frame. L'app n'envoie qu'une boucle vidéo à la fois.
+
 `filters[]` : `{id, intensity}` avec `intensity` ∈ [0, 1]. Ids :
 `bloom`, `chroma` (Retrofutur) ; `grain`, `vignette`, `sepia` (Vintage) ;
 `warmth` (70's, inclut le halo) ; `photocopy`, `glitch` (Punk) ; `vhs`

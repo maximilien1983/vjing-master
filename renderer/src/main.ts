@@ -124,6 +124,7 @@ engine.start((stats) => {
   const params = new URLSearchParams(location.search);
   const bg = params.get('bg');
   const video = params.get('video'); // URL d'un clip : fond kind "video"
+  const loop = params.get('loop'); // URL d'une boucle : motif kind "video"
   const demo = params.get('demo');
   const motifs = (params.get('motifs') ?? (demo ? 'grid,loop' : ''))
     .split(',')
@@ -140,19 +141,24 @@ engine.start((stats) => {
     { x: 0.55, y: -0.25, scale: 0.45, rot: 0 },
     { x: 0.1, y: 0.1, scale: 0.6, rot: -0.3 },
   ];
-  if (bg || video || demo || motifs.length || filters.length) {
+  if (bg || video || loop || demo || motifs.length || filters.length) {
     window.VJM.handleMessage({
       type: 'scene',
       state: {
         background: video
           ? { kind: 'video', id: 'test-video', url: video }
           : { kind: 'shader', id: bg ?? 'cosmos-sun' },
-        overlays: motifs.map((motif, i) => ({
-          iid: `t${i}`,
-          motif,
-          ...slots[i % slots.length],
-          pulse: 0.8,
-        })),
+        overlays: [
+          ...motifs.map((motif, i) => ({
+            iid: `t${i}`,
+            motif,
+            ...slots[i % slots.length],
+            pulse: 0.8,
+          })),
+          ...(loop
+            ? [{ iid: 'tl', kind: 'video' as const, url: loop, x: 0.15, y: 0.05, scale: 0.7, rot: 0, pulse: 0.8 }]
+            : []),
+        ],
         filters,
         transition: { kind: 'cut', beats: 0 },
       },

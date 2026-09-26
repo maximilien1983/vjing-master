@@ -117,14 +117,60 @@ for (const src of manifest.sources) {
   });
 }
 
+// Boucles VJ (motifs lumineux sur fond noir, fusion additive côté moteur) :
+// fichier entier plafonné à 14 s, recompression, inversion optionnelle
+// (boucles à fond blanc), pas de tags lumière (taguées par style).
+const loopEntries = [];
+if (manifest.loops?.length) {
+  const loopsDir = resolve(here, manifest.loopsOutput);
+  mkdirSync(loopsDir, { recursive: true });
+  console.log('\n== boucles VJ');
+  for (const loop of manifest.loops) {
+    if (only && loop.id !== only) continue;
+    const name = `${loop.id}.mp4`;
+    const out = join(loopsDir, name);
+    if (!existsSync(out) || process.argv.includes('--force')) {
+      console.log(`   ${loop.id}${loop.invert ? ' (inversée)' : ''}`);
+      run([
+        '-y',
+        '-i', loop.url,
+        '-t', '14',
+        '-vf', loop.invert ? 'negate,scale=640:-2' : 'scale=640:-2',
+        '-an',
+        '-c:v', 'libx264', '-crf', '26', '-preset', 'veryfast',
+        '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+        out,
+      ]);
+    }
+    loopEntries.push({
+      id: loop.id,
+      url: `${manifest.loopsBaseUrl}${name}`,
+      duree: durationOf(out),
+      styles: loop.styles,
+      source: loop.source,
+      licence: loop.licence,
+      credit: loop.credit,
+    });
+  }
+}
+
 // Fusion avec le catalogue existant (--only ne doit pas écraser le reste).
-let existing = [];
+let existingClips = [];
+let existingLoops = [];
 if (existsSync(catalogPath)) {
-  existing = JSON.parse(readFileSync(catalogPath, 'utf8')).clips ?? [];
+  const prev = JSON.parse(readFileSync(catalogPath, 'utf8'));
+  existingClips = prev.clips ?? [];
+  existingLoops = prev.loops ?? [];
 }
 const replacedIds = new Set(entries.map((e) => e.id));
-const merged = [...existing.filter((e) => !replacedIds.has(e.id)), ...entries];
+const merged = [...existingClips.filter((e) => !replacedIds.has(e.id)), ...entries];
 merged.sort((a, b) => a.id.localeCompare(b.id));
+const replacedLoopIds = new Set(loopEntries.map((e) => e.id));
+const mergedLoops = [
+  ...existingLoops.filter((e) => !replacedLoopIds.has(e.id)),
+  ...loopEntries,
+];
+mergedLoops.sort((a, b) => a.id.localeCompare(b.id));
 writeFileSync(
   catalogPath,
   JSON.stringify(
@@ -133,10 +179,11 @@ writeFileSync(
       commentaire:
         'Catalogue de clips généré par tools/prepare-clips.mjs — ne pas éditer à la main. Schéma : brief « Tagging et catalogue ».',
       clips: merged,
+      loops: mergedLoops,
     },
     null,
     2,
   ) + '\n',
 );
-console.log(`\nCatalogue : ${merged.length} clips -> ${catalogPath}`);
+console.log(`\nCatalogue : ${merged.length} clips + ${mergedLoops.length} boucles -> ${catalogPath}`);
 console.log('Validation manuelle des tags avant commit (décision produit).');

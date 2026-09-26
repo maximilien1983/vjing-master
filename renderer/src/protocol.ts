@@ -12,7 +12,12 @@ export interface SceneBackground {
 
 export interface SceneOverlay {
   iid: string; // identifiant d'instance choisi par l'app
-  motif: string; // 'grid' | 'sun' | 'loop' (jalon 2)
+  /// Motif shader (voir PROTOCOL.md) — ignoré si kind = 'video'.
+  motif?: string;
+  /// 'shader' (défaut) | 'video' : boucle VJ sur fond noir, fusion additive.
+  kind?: 'shader' | 'video';
+  /// kind 'video' : URL de la boucle (mp4 muet, servi avec CORS).
+  url?: string;
   x: number; // centre, -1..1
   y: number;
   scale: number; // ~0.1..1

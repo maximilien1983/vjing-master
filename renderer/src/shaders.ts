@@ -824,6 +824,28 @@ void main() {
   outColor = vec4(col, 1.0);
 }`;
 
+// --- Motif vidéo (boucle VJ) --------------------------------------------------
+// Boucle « motifs lumineux sur fond noir » plaquée sur le quad des motifs,
+// fusion additive comme les motifs shaders. Pulsation de luminosité sur le
+// kick, proportionnelle à uPulse.
+
+export const OVERLAY_VIDEO_FRAGMENT = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uTex;
+uniform float uOpacity;
+uniform float uPulse;
+uniform float uBeat;
+void main() {
+  vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
+  vec3 col = texture(uTex, uv).rgb;
+  // Coupe le voile résiduel des noirs compressés (fusion additive propre).
+  col = max(col - 0.04, 0.0) * 1.04;
+  col *= 1.0 + uBeat * uPulse * 0.35;
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
 // --- Post-traitement -------------------------------------------------------
 // Chaîne unique paramétrée : chaque filtre a une intensité 0..1 (0 = inactif).
 // Un preset de style = un sous-ensemble de ces filtres (voir /catalog).

@@ -30,6 +30,31 @@ class CatalogClip extends EngineClip {
   });
 }
 
+/// Boucle VJ du catalogue (motif lumineux sur fond noir, fusion additive),
+/// taguée par styles — les motifs appartiennent aux styles (brief).
+class CatalogLoop extends EngineClip {
+  final int duree;
+  final List<String> styles;
+  final String credit;
+  final String licence;
+  const CatalogLoop(
+    super.id,
+    super.url, {
+    required this.duree,
+    required this.styles,
+    required this.credit,
+    required this.licence,
+  });
+}
+
+/// Contenu du catalogue hébergé.
+class CatalogData {
+  final List<CatalogClip> clips;
+  final List<CatalogLoop> loops;
+  const CatalogData(this.clips, this.loops);
+  static const empty = CatalogData([], []);
+}
+
 /// Règle du brief : l'autopilote ne pioche que des clips dont la luminosité
 /// colle au fader Lumière. Tolérance large : les archives sont surtout
 /// sombres, il faut qu'il reste des clips à lumière haute.
@@ -39,7 +64,7 @@ bool clipMatchesLight(CatalogClip c, double light) =>
 abstract final class ClipCatalog {
   /// Charge et résout le catalogue depuis l'hébergement statique.
   /// [baseUrl] se termine par `/` (ex. …/vjing-master/catalog/).
-  static Future<List<CatalogClip>> load(String baseUrl,
+  static Future<CatalogData> load(String baseUrl,
       {http.Client? httpClient}) async {
     final client = httpClient ?? http.Client();
     try {
@@ -52,7 +77,7 @@ abstract final class ClipCatalog {
       return parse(resp.body, baseUrl);
     } catch (e) {
       debugPrint('Catalogue de clips indisponible : $e');
-      return const [];
+      return CatalogData.empty;
     } finally {
       if (httpClient == null) client.close();
     }
@@ -60,16 +85,16 @@ abstract final class ClipCatalog {
 
   /// Parsing séparé pour les tests. Les URL relatives du catalogue sont
   /// résolues contre [baseUrl].
-  static List<CatalogClip> parse(String body, String baseUrl) {
+  static CatalogData parse(String body, String baseUrl) {
     final root = jsonDecode(body) as Map<String, dynamic>;
+    String resolve(String url) => url.startsWith('http') ? url : '$baseUrl$url';
     final clips = <CatalogClip>[];
     for (final raw in (root['clips'] ?? const []) as List) {
       final c = raw as Map<String, dynamic>;
       final tags = (c['tags'] ?? const {}) as Map<String, dynamic>;
-      final url = c['url'] as String;
       clips.add(CatalogClip(
         'cat-${c['id']}',
-        url.startsWith('http') ? url : '$baseUrl$url',
+        resolve(c['url'] as String),
         duree: (c['duree'] as num?)?.toInt() ?? 0,
         univers: (tags['univers'] as String?) ?? '',
         epoque: '${tags['epoque'] ?? ''}',
@@ -79,6 +104,18 @@ abstract final class ClipCatalog {
         licence: (c['licence'] as String?) ?? '',
       ));
     }
-    return clips;
+    final loops = <CatalogLoop>[];
+    for (final raw in (root['loops'] ?? const []) as List) {
+      final l = raw as Map<String, dynamic>;
+      loops.add(CatalogLoop(
+        'loop-${l['id']}',
+        resolve(l['url'] as String),
+        duree: (l['duree'] as num?)?.toInt() ?? 0,
+        styles: List<String>.from((l['styles'] ?? const []) as List),
+        credit: (l['credit'] as String?) ?? '',
+        licence: (l['licence'] as String?) ?? '',
+      ));
+    }
+    return CatalogData(clips, loops);
   }
 }

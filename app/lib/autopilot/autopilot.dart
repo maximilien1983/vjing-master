@@ -60,12 +60,27 @@ String selectBackground(
 
 class OverlayState {
   final String iid;
-  final String motif;
+  final String? motif; // motif shader, null pour une boucle vidéo
+  final String? url; // boucle vidéo (motif lumineux sur fond noir)
   final double x, y, scale, rot, pulse;
-  const OverlayState(this.iid, this.motif, this.x, this.y, this.scale, this.rot, this.pulse);
+  const OverlayState(this.iid, this.motif, this.x, this.y, this.scale, this.rot, this.pulse)
+      : url = null;
+  const OverlayState.video(this.iid, this.url, this.x, this.y, this.scale, this.rot, this.pulse)
+      : motif = null;
 
-  Map<String, dynamic> toJson() =>
-      {'iid': iid, 'motif': motif, 'x': x, 'y': y, 'scale': scale, 'rot': rot, 'pulse': pulse};
+  bool get isVideo => url != null;
+
+  Map<String, dynamic> toJson() => {
+        'iid': iid,
+        if (isVideo) 'kind': 'video',
+        if (isVideo) 'url': url,
+        if (!isVideo) 'motif': motif,
+        'x': x,
+        'y': y,
+        'scale': scale,
+        'rot': rot,
+        'pulse': pulse,
+      };
 }
 
 class Autopilot {
@@ -85,6 +100,7 @@ class Autopilot {
 
   String? _currentBg;
   final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
+  List<EngineClip> _loops = []; // boucles VJ du style courant
   final List<OverlayState> _overlays = [];
   int _nextChangeMeasure = 0;
   int _nextOverlayDriftMeasure = 0;
@@ -165,6 +181,13 @@ class Autopilot {
     _clipUrls
       ..clear()
       ..addEntries(clips.map((c) => MapEntry(c.id, c.url)));
+  }
+
+  /// Boucles VJ du style courant (motifs vidéo, fusion additive), mélangées
+  /// aux motifs shaders. Une seule boucle vidéo à l'écran à la fois : le
+  /// budget de décodage du moteur privilégie les fonds (2 vidéos max).
+  void setLoops(List<EngineClip> loops) {
+    _loops = loops;
   }
 
   /// Fond illisible côté moteur (réseau, CORS…) : banni pour la session,
@@ -250,24 +273,30 @@ class Autopilot {
     if (history.length > 10) history.removeAt(0);
   }
 
-  OverlayState _randomOverlay() {
+  bool get _hasVideoOverlay => _overlays.any((o) => o.isVideo);
+
+  OverlayState _randomOverlay({bool allowVideo = true}) {
+    final iid = 'o${_overlaySeq++}';
+    final x = (rng.nextDouble() - 0.5) * 1.2;
+    final y = (rng.nextDouble() - 0.5) * 1.0;
+    final rot = (rng.nextDouble() - 0.5) * 1.2;
+    final pulse = 0.3 + 0.7 * energy;
+    // Une chance sur deux de piocher une boucle vidéo quand c'est permis.
+    if (allowVideo && _loops.isNotEmpty && rng.nextBool()) {
+      final loop = _loops[rng.nextInt(_loops.length)];
+      return OverlayState.video(
+          iid, loop.url, x, y, 0.45 + rng.nextDouble() * 0.35, rot * 0.3, pulse);
+    }
     // Les motifs appartiennent au style (brief « Paramètres »).
     final motif = style.motifs[rng.nextInt(style.motifs.length)];
     return OverlayState(
-      'o${_overlaySeq++}',
-      motif,
-      (rng.nextDouble() - 0.5) * 1.2,
-      (rng.nextDouble() - 0.5) * 1.0,
-      0.3 + rng.nextDouble() * 0.35,
-      (rng.nextDouble() - 0.5) * 1.2,
-      0.3 + 0.7 * energy,
-    );
+        iid, motif, x, y, 0.3 + rng.nextDouble() * 0.35, rot, pulse);
   }
 
   void _rebuildOverlays(int count) {
     _overlays.clear();
     for (var i = 0; i < count; i++) {
-      _overlays.add(_randomOverlay());
+      _overlays.add(_randomOverlay(allowVideo: !_hasVideoOverlay));
     }
   }
 
@@ -277,11 +306,13 @@ class Autopilot {
       _overlays.removeAt(rng.nextInt(_overlays.length));
     }
     while (_overlays.length < target) {
-      _overlays.add(_randomOverlay());
+      _overlays.add(_randomOverlay(allowVideo: !_hasVideoOverlay));
     }
     // Remplace une boucle de temps en temps pour que ça vive.
     if (_overlays.isNotEmpty && rng.nextDouble() < 0.4) {
-      _overlays[rng.nextInt(_overlays.length)] = _randomOverlay();
+      final i = rng.nextInt(_overlays.length);
+      final allowVideo = _overlays[i].isVideo || !_hasVideoOverlay;
+      _overlays[i] = _randomOverlay(allowVideo: allowVideo);
     }
   }
 
