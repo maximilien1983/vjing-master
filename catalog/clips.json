@@ -3,6 +3,86 @@
   "commentaire": "Catalogue de clips généré par tools/prepare-clips.mjs — ne pas éditer à la main. Schéma : brief « Tagging et catalogue ».",
   "clips": [
     {
+      "id": "americana-01",
+      "url": "clips/americana-01.mp4",
+      "vignette": "clips/americana-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1950s",
+        "luminosite": 0.47,
+        "couleur": "#7a767a",
+        "extra": "couples swing"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "americana-02",
+      "url": "clips/americana-02.mp4",
+      "vignette": "clips/americana-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1950s",
+        "luminosite": 0.49,
+        "couleur": "#7e7a7e",
+        "extra": "chorus line"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "americana-03",
+      "url": "clips/americana-03.mp4",
+      "vignette": "clips/americana-03.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1950s",
+        "luminosite": 0.41,
+        "couleur": "#5c585c",
+        "extra": "portés de bal"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "americana-04",
+      "url": "clips/americana-04.mp4",
+      "vignette": "clips/americana-04.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1950s",
+        "luminosite": 0.48,
+        "couleur": "#807c81",
+        "extra": "charleston"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
+      "id": "americana-05",
+      "url": "clips/americana-05.mp4",
+      "vignette": "clips/americana-05.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1950s",
+        "luminosite": 0.48,
+        "couleur": "#7f7c80",
+        "extra": "danse western"
+      },
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "U.S. National Archives"
+    },
+    {
       "id": "apollo-01",
       "url": "clips/apollo-01.mp4",
       "vignette": "clips/apollo-01.jpg",
@@ -81,6 +161,38 @@
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
       "licence": "Domaine public (NASA, CC0)",
       "credit": "U.S. National Archives / NASA"
+    },
+    {
+      "id": "boogie-01",
+      "url": "clips/boogie-01.mp4",
+      "vignette": "clips/boogie-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1940s",
+        "luminosite": 0.46,
+        "couleur": "#7e7a7e",
+        "extra": "boogie solo"
+      },
+      "source": "Prelinger Archives — archive.org : soundie_12",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "Prelinger Archives"
+    },
+    {
+      "id": "boogie-02",
+      "url": "clips/boogie-02.mp4",
+      "vignette": "clips/boogie-02.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "danse",
+        "epoque": "1940s",
+        "luminosite": 0.46,
+        "couleur": "#848084",
+        "extra": "boogie scène"
+      },
+      "source": "Prelinger Archives — archive.org : soundie_12",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "Prelinger Archives"
     },
     {
       "id": "city-01",
@@ -163,84 +275,68 @@
       "credit": "American Documentary Films / FDR Presidential Library"
     },
     {
-      "id": "holtville-01",
-      "url": "clips/holtville-01.mp4",
-      "vignette": "clips/holtville-01.jpg",
+      "id": "hatdance-01",
+      "url": "clips/hatdance-01.mp4",
+      "vignette": "clips/hatdance-01.jpg",
       "duree": 12,
       "tags": {
-        "univers": "campagne",
+        "univers": "danse",
         "epoque": "1940s",
-        "luminosite": 0.3,
-        "couleur": "#545155",
-        "extra": "ferme"
+        "luminosite": 0.49,
+        "couleur": "#7d7a7e",
+        "extra": "danseuse jupe"
       },
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "source": "Prelinger Archives — archive.org : MexicanHatDa",
       "licence": "Domaine public (CC Public Domain Mark)",
-      "credit": "U.S. National Archives"
+      "credit": "Prelinger Archives"
     },
     {
-      "id": "holtville-02",
-      "url": "clips/holtville-02.mp4",
-      "vignette": "clips/holtville-02.jpg",
+      "id": "hatdance-02",
+      "url": "clips/hatdance-02.mp4",
+      "vignette": "clips/hatdance-02.jpg",
       "duree": 12,
       "tags": {
-        "univers": "campagne",
+        "univers": "danse",
         "epoque": "1940s",
-        "luminosite": 0.27,
-        "couleur": "#3f3b3f",
-        "extra": "chemin de campagne"
+        "luminosite": 0.4,
+        "couleur": "#817d81",
+        "extra": "danse et mariachis"
       },
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "source": "Prelinger Archives — archive.org : MexicanHatDa",
       "licence": "Domaine public (CC Public Domain Mark)",
-      "credit": "U.S. National Archives"
+      "credit": "Prelinger Archives"
     },
     {
-      "id": "holtville-03",
-      "url": "clips/holtville-03.mp4",
-      "vignette": "clips/holtville-03.jpg",
+      "id": "lion-01",
+      "url": "clips/lion-01.mp4",
+      "vignette": "clips/lion-01.jpg",
       "duree": 12,
       "tags": {
-        "univers": "campagne",
-        "epoque": "1940s",
-        "luminosite": 0.32,
-        "couleur": "#1b181c",
-        "extra": "grange en rondins"
+        "univers": "danse",
+        "epoque": "1925",
+        "luminosite": 0.41,
+        "couleur": "#737074",
+        "extra": "danse du lion"
       },
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "source": "Prelinger Archives — archive.org : ChineseL1925",
       "licence": "Domaine public (CC Public Domain Mark)",
-      "credit": "U.S. National Archives"
+      "credit": "Prelinger Archives"
     },
     {
-      "id": "holtville-04",
-      "url": "clips/holtville-04.mp4",
-      "vignette": "clips/holtville-04.jpg",
+      "id": "lion-02",
+      "url": "clips/lion-02.mp4",
+      "vignette": "clips/lion-02.jpg",
       "duree": 12,
       "tags": {
-        "univers": "campagne",
-        "epoque": "1940s",
-        "luminosite": 0.31,
-        "couleur": "#413d41",
-        "extra": "nuages sur la route"
+        "univers": "danse",
+        "epoque": "1925",
+        "luminosite": 0.41,
+        "couleur": "#585458",
+        "extra": "lion dans la rue"
       },
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "source": "Prelinger Archives — archive.org : ChineseL1925",
       "licence": "Domaine public (CC Public Domain Mark)",
-      "credit": "U.S. National Archives"
-    },
-    {
-      "id": "holtville-05",
-      "url": "clips/holtville-05.mp4",
-      "vignette": "clips/holtville-05.jpg",
-      "duree": 12,
-      "tags": {
-        "univers": "campagne",
-        "epoque": "1940s",
-        "luminosite": 0.35,
-        "couleur": "#514d51",
-        "extra": "récolte au tracteur"
-      },
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
-      "licence": "Domaine public (CC Public Domain Mark)",
-      "credit": "U.S. National Archives"
+      "credit": "Prelinger Archives"
     },
     {
       "id": "steel-01",

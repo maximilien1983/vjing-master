@@ -41,8 +41,10 @@ const cosmos = UniversePreset(
 /// Les 6 crans de chaque rotacteur (ordre des maquettes : angles −150° à 150°).
 const styleIds = ['vintage', '70s', 'punk', 'retrofutur', 'vhs', 'psyche'];
 const styleLabels = ['Vintage', "70's", 'Punk', 'Retrofutur', 'VHS', 'Psyché'];
-const universeIds = ['campagne', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
-const universeLabels = ['Campagne', 'Ville', 'Cosmos', 'Machines', 'Nature', 'Miroir'];
+// « Danse » a remplacé « Campagne » (demande utilisateur, 2026-09-26) :
+// boucles de gens qui dansent dans des styles très variés.
+const universeIds = ['danse', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
+const universeLabels = ['Danse', 'Ville', 'Cosmos', 'Machines', 'Nature', 'Miroir'];
 
 /// Catalogue chargé depuis le JSON embarqué (et plus tard rafraîchi depuis
 /// l'hébergement statique, avec le catalogue de clips).

@@ -40,10 +40,11 @@
     }
   },
   "universes": {
-    "campagne": {
-      "label": "Campagne",
-      "backgrounds": ["campagne-collines", "campagne-ble", "campagne-nuages"],
-      "pixabay": ["countryside field aerial", "wheat field wind", "rural road vintage"]
+    "danse": {
+      "label": "Danse",
+      "backgrounds": ["danse-spots", "danse-disco", "danse-foule"],
+      "pixabay": ["people dancing", "dancer silhouette", "disco party dance", "ballet dancer", "hip hop dance"],
+      "note": "Remplace Campagne (2026-09-26) : boucles de danse dans des styles très variés. Les fonds shaders Campagne restent dans le moteur si on veut revenir en arrière."
     },
     "ville": {
       "label": "Ville",

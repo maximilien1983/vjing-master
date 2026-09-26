@@ -148,20 +148,62 @@
       ]
     },
     {
-      "id": "holtville",
-      "title": "A Rural Community: Holtville, Alabama (ca. 1940s)",
-      "url": "https://archive.org/download/gov.archives.arc.47087/gov.archives.arc.47087_512kb.mp4",
-      "source": "FedFlix / NARA — archive.org : gov.archives.arc.47087",
+      "id": "boogie",
+      "title": "Soundie : Hollywood Boogie (années 40)",
+      "url": "https://archive.org/download/soundie_12/soundie_12_512kb.mp4",
+      "source": "Prelinger Archives — archive.org : soundie_12",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "Prelinger Archives",
+      "epoque": "1940s",
+      "univers": "danse",
+      "segments": [
+        { "start": "45", "dur": 12, "tags": "boogie solo" },
+        { "start": "100", "dur": 12, "tags": "boogie scène" }
+      ]
+    },
+    {
+      "id": "hatdance",
+      "title": "Mexican Hat Dance (soundie, années 40)",
+      "url": "https://archive.org/download/MexicanHatDa/MexicanHatDa_512kb.mp4",
+      "source": "Prelinger Archives — archive.org : MexicanHatDa",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "Prelinger Archives",
+      "epoque": "1940s",
+      "univers": "danse",
+      "segments": [
+        { "start": "49", "dur": 12, "tags": "danseuse jupe" },
+        { "start": "95", "dur": 12, "tags": "danse et mariachis" }
+      ]
+    },
+    {
+      "id": "lion",
+      "title": "Chinese Lion Dance, Marysville (1925)",
+      "url": "https://archive.org/download/ChineseL1925/ChineseL1925_512kb.mp4",
+      "source": "Prelinger Archives — archive.org : ChineseL1925",
+      "licence": "Domaine public (CC Public Domain Mark)",
+      "credit": "Prelinger Archives",
+      "epoque": "1925",
+      "univers": "danse",
+      "segments": [
+        { "start": "218", "dur": 12, "tags": "danse du lion" },
+        { "start": "365", "dur": 12, "tags": "lion dans la rue" }
+      ]
+    },
+    {
+      "id": "americana",
+      "title": "Dance Americana (NARA)",
+      "url": "https://archive.org/download/gov.archives.arc.49773/gov.archives.arc.49773_512kb.mp4",
+      "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
       "licence": "Domaine public (CC Public Domain Mark)",
       "credit": "U.S. National Archives",
-      "epoque": "1940s",
-      "univers": "campagne",
+      "epoque": "1950s",
+      "univers": "danse",
       "segments": [
-        { "start": "253", "dur": 12, "tags": "ferme" },
-        { "start": "593", "dur": 12, "tags": "chemin de campagne" },
-        { "start": "1443", "dur": 12, "tags": "grange en rondins" },
-        { "start": "3314", "dur": 12, "tags": "nuages sur la route" },
-        { "start": "3654", "dur": 12, "tags": "récolte au tracteur" }
+        { "start": "221", "dur": 12, "tags": "couples swing" },
+        { "start": "400", "dur": 12, "tags": "chorus line" },
+        { "start": "758", "dur": 12, "tags": "portés de bal" },
+        { "start": "1027", "dur": 12, "tags": "charleston" },
+        { "start": "1296", "dur": 12, "tags": "danse western" }
       ]
     },
     {

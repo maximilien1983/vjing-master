@@ -123,7 +123,7 @@ void main() {
     final data = ClipCatalog.parse(f.readAsStringSync(), '');
     expect(data.clips, isNotEmpty);
     expect(data.loops, isNotEmpty);
-    const universes = ['campagne', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
+    const universes = ['danse', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
     for (final c in data.clips) {
       expect(universes, contains(c.univers), reason: c.id);
       expect(c.duree, inInclusiveRange(4, 30), reason: c.id);

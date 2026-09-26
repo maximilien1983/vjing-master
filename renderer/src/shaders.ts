@@ -221,6 +221,115 @@ void main() {
   outColor = vec4(col, 1.0);
 }`;
 
+// --- Fonds : Danse -----------------------------------------------------------
+
+// Projecteurs de scène : faisceaux colorés qui balaient sur la mesure,
+// brume, sol luisant. La foule est dans les clips ; ici c'est la lumière.
+const BG_SPOTS = `
+${NOISE}
+float beam(vec2 uv, vec2 origin, float angle, float width) {
+  vec2 d = uv - origin;
+  float along = -d.y;
+  float across = d.x - d.y * tan(angle);
+  return smoothstep(width * (0.3 + along), 0.0, abs(across)) * step(0.0, along);
+}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.015, 0.01, 0.03);
+  vec3 tints[4] = vec3[4](
+    vec3(1.0, 0.20, 0.55), vec3(0.20, 0.70, 1.0),
+    vec3(1.0, 0.65, 0.15), vec3(0.55, 0.30, 1.0));
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    float sweep = sin(uMeasure * 6.2831 * (0.5 + fi * 0.13) + fi * 2.1) * 0.55;
+    vec2 origin = vec2(-0.66 + fi * 0.44, 0.62);
+    float b = beam(uv, origin, sweep, 0.05 + 0.02 * fi);
+    col += tints[i] * b * (0.28 + 0.5 * uBeat) * smoothstep(0.62, -0.35, uv.y);
+  }
+  // Brume qui accroche la lumière.
+  col += vec3(0.5, 0.45, 0.6) * fbm(uv * 3.0 + vec2(uTime * 0.05, 0.0)) * 0.08;
+  // Sol luisant : reflet des faisceaux.
+  if (uv.y < -0.32) {
+    col += vec3(0.25, 0.2, 0.35) * (0.3 + 0.7 * uBeat) * exp((uv.y + 0.32) * 6.0) * 0.5;
+  }
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Boule à facettes : sphère scintillante, taches de lumière qui tournent.
+const BG_DISCO = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 col = vec3(0.02, 0.015, 0.04);
+  // Taches de lumière sur les murs : grille de points qui tourne.
+  for (int layer = 0; layer < 2; layer++) {
+    float fl = float(layer);
+    vec2 p = uv * (5.0 + fl * 3.0);
+    p.x += uMeasure * (2.0 + fl) + fl * 7.0;
+    p.y += sin(uMeasure * 3.1416 + fl) * 0.4;
+    vec2 cell = floor(p);
+    float h = hash(cell + fl * 13.0);
+    float d = length(fract(p) - 0.5);
+    float dot_ = smoothstep(0.12 + h * 0.08, 0.02, d) * step(0.45, h);
+    vec3 tint = mix(vec3(1.0, 0.8, 0.5), vec3(0.5, 0.75, 1.0), h);
+    col += tint * dot_ * (0.18 + 0.35 * uBeat) * (1.0 - fl * 0.4);
+  }
+  // La boule : disque à facettes scintillantes.
+  vec2 bp = uv - vec2(0.0, 0.22);
+  float r = length(bp);
+  if (r < 0.20) {
+    // Facettes : quantification de la direction, éclat aléatoire animé.
+    vec2 facet = floor(bp * 46.0);
+    float sparkle = hash(facet + floor(uTime * 6.0) * 0.13);
+    float shade = 0.25 + 0.75 * pow(max(0.0, 1.0 - r / 0.20), 0.6);
+    col = vec3(0.35, 0.37, 0.42) * shade * (0.5 + 0.5 * sparkle);
+    col += vec3(1.0) * step(0.965, sparkle) * (0.6 + 0.4 * uBeat);
+  }
+  col += vec3(1.0, 0.95, 0.85) * smoothstep(0.23, 0.19, r) * smoothstep(0.19, 0.21, r) * 0.25;
+  // Tige.
+  col += vec3(0.2) * step(abs(uv.x), 0.004) * step(0.42, uv.y) * 0.5;
+  // Halo ambiant qui pulse.
+  col += vec3(0.12, 0.08, 0.18) * exp(-r * 2.5) * (0.4 + 0.6 * uBeat);
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
+// Foule en contre-jour : têtes qui sautent sur le kick, rayons derrière.
+const BG_FOULE = `
+${NOISE}
+void main() {
+  vec2 uv = (vUv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  // Rayons de scène derrière la foule.
+  float a = atan(uv.x, 0.55 - uv.y);
+  float rays = pow(0.5 + 0.5 * sin(a * 9.0 + uMeasure * 6.2831), 3.0);
+  vec3 col = vec3(0.02, 0.01, 0.04);
+  vec3 back = mix(vec3(1.0, 0.25, 0.45), vec3(0.25, 0.5, 1.0),
+                  0.5 + 0.5 * sin(uMeasure * 3.1416));
+  col += back * rays * smoothstep(-0.5, 0.55, uv.y) * (0.22 + 0.38 * uBeat);
+  col += back * exp(-length(uv - vec2(0.0, 0.45)) * 2.0) * 0.35;
+  // Foule : silhouettes de têtes et d'épaules, sauts calés sur le beat.
+  float x = uv.x * 9.0;
+  float id = floor(x);
+  float h = hash(vec2(id, 3.0));
+  float jump = uBeat * (0.5 + 0.5 * hash(vec2(id, 7.0))) * 0.10 * (0.4 + 0.6 * uEnergy);
+  float headY = -0.30 + h * 0.10 + jump;
+  float fx = fract(x) - 0.5;
+  float head = smoothstep(0.34, 0.30, length(vec2(fx, (uv.y - headY) * 2.4)));
+  float shoulders = smoothstep(headY - 0.06, headY - 0.10, uv.y);
+  float crowd = max(head, shoulders);
+  // Deuxième rang, plus bas et plus sombre.
+  float x2 = uv.x * 12.0 + 4.7;
+  float id2 = floor(x2);
+  float jump2 = uBeat * hash(vec2(id2, 9.0)) * 0.06;
+  float headY2 = -0.42 + hash(vec2(id2, 5.0)) * 0.07 + jump2;
+  float head2 = smoothstep(0.36, 0.30, length(vec2(fract(x2) - 0.5, (uv.y - headY2) * 2.2)));
+  float crowd2 = max(head2, smoothstep(headY2 - 0.04, headY2 - 0.08, uv.y));
+  col = mix(col, vec3(0.012, 0.01, 0.02), clamp(crowd2 * 0.85 + crowd, 0.0, 1.0));
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
 // --- Fonds : Ville -----------------------------------------------------------
 
 // Skyline nocturne : immeubles en silhouettes, fenêtres qui clignotent.
@@ -516,6 +625,9 @@ export const BACKGROUNDS: Record<string, string> = {
   'campagne-collines': BG_COLLINES,
   'campagne-ble': BG_BLE,
   'campagne-nuages': BG_NUAGES,
+  'danse-spots': BG_SPOTS,
+  'danse-disco': BG_DISCO,
+  'danse-foule': BG_FOULE,
   'ville-skyline': BG_SKYLINE,
   'ville-trafic': BG_TRAFIC,
   'ville-pluie': BG_PLUIE,
