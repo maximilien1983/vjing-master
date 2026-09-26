@@ -5,6 +5,8 @@ export const PROTOCOL_VERSION = 1;
 export interface SceneBackground {
   kind: 'shader' | 'video';
   id: string;
+  /// kind 'video' : URL du clip (mp4/webm, servi avec CORS).
+  url?: string;
   params?: Record<string, number>;
 }
 
@@ -100,4 +102,12 @@ export interface PongMsg {
   tr: number;
 }
 
-export type OutboundMsg = StatsMsg | PongMsg;
+/// Fond vidéo illisible (réseau, CORS, format) : l'app doit bannir ce clip
+/// et pousser une autre scène.
+export interface BgErrorMsg {
+  type: 'bgerror';
+  id: string;
+  reason: string;
+}
+
+export type OutboundMsg = StatsMsg | PongMsg | BgErrorMsg;

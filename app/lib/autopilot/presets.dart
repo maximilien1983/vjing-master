@@ -24,7 +24,8 @@ class StylePreset {
 class UniversePreset {
   final String id;
   final List<String> backgrounds; // fonds shaders du moteur
-  const UniversePreset(this.id, this.backgrounds);
+  final List<String> queries; // requêtes Pixabay prédéfinies (brief)
+  const UniversePreset(this.id, this.backgrounds, [this.queries = const []]);
 }
 
 /// Repli : Retrofutur × Cosmos (jalons 1-3), utilisés avant le chargement
@@ -79,7 +80,11 @@ abstract final class PresetCatalog {
     for (final MapEntry(:key, :value)
         in (root['universes'] as Map<String, dynamic>).entries) {
       final m = value as Map<String, dynamic>;
-      u[key] = UniversePreset(key, List<String>.from(m['backgrounds'] as List));
+      u[key] = UniversePreset(
+        key,
+        List<String>.from(m['backgrounds'] as List),
+        List<String>.from((m['pixabay'] ?? const []) as List),
+      );
     }
     styles = s;
     universes = u;

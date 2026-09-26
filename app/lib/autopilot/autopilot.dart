@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import '../audio/audio_analyzer.dart';
+import '../sources/pixabay.dart';
 import 'beat_clock.dart';
 import 'presets.dart';
 
@@ -83,6 +84,7 @@ class Autopilot {
   bool hold = false; // Garder
 
   String? _currentBg;
+  final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
   final List<OverlayState> _overlays = [];
   int _nextChangeMeasure = 0;
   int _nextOverlayDriftMeasure = 0;
@@ -151,8 +153,32 @@ class Autopilot {
     universe = u;
     history.clear();
     banned.clear();
+    // Les clips de l'ancien univers ne doivent plus être piochés ; la session
+    // pousse ceux du nouveau dès qu'ils sont chargés.
+    setClips(const []);
     _sceneRequested = true;
   }
+
+  /// Clips vidéo de l'univers courant (Pixabay au jalon 4), fusionnés aux
+  /// fonds shaders dans le tirage.
+  void setClips(List<PixabayClip> clips) {
+    _clipUrls
+      ..clear()
+      ..addEntries(clips.map((c) => MapEntry(c.id, c.url)));
+  }
+
+  /// Fond illisible côté moteur (réseau, CORS…) : banni pour la session,
+  /// et remplacé immédiatement s'il est à l'écran.
+  void banOnError(String id) {
+    banned.add(id);
+    if (_currentBg == id) {
+      _changeBackground();
+      _pushScene();
+      _scheduleNextChange();
+    }
+  }
+
+  List<String> get _bgPool => [...universe.backgrounds, ..._clipUrls.keys];
 
   /// Suivant : zappe le fond en cours et l'écarte pour la session.
   void triggerNext() {
@@ -218,7 +244,7 @@ class Autopilot {
   }
 
   void _changeBackground() {
-    final bg = selectBackground(rng, universe.backgrounds, history, banned);
+    final bg = selectBackground(rng, _bgPool, history, banned);
     _currentBg = bg;
     history.add(bg);
     if (history.length > 10) history.removeAt(0);
@@ -260,14 +286,17 @@ class Autopilot {
   }
 
   void _pushScene({bool cut = false}) {
-    _currentBg ??= selectBackground(rng, universe.backgrounds, history, banned);
+    _currentBg ??= selectBackground(rng, _bgPool, history, banned);
     if (history.isEmpty) history.add(_currentBg!);
     final dropping = _dropUntilMeasure >= 0;
     final intensity = filterIntensity(energy, dropping ? StructureState.drop : structure);
+    final clipUrl = _clipUrls[_currentBg];
     send({
       'type': 'scene',
       'state': {
-        'background': {'kind': 'shader', 'id': _currentBg},
+        'background': clipUrl != null
+            ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
+            : {'kind': 'shader', 'id': _currentBg},
         'overlays': [for (final o in _overlays) o.toJson()],
         'filters': [
           for (final id in style.filterIds) {'id': id, 'intensity': intensity},

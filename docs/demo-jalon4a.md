@@ -1,9 +1,29 @@
-# Démo du jalon 4 — tranche 1 : les 6 styles et 6 univers (shaders)
+# Démo du jalon 4 — tranches 1 et 2 : styles, univers, fonds Pixabay
 
 Les rotacteurs de la console pilotent maintenant de vrais presets : chaque
-cran change réellement le rendu. Les fonds restent 100 % shaders génératifs ;
-les vrais clips vidéo (Pixabay, FedFlix, boucles) arrivent dans la suite du
-jalon 4.
+cran change réellement le rendu. Et les univers piochent de **vrais clips
+vidéo Pixabay** en plus des shaders (tranche 2). Restent : FedFlix, boucles
+CC, fichiers du téléphone, catalogue tagué.
+
+## Tranche 2 : fonds vidéo
+
+- Le moteur lit des clips mp4 (muets, en boucle, recadrés cover 854 × 480,
+  2 décodés max) et les fond avec les shaders ; les styles s'appliquent
+  par-dessus (un clip de trafic en VHS ressemble à une VHS).
+- Chaque univers a ses requêtes Pixabay prédéfinies dans
+  `catalog/presets.json` (ex. Ville : « city night traffic », « neon
+  street »). L'autopilote mélange shaders et clips ; un clip illisible est
+  banni automatiquement (message `bgerror`).
+- **Clé API** : jamais dans le dépôt. La passer au lancement :
+  `flutter run -d chrome --dart-define=PIXABAY_KEY=<ta clé>`
+  (pratique : mettre la clé dans `secrets/pixabay-key.txt`, ignoré par git,
+  puis `--dart-define=PIXABAY_KEY=$(Get-Content ..\secrets\pixabay-key.txt)`).
+  Sans clé, les univers restent en shaders seuls.
+- Conditions Pixabay vérifiées : recherches mises en cache 24 h (fait),
+  quota ~100 req/min (loin d'être atteint : ~3 requêtes par changement
+  d'univers). Lecture directe depuis le CDN assumée pour l'usage perso ;
+  à revoir avant publication (jalon 6, bascule possible vers copies R2).
+- Test direct moteur : `?video=<url mp4 encodée>` (banc URL).
 
 ## Ce qui change
 

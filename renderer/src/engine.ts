@@ -1,5 +1,11 @@
 import { BeatClock } from './beatClock';
-import { BACKGROUNDS, COMMON_UNIFORMS, OVERLAYS, POST_FRAGMENT } from './shaders';
+import {
+  BACKGROUNDS,
+  COMMON_UNIFORMS,
+  OVERLAYS,
+  POST_FRAGMENT,
+  VIDEO_FRAGMENT,
+} from './shaders';
 import type { InboundMsg, LevelsMsg, SceneState } from './protocol';
 
 // Résolution interne fixe (brief) : 854 × 480, mise à l'échelle par le CSS.
@@ -94,6 +100,21 @@ export interface EngineStats {
   bg: string;
 }
 
+/// Référence de fond : shader générativement rendu, ou clip vidéo (jalon 4).
+interface BgRef {
+  kind: 'shader' | 'video';
+  id: string;
+  url?: string;
+}
+
+interface VideoEntry {
+  el: HTMLVideoElement;
+  tex: WebGLTexture;
+  /// Dernière frame déjà envoyée à la texture (évite les uploads inutiles).
+  lastUpload: number;
+  hasFrame: boolean;
+}
+
 export class Engine {
   private gl: WebGL2RenderingContext;
   private bgPrograms = new Map<string, GlProgram>();
@@ -109,12 +130,19 @@ export class Engine {
   private light = 0.5;
   private energy = 0.5;
 
-  private currentBg = 'cosmos-sun';
-  private nextBg: string | null = null;
+  private currentBg: BgRef = { kind: 'shader', id: 'cosmos-sun' };
+  private nextBg: BgRef | null = null;
+  /// Fond vidéo demandé mais pas encore décodable : la transition attend.
+  private pendingBg: { ref: BgRef; cut: boolean; beats: number } | null = null;
   private fadeStart = 0;
   private fadeDurMs = 0;
   private overlays: OverlayInstance[] = [];
   private filters = new Map<string, number>();
+  private videos = new Map<string, VideoEntry>();
+  private videoProgram: GlProgram | null = null;
+
+  /// Clip illisible (réseau, CORS, format) : l'app bannit et rejoue.
+  onBgError: ((id: string, reason: string) => void) | null = null;
 
   private beatEnv = 0;
   private lastBeatIndex = -1;
@@ -128,7 +156,7 @@ export class Engine {
   private renderMsAccum = 0;
   private dropped = 0;
   private statsWindowStart = performance.now();
-  private lastStats: EngineStats = { fps: 0, renderMs: 0, droppedFrames: 0, bg: this.currentBg };
+  private lastStats: EngineStats = { fps: 0, renderMs: 0, droppedFrames: 0, bg: 'cosmos-sun' };
   private running = false;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -194,6 +222,77 @@ export class Engine {
     return p;
   }
 
+  private startTransition(ref: BgRef, cut: boolean, beats: number): void {
+    if (cut) {
+      this.currentBg = ref;
+      this.nextBg = null;
+      return;
+    }
+    const beatMs = this.clock.hasBeat ? 60000 / this.clock.currentBpm : 500;
+    // Si un fondu est déjà en cours, on le termine net avant d'enchaîner.
+    if (this.nextBg) this.currentBg = this.nextBg;
+    this.nextBg = ref;
+    this.fadeStart = performance.now();
+    this.fadeDurMs = beats * beatMs;
+  }
+
+  private ensureVideo(ref: BgRef): VideoEntry {
+    let entry = this.videos.get(ref.id);
+    if (entry) return entry;
+    const el = document.createElement('video');
+    el.muted = true;
+    el.loop = true;
+    el.playsInline = true;
+    el.crossOrigin = 'anonymous'; // requis pour l'upload en texture WebGL
+    el.preload = 'auto';
+    el.addEventListener('error', () => {
+      if (this.pendingBg?.ref.id === ref.id) this.pendingBg = null;
+      this.dropVideo(ref.id);
+      this.onBgError?.(ref.id, el.error?.message ?? 'erreur vidéo');
+    });
+    el.src = ref.url ?? '';
+    void el.play().catch(() => {
+      // L'autoplay muet est normalement permis ; on retentera à l'upload.
+    });
+    const gl = this.gl;
+    const tex = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    entry = { el, tex, lastUpload: -1, hasFrame: false };
+    this.videos.set(ref.id, entry);
+    return entry;
+  }
+
+  private dropVideo(id: string): void {
+    const entry = this.videos.get(id);
+    if (!entry) return;
+    entry.el.pause();
+    entry.el.removeAttribute('src');
+    entry.el.load();
+    this.gl.deleteTexture(entry.tex);
+    this.videos.delete(id);
+  }
+
+  /// Deux vidéos décodées au maximum (brief) : celles encore utiles.
+  private releaseUnusedVideos(): void {
+    const keep = new Set(
+      [this.currentBg, this.nextBg, this.pendingBg?.ref]
+        .filter((r): r is BgRef => !!r && r.kind === 'video')
+        .map((r) => r.id),
+    );
+    for (const id of [...this.videos.keys()]) {
+      if (!keep.has(id)) this.dropVideo(id);
+    }
+  }
+
+  private getVideoProgram(): GlProgram {
+    this.videoProgram ??= link(this.gl, FULLSCREEN_VERTEX, VIDEO_FRAGMENT);
+    return this.videoProgram;
+  }
+
   handle(msg: InboundMsg): void {
     switch (msg.type) {
       case 'beat':
@@ -224,19 +323,20 @@ export class Engine {
 
   private applyScene(state: SceneState): void {
     const bg = state.background;
-    if (bg && bg.kind === 'shader' && bg.id !== (this.nextBg ?? this.currentBg)) {
+    const targetId = this.pendingBg?.ref.id ?? this.nextBg?.id ?? this.currentBg.id;
+    if (bg && bg.id !== targetId) {
+      const ref: BgRef = { kind: bg.kind, id: bg.id, url: bg.url };
+      const cut = state.transition?.kind === 'cut';
       const beats = state.transition?.beats ?? 4;
-      const beatMs = this.clock.hasBeat ? 60000 / this.clock.currentBpm : 500;
-      if (state.transition?.kind === 'cut') {
-        this.currentBg = bg.id;
-        this.nextBg = null;
+      if (ref.kind === 'video') {
+        // Préchauffe le clip ; la transition démarre quand il est décodable.
+        this.ensureVideo(ref);
+        this.pendingBg = { ref, cut, beats };
       } else {
-        // Si un fondu est déjà en cours, on le termine net avant d'enchaîner.
-        if (this.nextBg) this.currentBg = this.nextBg;
-        this.nextBg = bg.id;
-        this.fadeStart = performance.now();
-        this.fadeDurMs = beats * beatMs;
+        this.pendingBg = null;
+        this.startTransition(ref, cut, beats);
       }
+      this.releaseUnusedVideos();
     }
 
     // Diff des motifs : nouveaux = fondu d'entrée, absents = fondu de sortie.
@@ -309,11 +409,52 @@ export class Engine {
     if (res) gl.uniform2f(res, INTERNAL_WIDTH, INTERNAL_HEIGHT);
   }
 
-  private drawBackground(id: string, now: number, fade: number): void {
+  private drawBackground(ref: BgRef, now: number, fade: number): void {
     const gl = this.gl;
-    const p = this.bgProgram(id);
-    gl.useProgram(p.program);
-    this.setCommonUniforms(p, now);
+    let p: GlProgram;
+    if (ref.kind === 'video') {
+      const entry = this.videos.get(ref.id);
+      if (!entry) return;
+      const el = entry.el;
+      if (el.readyState >= 2 && el.currentTime !== entry.lastUpload) {
+        gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+        try {
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+          entry.lastUpload = el.currentTime;
+          entry.hasFrame = true;
+        } catch (e) {
+          this.dropVideo(ref.id);
+          this.onBgError?.(ref.id, `texture : ${String(e)}`);
+          return;
+        }
+        if (el.paused) void el.play().catch(() => {});
+      }
+      if (!entry.hasFrame) return;
+      p = this.getVideoProgram();
+      gl.useProgram(p.program);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+      gl.uniform1i(p.uniforms.get('uTex')!, 0);
+      // Recadrage cover : on rogne l'axe le plus large.
+      const va = (el.videoWidth || 16) / (el.videoHeight || 9);
+      const ca = INTERNAL_WIDTH / INTERNAL_HEIGHT;
+      const cover = p.uniforms.get('uCover');
+      if (cover) {
+        if (va > ca) gl.uniform2f(cover, ca / va, 1);
+        else gl.uniform2f(cover, 1, va / ca);
+      }
+      const set1 = (name: string, v: number) => {
+        const loc = p.uniforms.get(name);
+        if (loc) gl.uniform1f(loc, v);
+      };
+      set1('uLight', this.light);
+      set1('uEnergy', this.energy);
+      set1('uBeat', this.clock.hasBeat ? this.beatEnv : 0);
+    } else {
+      p = this.bgProgram(ref.id);
+      gl.useProgram(p.program);
+      this.setCommonUniforms(p, now);
+    }
     gl.bindVertexArray(this.fullscreenVao);
     if (fade < 1) {
       gl.enable(gl.BLEND);
@@ -355,6 +496,16 @@ export class Engine {
       return !(o.fadingOut && o.opacity <= 0);
     });
 
+    // Fond vidéo en attente : la transition démarre dès qu'il est décodable.
+    if (this.pendingBg) {
+      const entry = this.videos.get(this.pendingBg.ref.id);
+      if (entry && entry.el.readyState >= 2) {
+        const { ref, cut, beats } = this.pendingBg;
+        this.pendingBg = null;
+        this.startTransition(ref, cut, beats);
+      }
+    }
+
     // Fondu enchaîné du fond.
     let fade = 0;
     if (this.nextBg) {
@@ -363,6 +514,7 @@ export class Engine {
         this.currentBg = this.nextBg;
         this.nextBg = null;
         fade = 0;
+        this.releaseUnusedVideos();
       }
     }
 
@@ -443,7 +595,7 @@ export class Engine {
         fps: Math.round((this.frameCount / windowSec) * 10) / 10,
         renderMs: Math.round((this.renderMsAccum / Math.max(1, this.frameCount)) * 100) / 100,
         droppedFrames: this.dropped,
-        bg: this.currentBg,
+        bg: this.currentBg.id,
       };
       this.frameCount = 0;
       this.renderMsAccum = 0;

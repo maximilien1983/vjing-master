@@ -89,6 +89,11 @@ window.VJM = {
   },
 };
 
+// Clip illisible : l'app le bannit et pousse une autre scène.
+engine.onBgError = (id, reason) => {
+  sendFeedback({ type: 'bgerror', id, reason });
+};
+
 engine.start((stats) => {
   if (!debug) return;
   sendFeedback({ ...stats, type: 'stats', t: Date.now() });
@@ -118,6 +123,7 @@ engine.start((stats) => {
   });
   const params = new URLSearchParams(location.search);
   const bg = params.get('bg');
+  const video = params.get('video'); // URL d'un clip : fond kind "video"
   const demo = params.get('demo');
   const motifs = (params.get('motifs') ?? (demo ? 'grid,loop' : ''))
     .split(',')
@@ -134,11 +140,13 @@ engine.start((stats) => {
     { x: 0.55, y: -0.25, scale: 0.45, rot: 0 },
     { x: 0.1, y: 0.1, scale: 0.6, rot: -0.3 },
   ];
-  if (bg || demo || motifs.length || filters.length) {
+  if (bg || video || demo || motifs.length || filters.length) {
     window.VJM.handleMessage({
       type: 'scene',
       state: {
-        background: { kind: 'shader', id: bg ?? 'cosmos-sun' },
+        background: video
+          ? { kind: 'video', id: 'test-video', url: video }
+          : { kind: 'shader', id: bg ?? 'cosmos-sun' },
         overlays: motifs.map((motif, i) => ({
           iid: `t${i}`,
           motif,

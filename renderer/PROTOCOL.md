@@ -27,7 +27,14 @@ Le moteur remonte des infos (stats, clips en cours pour les aperçus console) vi
 }}
 ```
 
-`background.kind` : `shader` | `video` (jalon 4 en cours : `shader` uniquement).
+`background.kind` : `shader` | `video`.
+
+Fond vidéo : `{"kind": "video", "id": "px-21118", "url": "https://…/x.mp4"}`.
+Le clip doit être servi avec CORS (`crossorigin`), il est lu muet en boucle,
+recadré en cover sur 854 × 480, lumière et styles appliqués comme aux
+shaders. Le moteur garde **2 vidéos décodées maximum** (courante + suivante) ;
+la transition attend que le clip soit décodable (pas d'écran noir). Clip
+illisible ⇒ message sortant `bgerror` (l'app bannit et rejoue).
 
 `background.id` (shaders, par univers) :
 - Cosmos : `cosmos-sun`, `cosmos-stars`, `cosmos-nebula`, `cosmos-rings`
@@ -99,6 +106,15 @@ Id inconnu ⇒ ignoré.
 ### `sources` (à partir du jalon 4)
 
 Identifiants et vignettes des clips en cours, pour les aperçus de la console.
+
+### `bgerror`
+
+```json
+{"type": "bgerror", "id": "px-21118", "reason": "erreur vidéo"}
+```
+
+Fond vidéo illisible (réseau, CORS, format) : l'app doit bannir ce clip pour
+la session et pousser une autre scène.
 
 ### `pong`
 

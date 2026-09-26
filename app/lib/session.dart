@@ -7,8 +7,10 @@ import 'audio/audio_analyzer.dart';
 import 'autopilot/autopilot.dart';
 import 'autopilot/presets.dart';
 import 'cast/cast_link.dart';
+import 'config.dart';
 import 'engine/engine_link.dart';
 import 'engine/local_link.dart';
+import 'sources/pixabay.dart';
 import 'sources/sources_model.dart';
 
 /// Session jalon 2 : micro -> analyse -> autopilote -> moteur(s).
@@ -42,6 +44,10 @@ class Session {
   /// Sources vidéo de la session (données factices au jalon 3).
   final sourcesModel = SourcesModel();
 
+  /// Fonds Pixabay par univers (jalon 4). Sans clé : shaders seuls.
+  final PixabayClient? _pixabay =
+      pixabayKey.isEmpty ? null : PixabayClient(pixabayKey);
+
   /// Vrai une fois start() exécuté (bouton Lancer).
   bool get started => _started;
   bool _started = false;
@@ -70,7 +76,19 @@ class Session {
     PresetCatalog.load().then((_) {
       pilot.setStyle(stylePresetFor(styleId.value));
       pilot.setUniverse(universePresetFor(universeId.value));
+      _loadClips(universeId.value);
     });
+  }
+
+  /// Charge les clips Pixabay de l'univers et les donne à l'autopilote,
+  /// sauf si l'utilisateur a déjà changé d'univers entre-temps.
+  Future<void> _loadClips(String id) async {
+    final client = _pixabay;
+    if (client == null) return;
+    final queries = universePresetFor(id).queries;
+    if (queries.isEmpty) return;
+    final clips = await clipsForQueries(client, queries);
+    if (universeId.value == id) pilot.setClips(clips);
   }
 
   List<EngineLink> get _links => [
@@ -116,6 +134,10 @@ class Session {
           final src = link == cast ? 'TV' : 'local';
           stats.value =
               '$src ${msg['fps']} i/s · ${msg['renderMs']} ms · ${msg['bg']}';
+        } else if (msg['type'] == 'bgerror') {
+          // Clip illisible : banni pour la session, scène remplacée.
+          debugPrint('Fond vidéo illisible : ${msg['id']} (${msg['reason']})');
+          pilot.banOnError(msg['id'] as String);
         }
       };
     }
@@ -206,6 +228,7 @@ class Session {
   void setUniverse(String id) {
     universeId.value = id;
     pilot.setUniverse(universePresetFor(id));
+    _loadClips(id);
   }
 
   /// Phase du temps courant [0,1) pour la LED tempo, calée sur l'horloge de
@@ -233,5 +256,6 @@ class Session {
     await _recorder.dispose();
     analyzer.dispose();
     cast.dispose();
+    _pixabay?.dispose();
   }
 }

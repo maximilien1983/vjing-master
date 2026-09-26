@@ -800,6 +800,30 @@ export const OVERLAYS: Record<string, string> = {
   'fluide': OV_FLUIDE,
 };
 
+// --- Fond vidéo --------------------------------------------------------------
+// Texture d'un élément <video>, recadrée en « cover » sur le 854 × 480.
+// La règle de lumière est la même que pour les fonds shaders ; les styles
+// s'appliquent ensuite dans le post-traitement.
+
+export const VIDEO_FRAGMENT = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uTex;
+uniform vec2 uCover;   // échelle uv du recadrage cover
+uniform float uLight;
+uniform float uBeat;
+uniform float uEnergy;
+void main() {
+  vec2 uv = (vUv - 0.5) * uCover + 0.5;
+  uv.y = 1.0 - uv.y; // les textures vidéo arrivent ligne du haut en premier
+  vec3 col = texture(uTex, uv).rgb;
+  // Légère pulsation de luminosité sur le kick, proportionnelle à l'énergie.
+  col *= 1.0 + uBeat * uEnergy * 0.12;
+  col *= 0.55 + 0.9 * uLight;
+  outColor = vec4(col, 1.0);
+}`;
+
 // --- Post-traitement -------------------------------------------------------
 // Chaîne unique paramétrée : chaque filtre a une intensité 0..1 (0 = inactif).
 // Un preset de style = un sous-ensemble de ces filtres (voir /catalog).

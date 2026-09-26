@@ -42,23 +42,28 @@
   "universes": {
     "campagne": {
       "label": "Campagne",
-      "backgrounds": ["campagne-collines", "campagne-ble", "campagne-nuages"]
+      "backgrounds": ["campagne-collines", "campagne-ble", "campagne-nuages"],
+      "pixabay": ["countryside field aerial", "wheat field wind", "rural road vintage"]
     },
     "ville": {
       "label": "Ville",
-      "backgrounds": ["ville-skyline", "ville-trafic", "ville-pluie"]
+      "backgrounds": ["ville-skyline", "ville-trafic", "ville-pluie"],
+      "pixabay": ["city night traffic", "neon street", "skyline timelapse"]
     },
     "cosmos": {
       "label": "Cosmos",
-      "backgrounds": ["cosmos-sun", "cosmos-stars", "cosmos-nebula", "cosmos-rings"]
+      "backgrounds": ["cosmos-sun", "cosmos-stars", "cosmos-nebula", "cosmos-rings"],
+      "pixabay": ["nebula space", "galaxy stars"]
     },
     "machines": {
       "label": "Machines",
-      "backgrounds": ["machines-engrenages", "machines-pistons", "machines-circuits"]
+      "backgrounds": ["machines-engrenages", "machines-pistons", "machines-circuits"],
+      "pixabay": ["industrial machine", "gears mechanism", "factory robot"]
     },
     "nature": {
       "label": "Nature",
-      "backgrounds": ["nature-eau", "nature-fumee", "nature-lucioles"]
+      "backgrounds": ["nature-eau", "nature-fumee", "nature-lucioles"],
+      "pixabay": ["water surface ripples", "smoke slow motion", "forest canopy"]
     },
     "miroir": {
       "label": "Miroir",
