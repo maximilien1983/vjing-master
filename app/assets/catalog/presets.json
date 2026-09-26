@@ -6,37 +6,37 @@
       "label": "Vintage",
       "filters": ["grain", "vignette", "sepia"],
       "transition": { "kind": "crossfade", "beats": 8 },
-      "motifs": ["poussieres", "cercles"]
+      "motifs": ["lightleak", "poussieres", "vumetre"]
     },
     "70s": {
       "label": "70's",
       "filters": ["warmth"],
       "transition": { "kind": "crossfade", "beats": 8 },
-      "motifs": ["spirale", "onde"]
+      "motifs": ["lightleak", "bokeh", "speaker"]
     },
     "punk": {
       "label": "Punk",
       "filters": ["photocopy", "glitch"],
       "transition": { "kind": "cut", "beats": 1 },
-      "motifs": ["trame", "eclats"]
+      "motifs": ["oscillo", "trame", "speaker"]
     },
     "retrofutur": {
       "label": "Retrofutur",
       "filters": ["bloom", "chroma"],
       "transition": { "kind": "crossfade", "beats": 2 },
-      "motifs": ["grid", "sun", "loop"]
+      "motifs": ["grid", "loop", "flare"]
     },
     "vhs": {
       "label": "VHS",
       "filters": ["vhs", "chroma"],
       "transition": { "kind": "cut", "beats": 1 },
-      "motifs": ["timecode", "tracking"]
+      "motifs": ["timecode", "tracking", "oscillo"]
     },
     "psyche": {
       "label": "Psyché",
       "filters": ["kaleido", "huerot", "bloom"],
       "transition": { "kind": "crossfade", "beats": 16 },
-      "motifs": ["mandala", "fluide"]
+      "motifs": ["mandala", "fluide", "bokeh"]
     }
   },
   "universes": {
@@ -51,6 +51,8 @@
         "hip hop dance",
         "dancehall dance",
         "afro dance",
+        "african dance",
+        "sound system party",
         "reggae party",
         "party crowd dancing",
         "festival crowd night",

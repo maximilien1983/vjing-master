@@ -896,7 +896,148 @@ void main() {
   outColor = vec4(col * uOpacity * 0.7, 1.0);
 }`;
 
+// --- Motifs « motion graphics » discrets (refonte, demande utilisateur) ----
+// Sobres et lumineux : fuites de lumière, bokeh, flare, matériel audio
+// vintage. Faible intensité : ils habillent la vidéo sans la manger.
+
+// Fuite de lumière chaude qui glisse lentement en diagonale.
+const OV_LIGHTLEAK = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float t = uTime * 0.11;
+  vec2 dir = normalize(vec2(cos(t * 0.7) * 0.6 + 0.8, sin(t) * 0.5 + 0.4));
+  float band = exp(-pow(dot(uv, dir) * 1.3 + sin(t * 1.7) * 0.7, 2.0));
+  float band2 = exp(-pow(dot(uv, dir.yx * vec2(-1.0, 1.0)) * 2.2 - 0.5, 2.0));
+  vec3 warm = vec3(1.0, 0.45, 0.18);
+  vec3 rose = vec3(1.0, 0.30, 0.38);
+  vec3 col = warm * band * 0.20 + rose * band2 * 0.10;
+  col *= 1.0 + uBeat * uPulse * 0.15;
+  col *= smoothstep(1.6, 0.4, length(uv));
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Bokeh : quelques disques flous qui dérivent, très doux.
+const OV_BOKEH = `
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i);
+    float h = hash(vec2(fi, 1.0));
+    vec2 pos = vec2(
+      sin(uTime * (0.05 + h * 0.05) + fi * 2.4) * 0.8,
+      cos(uTime * (0.04 + h * 0.06) + fi * 1.7) * 0.6);
+    float r = 0.10 + h * 0.16;
+    float d = length(uv - pos);
+    float disc = smoothstep(r, r * 0.25, d);
+    // Anneau doux au bord, comme un vrai bokeh d'objectif.
+    disc = disc * 0.55 + smoothstep(0.06, 0.0, abs(d - r * 0.8)) * 0.45;
+    vec3 tint = mix(vec3(1.0, 0.75, 0.45), vec3(0.45, 0.7, 1.0), h);
+    col += tint * disc * 0.085 * (1.0 + uBeat * uPulse * 0.3);
+  }
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Flare anamorphique : strie horizontale bleutée + cœur chaud, discret.
+const OV_FLARE = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec2 p = vec2(sin(uTime * 0.07) * 0.5, cos(uTime * 0.09) * 0.35);
+  vec2 d = uv - p;
+  float streak = exp(-pow(d.y * 11.0, 2.0)) * exp(-abs(d.x) * 1.7);
+  float core = exp(-length(d) * 7.0);
+  float ring = smoothstep(0.05, 0.0, abs(length(d) - 0.42)) * 0.35;
+  vec3 col = vec3(0.35, 0.6, 1.0) * streak * 0.30
+           + vec3(1.0, 0.8, 0.55) * core * 0.5
+           + vec3(0.5, 0.65, 1.0) * ring * 0.2;
+  col *= 1.0 + uBeat * uPulse * 0.25;
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Enceinte vintage : boomer qui pompe sur le kick, tweeter, caisse esquissée.
+const OV_SPEAKER = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  float kick = uBeat * uPulse;
+  // Caisse : liseré arrondi à peine suggéré.
+  vec2 b = abs(uv) - vec2(0.78, 0.92);
+  float box = length(max(b, 0.0)) + min(max(b.x, b.y), 0.0);
+  col += vec3(0.55, 0.38, 0.22) * smoothstep(0.015, 0.0, abs(box)) * 0.4;
+  // Boomer : centre bas, le cône pompe sur le kick.
+  vec2 wp = uv - vec2(0.0, -0.28);
+  float wr = length(wp) / (1.0 + kick * 0.06);
+  vec3 warm = vec3(1.0, 0.72, 0.42);
+  // Suspension + saladier : deux anneaux.
+  col += warm * smoothstep(0.022, 0.0, abs(wr - 0.50)) * 0.65;
+  col += warm * smoothstep(0.015, 0.0, abs(wr - 0.44)) * 0.30;
+  // Ondulations du cône, resserrées vers le centre.
+  float cone = sin(wr * 34.0) * 0.5 + 0.5;
+  col += warm * pow(cone, 3.0) * smoothstep(0.44, 0.16, wr) * 0.14 * (1.0 + kick * 0.8);
+  // Cache-noyau bombé.
+  col += vec3(1.0, 0.85, 0.6) * smoothstep(0.15, 0.02, wr) * (0.22 + kick * 0.25);
+  // Tweeter en haut.
+  vec2 tp = uv - vec2(0.0, 0.55);
+  float tr = length(tp) / (1.0 + kick * 0.02);
+  col += warm * smoothstep(0.015, 0.0, abs(tr - 0.16)) * 0.5;
+  col += vec3(1.0, 0.9, 0.7) * smoothstep(0.05, 0.01, tr) * (0.15 + uHigh * 0.25);
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// VU-mètre à aiguille : cadran chaud rétroéclairé, aiguille sur les basses.
+const OV_VUMETRE = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec3 col = vec3(0.0);
+  vec2 pivot = vec2(0.0, -0.55);
+  vec2 d = uv - pivot;
+  float r = length(d);
+  float ang = atan(d.x, d.y); // 0 = vertical
+  // Fond de cadran rétroéclairé ambre, très doux, borné en arc.
+  float dial = smoothstep(0.95, 0.35, r) * smoothstep(0.98, 0.85, abs(ang))
+             * step(0.0, d.y) * smoothstep(0.08, 0.2, r);
+  col += vec3(1.0, 0.62, 0.22) * dial * 0.12;
+  // Graduations en arc.
+  float tick = smoothstep(0.012, 0.004, abs(fract(ang * 6.0 / 3.1416 + 0.5) - 0.5) * 0.5236)
+             * smoothstep(0.03, 0.0, abs(r - 0.82)) ;
+  col += vec3(1.0, 0.85, 0.6) * tick * step(abs(ang), 0.9) * 0.8;
+  // Zone rouge à droite.
+  col += vec3(1.0, 0.15, 0.1) * smoothstep(0.05, 0.0, abs(r - 0.82))
+       * step(0.55, ang) * step(ang, 0.9) * 0.45;
+  // Aiguille : angle piloté par les basses.
+  float target = mix(-0.85, 0.85, clamp(uLow * 1.25 + uBeat * 0.15, 0.0, 1.0));
+  float needle = smoothstep(0.014, 0.004, abs(ang - target) * r) * step(r, 0.9) * step(0.05, r);
+  col += vec3(1.0, 0.95, 0.85) * needle * 0.9;
+  // Témoin de crête.
+  col += vec3(1.0, 0.2, 0.12) * smoothstep(0.06, 0.01, length(uv - vec2(0.62, 0.32)))
+       * smoothstep(0.72, 0.85, uLow);
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Oscilloscope : trait fin phosphore qui suit les niveaux.
+const OV_OSCILLO = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float t = uTime * 2.0;
+  float y = 0.45 * uLow * sin(uv.x * 3.1 + t)
+          + 0.22 * uMid * sin(uv.x * 7.3 - t * 1.6)
+          + 0.10 * uHigh * sin(uv.x * 15.7 + t * 2.4);
+  float line = exp(-pow((uv.y - y) * 26.0, 2.0));
+  float glow = exp(-pow((uv.y - y) * 7.0, 2.0)) * 0.25;
+  vec3 phosphor = vec3(0.55, 1.0, 0.65);
+  vec3 col = phosphor * (line * 0.75 + glow) * (0.8 + uBeat * uPulse * 0.4);
+  col *= smoothstep(1.05, 0.85, abs(uv.x));
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
 export const OVERLAYS: Record<string, string> = {
+  'lightleak': OV_LIGHTLEAK,
+  'bokeh': OV_BOKEH,
+  'flare': OV_FLARE,
+  'speaker': OV_SPEAKER,
+  'vumetre': OV_VUMETRE,
+  'oscillo': OV_OSCILLO,
   'grid': OV_GRID,
   'sun': OV_SUN,
   'loop': OV_LOOP,

@@ -44,10 +44,13 @@ illisible ⇒ message sortant `bgerror` (l'app bannit et rejoue).
 - Nature : `nature-eau`, `nature-fumee`, `nature-lucioles`
 - Miroir (placeholders, caméra au jalon 5) : `miroir-kaleido`, `miroir-chrome`
 
-`overlays[]` : `{iid, motif, x, y, scale, rot, pulse}`. Motifs (par style) :
-`grid`, `sun`, `loop` (Retrofutur) ; `poussieres`, `cercles` (Vintage) ;
-`spirale`, `onde` (70's) ; `trame`, `eclats` (Punk) ; `timecode`, `tracking`
-(VHS) ; `mandala`, `fluide` (Psyché). Id inconnu ⇒ repli `grid`.
+`overlays[]` : `{iid, motif, x, y, scale, rot, pulse}`. Motifs (par style,
+« motion graphics » discrets) : `lightleak`, `poussieres`, `vumetre`
+(Vintage) ; `lightleak`, `bokeh`, `speaker` (70's) ; `oscillo`, `trame`,
+`speaker` (Punk) ; `grid`, `loop`, `flare` (Retrofutur) ; `timecode`,
+`tracking`, `oscillo` (VHS) ; `mandala`, `fluide`, `bokeh` (Psyché).
+Toujours disponibles mais hors presets : `sun`, `cercles`, `spirale`,
+`onde`, `eclats`. Id inconnu ⇒ repli `grid`.
 
 Motif vidéo (boucle VJ sur fond noir, fusion additive) :
 `{iid, kind: "video", url, x, y, scale, rot, pulse}`. Le budget de décodage

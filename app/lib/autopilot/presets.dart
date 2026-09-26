@@ -10,6 +10,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+
+import '../config.dart';
 
 class StylePreset {
   final String id;
@@ -31,7 +34,7 @@ class UniversePreset {
 /// Repli : Retrofutur × Cosmos (jalons 1-3), utilisés avant le chargement
 /// du catalogue et si un id inconnu arrive.
 const retrofutur = StylePreset(
-    'retrofutur', ['bloom', 'chroma'], 'crossfade', 2, ['grid', 'sun', 'loop']);
+    'retrofutur', ['bloom', 'chroma'], 'crossfade', 2, ['grid', 'loop', 'flare']);
 
 const cosmos = UniversePreset(
   'cosmos',
@@ -53,8 +56,22 @@ abstract final class PresetCatalog {
   static Map<String, UniversePreset> universes = {'cosmos': cosmos};
   static bool loaded = false;
 
+  /// Réseau d'abord (presets modifiables sans recompiler, brief), puis copie
+  /// embarquée, puis constantes de repli.
   static Future<void> load() async {
     if (loaded) return;
+    try {
+      final resp = await http
+          .get(Uri.parse('${catalogUrl}presets.json'))
+          .timeout(const Duration(seconds: 6));
+      if (resp.statusCode == 200) {
+        apply(utf8.decode(resp.bodyBytes));
+        return;
+      }
+      debugPrint('Presets réseau : HTTP ${resp.statusCode}, repli asset');
+    } catch (e) {
+      debugPrint('Presets réseau indisponibles ($e), repli asset');
+    }
     try {
       apply(await rootBundle.loadString('assets/catalog/presets.json'));
     } catch (e) {
