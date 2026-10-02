@@ -66,12 +66,24 @@ export interface LevelsMsg {
   high: number;
 }
 
-export type TriggerId = 'flash' | 'drop' | 'scene' | 'next' | 'keep';
+export type TriggerId =
+  | 'flash'
+  | 'drop'
+  | 'strobe'
+  | 'negative'
+  | 'zoom'
+  | 'shake'
+  | 'echo'
+  | 'rewind';
 
 export interface TriggerMsg {
   type: 'trigger';
   v?: number;
   id: TriggerId;
+  /// Effets maintenables : true à l'appui, false au relâchement. Un tap
+  /// (on puis off rapprochés) garantit l'effet pendant une mesure complète ;
+  /// maintenu, l'effet dure jusqu'au relâchement. Absent = tap.
+  on?: boolean;
 }
 
 export interface ConfigMsg {

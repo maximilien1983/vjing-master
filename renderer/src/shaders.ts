@@ -1186,15 +1186,17 @@ void main() {
 // --- Post-traitement -------------------------------------------------------
 // Chaîne unique paramétrée : chaque filtre a une intensité 0..1 (0 = inactif).
 // Un preset de style = un sous-ensemble de ces filtres (voir /catalog).
-// Ordre : déformations d'échantillonnage (kaléido, glitch, vhs), chroma,
-// bloom, couleur (chaleur, sépia, photocopie, posterize, teinte), texture
-// (lignes vhs, grain, vignettage), puis noir / flash.
+// Ordre : déformations d'échantillonnage (kaléido, glitch, vhs, zoom, shake,
+// rewind), chroma, traînée echo, bloom, couleur (chaleur, sépia, photocopie,
+// posterize, teinte), texture (lignes vhs, grain, vignettage), effets
+// ponctuels (rewind, négatif, strobe), puis noir / flash.
 
 export const POST_FRAGMENT = `#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outColor;
 uniform sampler2D uScene;
+uniform sampler2D uTrail;
 uniform float uTime;
 uniform float uBeat;
 uniform float uBloom;
@@ -1210,6 +1212,13 @@ uniform float uGlitch;
 uniform float uVhs;
 uniform float uKaleido;
 uniform float uHueRot;
+uniform float uStrobe;
+uniform float uStrobeGate;
+uniform float uNegate;
+uniform float uZoom;
+uniform float uShake;
+uniform float uEcho;
+uniform float uRewind;
 uniform float uFlash;
 uniform float uBlack;
 uniform vec2 uRes;
@@ -1255,12 +1264,32 @@ void main() {
     uv.y = fract(uv.y + jump * 0.05 * sin(uTime * 40.0));
   }
 
+  // Zoom punch : plongée au centre, amplitude portée par l'appui.
+  if (uZoom > 0.001) uv = 0.5 + (uv - 0.5) * (1.0 - 0.45 * clamp(uZoom, 0.0, 1.0));
+
+  // Shake : secousse aléatoire par frame (tirage stable ~30 Hz).
+  if (uShake > 0.001) {
+    float ft = floor(uTime * 31.0);
+    uv += (vec2(phash(vec2(ft, 1.0)), phash(vec2(ft, 7.0))) - 0.5) * 0.05 * uShake;
+  }
+
+  // Rewind : roulis vertical + bandes déchirées, façon rembobinage VHS.
+  if (uRewind > 0.001) {
+    uv.y = fract(uv.y + uRewind * (0.12 * sin(uTime * 48.0)
+        + 0.3 * (phash(vec2(floor(uTime * 18.0), 2.0)) - 0.5)));
+    float band = floor(uv.y * 18.0 + floor(uTime * 30.0));
+    uv.x += (phash(vec2(band, 5.0)) - 0.5) * 0.12 * uRewind;
+  }
+
   // Décalage chromatique : radial (retrofutur) + horizontal (bavure VHS).
   vec2 dir = (uv - 0.5) * uChroma * 0.02 + vec2(0.0035, 0.0) * uVhs;
   vec3 col;
   col.r = texture(uScene, uv + dir).r;
   col.g = texture(uScene, uv).g;
   col.b = texture(uScene, uv - dir).b;
+
+  // Echo : traînée fantôme accumulée dans uTrail (fusion éclaircissante).
+  if (uEcho > 0.001) col = max(col, texture(uTrail, uv).rgb * 0.95 * uEcho);
 
   // Bloom approché : moyenne élargie des voisins brillants.
   float bloomAmt = max(uBloom, uWarmth * 0.5); // le halo 70's passe par là
@@ -1329,7 +1358,35 @@ void main() {
     col *= 1.0 - dot(v, v) * 0.9 * uVignette;
   }
 
+  // Rewind : stries claires horizontales et image légèrement délavée.
+  if (uRewind > 0.001) {
+    float streak = step(0.93, phash(vec2(floor(vUv.y * uRes.y / 2.0), floor(uTime * 45.0))));
+    col = mix(col, vec3(0.9), streak * 0.55 * uRewind);
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, vec3(luma), 0.3 * uRewind);
+  }
+
+  // Négatif : inversion des couleurs de toute l'image.
+  if (uNegate > 0.001) col = mix(col, 1.0 - col, clamp(uNegate, 0.0, 1.0));
+
+  // Strobe : alternance blanc/noir pilotée côté moteur (uStrobeGate).
+  if (uStrobe > 0.001) col = mix(col, vec3(uStrobeGate), clamp(uStrobe, 0.0, 1.0) * 0.92);
+
   col = mix(col, vec3(0.0), clamp(uBlack, 0.0, 1.0));
   col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));
   outColor = vec4(col, 1.0);
+}`;
+
+// Accumulation de la traînée Echo : max(image, traînée précédente atténuée),
+// léger zoom arrière pour que les fantômes s'étirent vers l'extérieur.
+export const ECHO_FRAGMENT = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uScene;
+uniform sampler2D uPrev;
+void main() {
+  vec3 cur = texture(uScene, vUv).rgb;
+  vec3 prev = texture(uPrev, 0.5 + (vUv - 0.5) * 0.992).rgb * 0.93;
+  outColor = vec4(max(cur, prev), 1.0);
 }`;

@@ -88,10 +88,25 @@ Id inconnu ⇒ ignoré.
 ### `trigger` — déclencheur ponctuel
 
 ```json
-{"type": "trigger", "id": "flash"}
+{"type": "trigger", "id": "strobe", "on": true}
 ```
 
-`id` : `flash` | `drop` | `scene` | `next` | `keep`. Jalon 1 : `flash` seul.
+`id` : `flash` | `drop` | `strobe` | `negative` | `zoom` | `shake` | `echo` | `rewind`.
+
+`on` (effets maintenables) : `true` à l'appui, `false` au relâchement. Un tap
+garantit l'effet pendant **une mesure complète** (2 s sans beat) ; maintenu,
+l'effet dure jusqu'au relâchement. Sans `on` : équivaut à un tap.
+
+- `flash` : éclair blanc calé sur le prochain temps (immédiat sans beat).
+- `drop` : coupe au noir (envoyé par l'autopilote sur montée détectée).
+- `strobe` : stroboscope blanc/noir, 2 éclats par temps.
+- `negative` : inversion des couleurs de toute l'image.
+- `zoom` : plongée au centre de l'image, pulsée sur le beat.
+- `shake` : secousse de l'image, amplifiée sur le beat.
+- `echo` : traînée fantôme (feedback vidéo, fusion éclaircissante).
+- `rewind` : rembobinage ~5 s, visuel VHS pendant le cycle ; les clips vidéo
+  sautent en arrière (en rebouclant par la fin), les shaders remontent le
+  temps. Maintenu : les rembobinages s'enchaînent.
 
 ### `config` — réglages du moteur
 

@@ -64,7 +64,7 @@ void main() {
   });
 
   group('Autopilot', () {
-    test('Suivant bannit le fond courant pour la session', () {
+    test('banOnError bannit le fond courant et le remplace', () {
       final msgs = <Map<String, dynamic>>[];
       final pilot = Autopilot(
         style: retrofutur,
@@ -75,7 +75,7 @@ void main() {
       pilot.start();
       final first = (msgs.last['state']
           as Map<String, dynamic>)['background']['id'] as String;
-      pilot.triggerNext();
+      pilot.banOnError(first);
       expect(pilot.banned, contains(first));
       final second = (msgs.last['state']
           as Map<String, dynamic>)['background']['id'] as String;
@@ -92,7 +92,7 @@ void main() {
       );
       pilot.start();
       for (var i = 0; i < 30; i++) {
-        pilot.triggerNext();
+        pilot.triggerDrop();
       }
       expect(pilot.history.length, lessThanOrEqualTo(10));
       pilot.stop();

@@ -1,5 +1,5 @@
 import { Engine } from './engine';
-import type { InboundMsg, OutboundMsg } from './protocol';
+import type { InboundMsg, OutboundMsg, TriggerId } from './protocol';
 
 declare global {
   interface Window {
@@ -167,8 +167,18 @@ engine.start((stats) => {
   }
 }
 
-// Dev navigateur : simulation clavier (d = debug, f = flash, b = beat 124 BPM).
+// Dev navigateur : simulation clavier (d = debug, f = flash, b = beat 124 BPM ;
+// effets maintenables — s = strobe, n = négatif, z = zoom, k = shake,
+// e = echo, r = rewind : actifs tant que la touche est enfoncée).
 if (import.meta.env.DEV) {
+  const fxKeys: Record<string, TriggerId> = {
+    s: 'strobe',
+    n: 'negative',
+    z: 'zoom',
+    k: 'shake',
+    e: 'echo',
+    r: 'rewind',
+  };
   let simBpm = 0;
   window.addEventListener('keydown', (e) => {
     if (e.key === 'd') window.VJM.handleMessage({ type: 'config', debug: !debug });
@@ -177,6 +187,12 @@ if (import.meta.env.DEV) {
       simBpm = simBpm ? 0 : 124;
       window.VJM.handleMessage({ type: 'beat', bpm: simBpm, phase: 0, t0: Date.now(), offsetMs: 0 });
     }
+    const fx = fxKeys[e.key];
+    if (fx && !e.repeat) window.VJM.handleMessage({ type: 'trigger', id: fx, on: true });
+  });
+  window.addEventListener('keyup', (e) => {
+    const fx = fxKeys[e.key];
+    if (fx) window.VJM.handleMessage({ type: 'trigger', id: fx, on: false });
   });
   setInterval(() => {
     if (!simBpm) return;

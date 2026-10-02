@@ -126,19 +126,19 @@ class _StartScreenState extends State<StartScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _selectorColumn(
-                  title: 'STYLE',
-                  labels: styleLabels,
-                  ids: styleIds,
-                  notifier: session.styleId,
-                  onChanged: session.setStyle,
-                ),
-                const SizedBox(width: 24),
-                _selectorColumn(
                   title: 'UNIVERS',
                   labels: universeLabels,
                   ids: universeIds,
                   notifier: session.universeId,
                   onChanged: session.setUniverse,
+                ),
+                const SizedBox(width: 24),
+                _selectorColumn(
+                  title: 'EFFECTS',
+                  labels: styleLabels,
+                  ids: styleIds,
+                  notifier: session.styleId,
+                  onChanged: session.setStyle,
                 ),
                 const SizedBox(width: 24),
                 _lightColumn(),

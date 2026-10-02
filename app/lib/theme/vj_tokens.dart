@@ -122,7 +122,7 @@ abstract final class VjText {
   );
 
   static const wordmark = TextStyle(
-    fontFamily: 'Allura',
+    fontFamily: 'Gajraj One',
     fontSize: 25,
     fontWeight: FontWeight.w400,
   );

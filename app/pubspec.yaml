@@ -57,3 +57,6 @@ flutter:
     - family: Allura
       fonts:
         - asset: assets/fonts/Allura-Regular.ttf
+    - family: Gajraj One
+      fonts:
+        - asset: assets/fonts/GajrajOne-Regular.ttf

@@ -10,10 +10,11 @@ import 'presets.dart';
 /// - changement de fond toutes les 32 (énergie 0) à 4 (énergie 100) mesures ;
 /// - 0 à 4 boucles superposées selon l'énergie, apparition/disparition en fondu ;
 /// - intensité des filtres 20 % à 100 % ;
-/// - historique des 10 derniers fonds, bannis de session (Suivant) ;
+/// - historique des 10 derniers fonds (variété) ; bannis de session sur erreur ;
 /// - transitions quantifiées sur la mesure ; sans beat : dérive lente ;
-/// - montée détectée : changements resserrés ; drop : tout au maximum 4 mesures ;
-/// - Garder : fige la scène ; Scène : nouveau fond + boucles au prochain temps 1.
+/// - montée détectée : changements resserrés ; drop : tout au maximum 4 mesures.
+/// Les effets ponctuels des boutons (strobe, echo…) sont gérés par le moteur
+/// (voir renderer/PROTOCOL.md), pas ici.
 
 double changeIntervalMeasures(double energy, StructureState structure) {
   var interval = 32 - 28 * energy.clamp(0.0, 1.0); // 32 -> 4
@@ -96,7 +97,6 @@ class Autopilot {
   double energy = 0.5;
   double light = 0.5;
   StructureState structure = StructureState.steady;
-  bool hold = false; // Garder
 
   String? _currentBg;
   final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
@@ -133,8 +133,9 @@ class Autopilot {
 
   void onStructure(StructureState s) {
     structure = s;
-    if (s == StructureState.drop && !hold) {
-      // Montée brutale détectée dans la musique : même effet que le bouton Drop.
+    if (s == StructureState.drop) {
+      // Montée brutale détectée dans la musique : coupe au noir puis tout au
+      // maximum pendant 4 mesures.
       triggerDrop();
     }
   }
@@ -149,10 +150,6 @@ class Autopilot {
   void setLight(double v) {
     light = v.clamp(0.0, 1.0);
     send({'type': 'config', 'light': light});
-  }
-
-  void setHold(bool v) {
-    hold = v;
   }
 
   /// Changement de style : les filtres et transitions suivent immédiatement.
@@ -203,19 +200,6 @@ class Autopilot {
 
   List<String> get _bgPool => [...universe.backgrounds, ..._clipUrls.keys];
 
-  /// Suivant : zappe le fond en cours et l'écarte pour la session.
-  void triggerNext() {
-    if (_currentBg != null) banned.add(_currentBg!);
-    _changeBackground();
-    _pushScene();
-    _scheduleNextChange();
-  }
-
-  /// Scène : nouveau fond et nouvelles boucles au prochain temps 1.
-  void triggerScene() {
-    _sceneRequested = true;
-  }
-
   /// Drop : coupe au noir (moteur), puis tout au maximum pendant 4 mesures.
   void triggerDrop() {
     send({'type': 'trigger', 'id': 'drop'});
@@ -233,7 +217,6 @@ class Autopilot {
   void _tick() {
     final boundary = clock.tickMeasureBoundary();
     if (!boundary) return;
-    if (hold) return; // Garder : la scène est figée
 
     final m = clock.measureCount;
     if (_dropUntilMeasure >= 0 && m >= _dropUntilMeasure) {

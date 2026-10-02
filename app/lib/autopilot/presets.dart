@@ -47,7 +47,9 @@ const styleLabels = ['Vintage', "70's", 'Punk', 'Retrofutur', 'VHS', 'Psyché'];
 // « Danse » a remplacé « Campagne » (demande utilisateur, 2026-09-26) :
 // boucles de gens qui dansent dans des styles très variés.
 const universeIds = ['danse', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
-const universeLabels = ['Danse', 'Ville', 'Cosmos', 'Machines', 'Nature', 'Miroir'];
+// « Miroir » s'affiche « Crazy AI » (demande utilisateur, 2026-10-02),
+// l'id `miroir` reste inchangé (backgrounds du moteur, catalogue de clips).
+const universeLabels = ['Danse', 'Ville', 'Cosmos', 'Machines', 'Nature', 'Crazy AI'];
 
 /// Catalogue chargé depuis le JSON embarqué (et plus tard rafraîchi depuis
 /// l'hébergement statique, avec le catalogue de clips).

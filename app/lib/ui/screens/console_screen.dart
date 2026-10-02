@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../autopilot/presets.dart';
 import '../../cast/cast_link.dart';
@@ -10,7 +7,7 @@ import '../../sources/sources_model.dart';
 import '../../theme/vj_tokens.dart';
 import '../cast_picker.dart';
 import '../materials.dart';
-import '../widgets/led_trigger_button.dart';
+import '../widgets/fx_button.dart';
 import '../widgets/mech_key.dart';
 import '../widgets/nixie_display.dart';
 import '../widgets/on_air_lamp.dart';
@@ -184,18 +181,18 @@ class ConsoleScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _selectorColumn(
-          title: 'STYLE',
-          labels: styleLabels,
-          ids: styleIds,
-          notifier: session.styleId,
-          onChanged: session.setStyle,
-        ),
-        _selectorColumn(
           title: 'UNIVERS',
           labels: universeLabels,
           ids: universeIds,
           notifier: session.universeId,
           onChanged: session.setUniverse,
+        ),
+        _selectorColumn(
+          title: 'EFFECTS',
+          labels: styleLabels,
+          ids: styleIds,
+          notifier: session.styleId,
+          onChanged: session.setStyle,
         ),
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -259,7 +256,21 @@ class ConsoleScreen extends StatelessWidget {
     );
   }
 
+  /// Rangées d'effets : 7 boutons-poussoirs 70s (diode, couronne métal).
+  /// Tap = burst d'une mesure, maintien = effet prolongé (flash : armé sur le
+  /// prochain temps par le moteur).
   Widget _triggersBlock() {
+    Widget btn(FxDef fx) => FxButton(
+          label: fx.label,
+          diode: fx.color,
+          diameter: 42,
+          litFor: () => session.fxBurst,
+          onDown: () =>
+              fx.id == 'flash' ? session.flash() : session.fxDown(fx.id),
+          onUp: () {
+            if (fx.id != 'flash') session.fxUp(fx.id);
+          },
+        );
     return SizedBox(
       width: 282,
       child: Column(
@@ -267,26 +278,12 @@ class ConsoleScreen extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              LedTriggerButton(label: 'Flash', onPressed: session.flash),
-              LedTriggerButton(label: 'Drop', onPressed: session.drop),
-              LedTriggerButton(label: 'Scène', onPressed: session.scene),
-            ],
+            children: [for (final fx in fxDefs.take(4)) btn(fx)],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              MomentaryIndicatorKey(label: 'Suivant', onTap: session.next),
-              ValueListenableBuilder(
-                valueListenable: session.hold,
-                builder: (_, holding, _) => IndicatorKey(
-                  label: 'Garder',
-                  on: holding,
-                  onTap: () => session.setHold(!holding),
-                ),
-              ),
-            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [for (final fx in fxDefs.skip(4)) btn(fx)],
           ),
         ],
       ),
@@ -339,51 +336,6 @@ class ConsoleScreen extends StatelessWidget {
           ),
         ),
       ]),
-    );
-  }
-}
-
-/// Touche momentanée : le voyant s'allume brièvement à l'appui.
-class MomentaryIndicatorKey extends StatefulWidget {
-  final String label;
-  final VoidCallback onTap;
-  final double width;
-  const MomentaryIndicatorKey({
-    super.key,
-    required this.label,
-    required this.onTap,
-    this.width = 135,
-  });
-
-  @override
-  State<MomentaryIndicatorKey> createState() => _MomentaryIndicatorKeyState();
-}
-
-class _MomentaryIndicatorKeyState extends State<MomentaryIndicatorKey> {
-  bool _lit = false;
-  Timer? _off;
-
-  @override
-  void dispose() {
-    _off?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return IndicatorKey(
-      label: widget.label,
-      on: _lit,
-      width: widget.width,
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-        _off?.cancel();
-        setState(() => _lit = true);
-        _off = Timer(const Duration(milliseconds: 300), () {
-          if (mounted) setState(() => _lit = false);
-        });
-      },
     );
   }
 }

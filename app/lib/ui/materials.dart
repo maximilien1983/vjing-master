@@ -399,7 +399,7 @@ class VjScaffold extends StatelessWidget {
   }
 }
 
-/// Signature « VJing Master » gravée (Allura, ombre au-dessus, reflet dessous).
+/// Signature « VJing Master » gravée (Gajraj One, ombre au-dessus, reflet dessous).
 class EngravedWordmark extends StatelessWidget {
   final double fontSize;
   const EngravedWordmark({super.key, this.fontSize = 25});

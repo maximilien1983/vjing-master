@@ -9,7 +9,7 @@ import '../../session.dart';
 import '../../theme/vj_tokens.dart';
 import '../cast_picker.dart';
 import '../materials.dart';
-import '../widgets/led_trigger_button.dart';
+import '../widgets/fx_button.dart';
 import '../widgets/mech_key.dart';
 import '../widgets/nixie_display.dart';
 import '../widgets/rotary_selector.dart';
@@ -314,7 +314,7 @@ class _LocalScreenState extends State<LocalScreen> {
     Widget selector(String title, List<String> labels, List<String> ids,
         ValueNotifier<String> notifier, ValueChanged<String> onChanged) {
       return SizedBox(
-        width: 100,
+        width: 136,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -346,10 +346,11 @@ class _LocalScreenState extends State<LocalScreen> {
     }
 
     return Row(children: [
-      selector('STYLE', styleLabels, styleIds, session.styleId, session.setStyle),
-      const SizedBox(width: 12),
       selector('UNIVERS', universeLabels, universeIds, session.universeId,
           session.setUniverse),
+      const SizedBox(width: 12),
+      selector('EFFECTS', styleLabels, styleIds, session.styleId,
+          session.setStyle),
     ]);
   }
 
@@ -385,39 +386,39 @@ class _LocalScreenState extends State<LocalScreen> {
     ]);
   }
 
+  /// Rangées d'effets compactes : mêmes 7 boutons 70s que la console.
   Widget _compactTriggers() {
+    Widget btn(FxDef fx) => FxButton(
+          label: fx.label,
+          diode: fx.color,
+          diameter: 34,
+          litFor: () => session.fxBurst,
+          onDown: () {
+            _armIdle();
+            if (fx.id == 'flash') {
+              session.flash();
+            } else {
+              session.fxDown(fx.id);
+            }
+          },
+          onUp: () {
+            _armIdle();
+            if (fx.id != 'flash') session.fxUp(fx.id);
+          },
+        );
     return SizedBox(
-      width: 272,
+      width: 268,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              LedTriggerButton(
-                  label: 'Flash', compact: true, onPressed: session.flash),
-              LedTriggerButton(
-                  label: 'Drop', compact: true, onPressed: session.drop),
-              LedTriggerButton(
-                  label: 'Scène', compact: true, onPressed: session.scene),
-            ],
+            children: [for (final fx in fxDefs.take(4)) btn(fx)],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              MomentaryIndicatorKey(
-                  label: 'Suivant', width: 131, onTap: session.next),
-              ValueListenableBuilder(
-                valueListenable: session.hold,
-                builder: (_, holding, _) => IndicatorKey(
-                  label: 'Garder',
-                  on: holding,
-                  width: 131,
-                  onTap: () => session.setHold(!holding),
-                ),
-              ),
-            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [for (final fx in fxDefs.skip(4)) btn(fx)],
           ),
         ],
       ),

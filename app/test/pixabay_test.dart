@@ -65,7 +65,7 @@ void main() {
       var found = false;
       pilot.setEnergy(.5);
       for (var i = 0; i < 20 && !found; i++) {
-        pilot.triggerNext();
+        pilot.triggerDrop();
         final bg = (msgs.lastWhere((m) => m['type'] == 'scene')['state']
             as Map<String, dynamic>)['background'] as Map<String, dynamic>;
         if (bg['kind'] == 'video') {
@@ -86,7 +86,7 @@ void main() {
       while ((msgs.lastWhere((m) => m['type'] == 'scene')['state']
               as Map<String, dynamic>)['background']['kind'] !=
           'video') {
-        pilot.triggerNext();
+        pilot.triggerDrop();
       }
       pilot.banOnError('px-1');
       expect(pilot.banned, contains('px-1'));
@@ -102,7 +102,7 @@ void main() {
       pilot.setUniverse(const UniversePreset('essai', ['cosmos-stars']));
       pilot.setEnergy(.5);
       for (var i = 0; i < 10; i++) {
-        pilot.triggerNext();
+        pilot.triggerDrop();
         final bg = (msgs.lastWhere((m) => m['type'] == 'scene')['state']
             as Map<String, dynamic>)['background'] as Map<String, dynamic>;
         expect(bg['kind'], 'shader');

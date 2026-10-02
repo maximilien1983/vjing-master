@@ -35,7 +35,6 @@ class Session {
   final latency = ValueNotifier<String>('—');
   final energy = ValueNotifier<double>(0.5);
   final light = ValueNotifier<double>(0.5);
-  final hold = ValueNotifier<bool>(false);
 
   /// Crans choisis sur les rotacteurs (ids de presets.dart). Seuls
   /// Retrofutur × Cosmos ont un preset moteur au jalon 3.
@@ -250,15 +249,19 @@ class Session {
     }
   }
 
-  void setHold(bool v) {
-    hold.value = v;
-    pilot.setHold(v);
-  }
-
   void flash() => pilot.triggerFlash();
-  void drop() => pilot.triggerDrop();
-  void scene() => pilot.triggerScene();
-  void next() => pilot.triggerNext();
+
+  /// Effets maintenables de la console (strobe, negative, zoom, shake, echo,
+  /// rewind) : on à l'appui, off au relâchement. La quantification (tap = une
+  /// mesure complète) est gérée côté moteur (voir PROTOCOL.md).
+  void fxDown(String id) => _sendAll({'type': 'trigger', 'id': id, 'on': true});
+  void fxUp(String id) => _sendAll({'type': 'trigger', 'id': id, 'on': false});
+
+  /// Durée du burst d'un tap d'effet (une mesure de 4 temps ; 2 s sans beat,
+  /// même règle que le moteur) — sert aux voyants des boutons.
+  Duration get fxBurst => bpm.value > 0
+      ? Duration(milliseconds: (4 * 60000 / bpm.value).round())
+      : const Duration(seconds: 2);
 
   void setStyle(String id) {
     styleId.value = id;

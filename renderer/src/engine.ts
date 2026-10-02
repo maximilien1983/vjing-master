@@ -2,6 +2,7 @@ import { BeatClock } from './beatClock';
 import {
   BACKGROUNDS,
   COMMON_UNIFORMS,
+  ECHO_FRAGMENT,
   OVERLAYS,
   OVERLAY_VIDEO_FRAGMENT,
   POST_FRAGMENT,
@@ -118,6 +119,15 @@ interface VideoEntry {
   hasFrame: boolean;
 }
 
+/// Effets ponctuels maintenables du post-traitement (hors flash/drop/rewind).
+type FxId = 'strobe' | 'negative' | 'zoom' | 'shake' | 'echo';
+
+interface FxState {
+  held: boolean; // doigt posé
+  minUntil: number; // fin de la mesure garantie par le tap (epoch perf ms)
+  level: number; // enveloppe 0..1 envoyée au shader
+}
+
 export class Engine {
   private gl: WebGL2RenderingContext;
   private bgPrograms = new Map<string, GlProgram>();
@@ -156,6 +166,29 @@ export class Engine {
   private flashArmed = false;
   private flashLevel = 0;
   private blackLevel = 0;
+
+  /// Effets maintenables (boutons de la console) : tap = une mesure complète,
+  /// maintien = jusqu'au relâchement. `level` monte/retombe en douceur.
+  private fx: Record<FxId, FxState> = {
+    strobe: { held: false, minUntil: 0, level: 0 },
+    negative: { held: false, minUntil: 0, level: 0 },
+    zoom: { held: false, minUntil: 0, level: 0 },
+    shake: { held: false, minUntil: 0, level: 0 },
+    echo: { held: false, minUntil: 0, level: 0 },
+  };
+  /// Traînée Echo : accumulation ping-pong, créée au premier usage.
+  private echoProgram: GlProgram | null = null;
+  private trailTex: WebGLTexture[] = [];
+  private trailFbo: WebGLFramebuffer | null = null;
+  private trailSrc = 0;
+  private trailActive = false;
+  /// Rewind : cycle d'animation en cours (début ms, -1 = aucun) ; les shaders
+  /// remontent le temps via timeShiftMs, les clips sautent en fin de cycle.
+  private rewindStart = -1;
+  private rewindHeld = false;
+  private timeShiftMs = 0;
+  private static readonly REWIND_CYCLE_MS = 650;
+  private static readonly REWIND_SECONDS = 5;
 
   private startTime = performance.now();
   private lastFrame = performance.now();
@@ -325,10 +358,27 @@ export class Engine {
         break;
       case 'trigger':
         if (msg.id === 'flash') {
+          if (msg.on === false) break;
           if (this.clock.hasBeat) this.flashArmed = true;
           else this.flashLevel = 1;
         } else if (msg.id === 'drop') {
-          this.blackLevel = 1; // coupe au noir ; l'app pousse ensuite énergie et filtres
+          // Coupe au noir ; l'app pousse ensuite énergie et filtres.
+          if (msg.on !== false) this.blackLevel = 1;
+        } else if (msg.id === 'rewind') {
+          if (msg.on === false) {
+            this.rewindHeld = false;
+          } else {
+            this.rewindHeld = msg.on === true;
+            if (this.rewindStart < 0) this.rewindStart = performance.now();
+          }
+        } else if (msg.id in this.fx) {
+          const fx = this.fx[msg.id as FxId];
+          if (msg.on === false) {
+            fx.held = false;
+          } else {
+            fx.held = msg.on === true;
+            fx.minUntil = performance.now() + this.measureMs();
+          }
         }
         break;
       case 'scene':
@@ -385,6 +435,42 @@ export class Engine {
     }
   }
 
+  /// Durée d'une mesure de 4 temps (garantie minimale d'un tap d'effet).
+  private measureMs(): number {
+    return this.clock.hasBeat ? (60000 / this.clock.currentBpm) * 4 : 2000;
+  }
+
+  /// Textures ping-pong de la traînée Echo, créées au premier usage.
+  private ensureTrail(): void {
+    if (this.trailTex.length === 2) return;
+    const gl = this.gl;
+    for (let i = 0; i < 2; i++) {
+      const tex = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, INTERNAL_WIDTH, INTERNAL_HEIGHT, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.trailTex.push(tex);
+    }
+    this.trailFbo = gl.createFramebuffer()!;
+    this.echoProgram = link(gl, FULLSCREEN_VERTEX, ECHO_FRAGMENT);
+  }
+
+  /// Fin de cycle rewind : les clips vidéo actifs sautent 5 s en arrière
+  /// (en rebouclant par la fin). Les shaders ont déjà reculé via timeShiftMs.
+  private applyRewindSeek(): void {
+    for (const ref of [this.currentBg, this.nextBg]) {
+      if (!ref || ref.kind !== 'video') continue;
+      const el = this.videos.get(ref.id)?.el;
+      if (!el || !isFinite(el.duration) || el.duration <= 0) continue;
+      let t = el.currentTime - Engine.REWIND_SECONDS;
+      while (t < 0) t += el.duration;
+      el.currentTime = Math.min(t, Math.max(0, el.duration - 0.05));
+    }
+  }
+
   private smoothLevels(msg: LevelsMsg): void {
     const k = 0.5;
     this.levels.low += (msg.low - this.levels.low) * k;
@@ -421,7 +507,8 @@ export class Engine {
       const loc = p.uniforms.get(name);
       if (loc) gl.uniform1f(loc, v);
     };
-    set1('uTime', (now - this.startTime) / 1000);
+    // timeShiftMs : recul accumulé par les rewinds (0 sinon).
+    set1('uTime', (now - this.startTime + this.timeShiftMs) / 1000);
     set1('uBeat', this.clock.hasBeat ? this.beatEnv : 0.08 + 0.06 * Math.sin(now / 900));
     const measure = this.clock.measurePhase();
     set1('uMeasure', measure < 0 ? ((now - this.startTime) / 8000) % 1 : measure);
@@ -512,6 +599,39 @@ export class Engine {
     this.beatEnv = Math.max(0, this.beatEnv - dt * 5.5);
     if (this.flashLevel > 0) this.flashLevel = Math.max(0, this.flashLevel - dt / beatDurSec);
     if (this.blackLevel > 0) this.blackLevel = Math.max(0, this.blackLevel - dt / beatDurSec);
+
+    // Enveloppes des effets maintenables : attaque vive, retombée douce.
+    for (const id of Object.keys(this.fx) as FxId[]) {
+      const f = this.fx[id];
+      const target = f.held || now < f.minUntil ? 1 : 0;
+      const k = target > f.level ? 1 - Math.exp(-dt * 22) : 1 - Math.exp(-dt * 7);
+      f.level += (target - f.level) * k;
+      if (f.level < 0.001) f.level = 0;
+    }
+
+    // Rewind : pendant le cycle les shaders remontent le temps ; en fin de
+    // cycle les clips sautent 5 s en arrière, et on enchaîne si maintenu.
+    let rewindLevel = 0;
+    if (this.rewindStart >= 0) {
+      const prog = (now - this.rewindStart) / Engine.REWIND_CYCLE_MS;
+      if (prog >= 1) {
+        this.applyRewindSeek();
+        this.rewindStart = this.rewindHeld ? now : -1;
+        rewindLevel = this.rewindHeld ? 1 : 0;
+      } else {
+        rewindLevel = Math.sin(Math.PI * prog);
+        const step = (dt * 1000 / Engine.REWIND_CYCLE_MS) * Engine.REWIND_SECONDS * 1000;
+        // Jamais avant t=0 : les shaders n'aiment pas trop les temps négatifs.
+        this.timeShiftMs = Math.max(this.timeShiftMs - step, -(now - this.startTime));
+      }
+    }
+
+    // Strobe : 2 éclats par temps, calés sur l'horloge (8 Hz sans beat).
+    let strobeGate = 0;
+    if (this.fx.strobe.level > 0.001) {
+      const ph = this.clock.hasBeat ? this.clock.measurePhase() * 8 : now / 125;
+      strobeGate = ph % 1 < 0.5 ? 1 : 0;
+    }
 
     // Fondus des motifs : 1 mesure pour entrer ou sortir.
     const overlayFade = dt / (beatDurSec * 4);
@@ -634,9 +754,47 @@ export class Engine {
       gl.disable(gl.BLEND);
     }
 
+    // 2b. Traînée Echo : accumulation max(image, traînée atténuée) en
+    // ping-pong, uniquement quand l'effet est actif.
+    const echoLevel = this.fx.echo.level;
+    let trailForPost = this.sceneTex;
+    if (echoLevel > 0.001) {
+      this.ensureTrail();
+      const dst = 1 - this.trailSrc;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.trailFbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.trailTex[dst], 0);
+      if (!this.trailActive) {
+        // Démarrage : traînée vierge pour ne pas ressortir un vieux fantôme.
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.trailTex[this.trailSrc], 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.trailTex[dst], 0);
+        this.trailActive = true;
+      }
+      const ep = this.echoProgram!;
+      gl.useProgram(ep.program);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.sceneTex);
+      gl.uniform1i(ep.uniforms.get('uScene')!, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.trailTex[this.trailSrc]);
+      gl.uniform1i(ep.uniforms.get('uPrev')!, 1);
+      gl.bindVertexArray(this.fullscreenVao);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      this.trailSrc = dst;
+      trailForPost = this.trailTex[dst];
+    } else {
+      this.trailActive = false;
+    }
+
     // 3. Post-traitement vers l'écran.
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.useProgram(this.post.program);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, trailForPost);
+    const trailLoc = this.post.uniforms.get('uTrail');
+    if (trailLoc) gl.uniform1i(trailLoc, 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.sceneTex);
     const setP = (name: string, v: number) => {
@@ -659,6 +817,13 @@ export class Engine {
     setP('uVhs', this.filters.get('vhs') ?? 0);
     setP('uKaleido', this.filters.get('kaleido') ?? 0);
     setP('uHueRot', this.filters.get('huerot') ?? 0);
+    setP('uStrobe', this.fx.strobe.level);
+    setP('uStrobeGate', strobeGate);
+    setP('uNegate', this.fx.negative.level);
+    setP('uZoom', this.fx.zoom.level * (0.75 + 0.25 * this.beatEnv));
+    setP('uShake', this.fx.shake.level * (0.45 + 0.55 * (this.clock.hasBeat ? this.beatEnv : 0.6)));
+    setP('uEcho', echoLevel);
+    setP('uRewind', rewindLevel);
     setP('uFlash', this.flashLevel);
     setP('uBlack', this.blackLevel);
     const res = this.post.uniforms.get('uRes');

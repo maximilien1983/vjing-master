@@ -83,16 +83,21 @@ class RotaryGeometry {
     labelFontSize: 9.5,
   );
 
-  /// Tiroir du mode local : 88 × 80, bouton 48, pas de libellés
-  /// (fenêtre ambrée séparée sous le bouton).
+  /// Tiroir du mode local : 136 × 88, bouton 48. Libellés des 6 crans autour
+  /// du bouton (demande utilisateur 2026-10-02 : on tournait à l'aveugle),
+  /// en plus de la fenêtre ambrée sous le bouton.
   static const compact = RotaryGeometry(
-    size: Size(88, 80),
+    size: Size(136, 88),
     knobDiameter: 48,
-    center: Offset(44, 40),
+    center: Offset(68, 44),
     ledRadius: 34,
     tickR1: 27,
     tickR2: 31,
-    showLabels: false,
+    labelSideDx: 44,
+    labelDiagDx: 26,
+    labelAboveDy: -36,
+    labelBelowDy: 42,
+    labelFontSize: 7.5,
   );
 }
 
