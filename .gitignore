@@ -10,6 +10,13 @@ renderer/shots/
 # Planches-contact de sélection des extraits (fichiers de travail)
 tools/sheets/
 
+# Vidéos brutes récupérées (fetch-instagram.mjs) + liste et session perso ;
+# manifeste local : sources privées, jamais dans le dépôt public
+tools/sources/
+tools/instagram-urls.*
+tools/instagram-cookies.txt
+tools/clips-manifest.local.json
+
 # Copie embarquée du moteur (générée par renderer `npm run build:embed`)
 app/assets/renderer/
 

@@ -36,6 +36,13 @@ shaders. Le moteur garde **2 vidéos décodées maximum** (courante + suivante) 
 la transition attend que le clip soit décodable (pas d'écran noir). Clip
 illisible ⇒ message sortant `bgerror` (l'app bannit et rejoue).
 
+Clips **portrait** (reels du catalogue, gardés verticaux) : le cadrage
+paysage est interne au moteur, sans message dédié — chaque nouveau clip
+vertical reçoit en rotation l'un des trois traitements : bandes noires,
+duo miroir (deux copies côte à côte, la droite inversée), fond flouté
+(le clip sur lui-même étendu, flouté et assombri). Banc d'essai :
+`?cadrage=bandes|duo|fond-flou`.
+
 `background.id` (shaders, par univers) :
 - Cosmos : `cosmos-sun`, `cosmos-stars`, `cosmos-nebula`, `cosmos-rings`
 - Campagne : `campagne-collines`, `campagne-ble`, `campagne-nuages`

@@ -109,6 +109,8 @@ engine.start((stats) => {
 
 // Test visuel direct, utilisé par les captures automatisées et le dev :
 //   ?bg=cosmos-stars                    force un fond
+//   ?video=<url>                        fond clip vidéo
+//   ?cadrage=bandes|duo|fond-flou      force le cadrage des clips portrait
 //   ?motifs=grid,loop                   ajoute des motifs (positions fixes)
 //   ?filters=bloom:0.7,chroma:0.6       applique des filtres
 //   ?demo=1                             raccourci Retrofutur complet
@@ -124,6 +126,10 @@ engine.start((stats) => {
   const params = new URLSearchParams(location.search);
   const bg = params.get('bg');
   const video = params.get('video'); // URL d'un clip : fond kind "video"
+  const cadrage = params.get('cadrage'); // force le cadrage portrait
+  if (cadrage) {
+    engine.forcedFraming = { bandes: 1, duo: 2, 'fond-flou': 3 }[cadrage] ?? null;
+  }
   const loop = params.get('loop'); // URL d'une boucle : motif kind "video"
   const demo = params.get('demo');
   const motifs = (params.get('motifs') ?? (demo ? 'grid,loop' : ''))

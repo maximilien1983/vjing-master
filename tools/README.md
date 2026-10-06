@@ -17,6 +17,11 @@ catalogue :
 5. Écriture de `/catalog/clips.json` (fusion : `--only <id>` ne touche que
    cette source ; `--force` recompresse).
 
+Sources verticales (reels) : normalisées à 480 px de haut, en gardant leur
+orientation. Le cadrage paysage (bandes noires, duo miroir, fond flouté)
+est appliqué par le moteur au moment du rendu — même fichier, traitements
+variés par l'autopilote (décision 2026-10-06).
+
 ```
 node tools/prepare-clips.mjs [--only steel] [--force]
 ```
@@ -27,6 +32,33 @@ sur ce poste : `C:\src\ffmpeg\ffmpeg-9.0.2-essentials_build\bin`).
 Le choix des segments se fait sur planches-contact : 24 vignettes par film
 extraites par seek HTTP puis assemblées (`tools/sheets/`, non versionné) —
 voir l'historique des sessions pour la commande.
+
+## fetch-instagram.mjs
+
+Récupère les vidéos d'une liste d'URL de posts/reels Instagram (fichier
+`tools/instagram-urls.txt` ou CSV, une URL par ligne — gitignoré) vers
+`tools/sources/instagram/` (gitignoré aussi : les bruts ne vont jamais dans
+le dépôt, seuls les extraits normalisés par `prepare-clips.mjs` sont
+publiés).
+
+```
+node tools/fetch-instagram.mjs [--list <fichier>] [--browser firefox]
+```
+
+- Session connectée obligatoire (collections perso). Deux options :
+  cookies lus dans Firefox, ou export `tools/instagram-cookies.txt`
+  (extension « Get cookies.txt LOCALLY » — sur Windows les cookies Chrome
+  sont illisibles directement, chiffrement app-bound).
+- Rythme lent volontaire (8-20 s entre vidéos) pour ne pas faire
+  restreindre le compte ; `archive.txt` évite les re-téléchargements.
+- Licences : contenus du domaine public avec accord écrit des titulaires
+  des comptes, accords conservés hors dépôt ; renseigner `licence` et
+  `credit` dans le manifeste.
+- Prérequis : yt-dlp (`winget install yt-dlp.yt-dlp`).
+
+Ensuite : déclarer les fichiers locaux comme sources dans
+`clips-manifest.json` (ffmpeg accepte les chemins locaux comme les URL)
+et relancer `prepare-clips.mjs`.
 
 ## sync-renderer.ps1
 

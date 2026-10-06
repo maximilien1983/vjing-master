@@ -19,6 +19,14 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const ffmpeg = process.env.FFMPEG ?? 'ffmpeg';
 const manifest = JSON.parse(readFileSync(join(here, 'clips-manifest.json'), 'utf8'));
+// Sources locales non versionnées (Instagram — voir instagram-manifest.mjs) :
+// fusionnées au manifeste public à l'exécution.
+const localManifestPath = join(here, 'clips-manifest.local.json');
+if (existsSync(localManifestPath)) {
+  const local = JSON.parse(readFileSync(localManifestPath, 'utf8'));
+  manifest.sources = [...(manifest.sources ?? []), ...(local.sources ?? [])];
+  manifest.loops = [...(manifest.loops ?? []), ...(local.loops ?? [])];
+}
 const outDir = resolve(here, manifest.output);
 const catalogPath = resolve(here, manifest.catalog);
 mkdirSync(outDir, { recursive: true });
@@ -26,6 +34,13 @@ mkdirSync(outDir, { recursive: true });
 const only = process.argv.includes('--only')
   ? process.argv[process.argv.indexOf('--only') + 1]
   : null;
+
+// Normalisation selon l'orientation : paysage -> 854 px de large,
+// portrait (reels) -> 480 px de haut. Les verticales restent verticales :
+// le cadrage paysage (bandes, duo miroir, fond flouté) est fait par le
+// moteur au rendu, pour varier les traitements sur un même fichier.
+const normalizeVf =
+  "scale='if(gt(iw\\,ih)\\,854\\,-2)':'if(gt(iw\\,ih)\\,-2\\,480)'";
 
 function run(args, opts = {}) {
   const r = spawnSync(ffmpeg, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts });
@@ -78,7 +93,7 @@ for (const src of manifest.sources) {
         '-ss', seg.start,
         '-i', src.url,
         '-t', String(seg.dur),
-        '-vf', 'scale=854:-2',
+        '-vf', normalizeVf,
         '-an',
         '-c:v', 'libx264', '-crf', '26', '-preset', 'veryfast',
         '-pix_fmt', 'yuv420p', '-movflags', '+faststart',

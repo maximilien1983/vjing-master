@@ -1138,23 +1138,47 @@ export const OVERLAYS: Record<string, string> = {
 };
 
 // --- Fond vidéo --------------------------------------------------------------
-// Texture d'un élément <video>, recadrée en « cover » sur le 854 × 480.
-// La règle de lumière est la même que pour les fonds shaders ; les styles
-// s'appliquent ensuite dans le post-traitement.
+// Texture d'un élément <video>. Clips paysage : recadrage « cover » sur le
+// 854 × 480. Clips portrait (reels, décision 2026-10-06) : le fichier reste
+// vertical dans le catalogue, le cadrage se fait ici, varié par le moteur —
+// bandes noires, duo miroir ou fond flouté (flou par mipmaps, générés par le
+// moteur pour ce mode seulement). La règle de lumière est la même que pour
+// les fonds shaders ; les styles s'appliquent ensuite dans le post-traitement.
 
 export const VIDEO_FRAGMENT = `#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outColor;
 uniform sampler2D uTex;
-uniform vec2 uCover;   // échelle uv du recadrage cover
+uniform vec2 uCover;    // échelle uv du recadrage cover
+uniform float uContain; // échelle x du recadrage contain (> 1 en portrait)
+uniform float uMode;    // 0 cover, 1 bandes, 2 duo miroir, 3 fond flouté
 uniform float uLight;
 uniform float uBeat;
 uniform float uEnergy;
 void main() {
-  vec2 uv = (vUv - 0.5) * uCover + 0.5;
-  uv.y = 1.0 - uv.y; // les textures vidéo arrivent ligne du haut en premier
-  vec3 col = texture(uTex, uv).rgb;
+  vec2 p = vec2(vUv.x, 1.0 - vUv.y); // textures vidéo : ligne du haut d'abord
+  vec3 col;
+  if (uMode < 0.5) {
+    // Cover : on rogne l'axe le plus large (clips paysage).
+    col = texture(uTex, (p - 0.5) * uCover + 0.5).rgb;
+  } else if (uMode < 1.5) {
+    // Bandes : clip entier centré, noir de part et d'autre.
+    vec2 uv = vec2((p.x - 0.5) * uContain + 0.5, p.y);
+    col = (uv.x < 0.0 || uv.x > 1.0) ? vec3(0.0) : texture(uTex, uv).rgb;
+  } else if (uMode < 2.5) {
+    // Duo miroir : deux copies côte à côte plein cadre, la droite inversée,
+    // chacune recadrée verticalement sur son centre.
+    float tx = p.x < 0.5 ? p.x * 2.0 : (1.0 - p.x) * 2.0;
+    vec2 uv = vec2(tx, (p.y - 0.5) * min(uCover.y * 2.0, 1.0) + 0.5);
+    col = texture(uTex, uv).rgb;
+  } else {
+    // Fond flouté : le clip centré, posé sur lui-même en cover flouté
+    // (mipmaps) et assombri.
+    vec3 fond = textureLod(uTex, (p - 0.5) * uCover + 0.5, 4.5).rgb * 0.55;
+    vec2 uv = vec2((p.x - 0.5) * uContain + 0.5, p.y);
+    col = (uv.x < 0.0 || uv.x > 1.0) ? fond : texture(uTex, uv).rgb;
+  }
   // Légère pulsation de luminosité sur le kick, proportionnelle à l'énergie.
   col *= 1.0 + uBeat * uEnergy * 0.12;
   col *= 0.55 + 0.9 * uLight;

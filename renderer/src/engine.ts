@@ -117,6 +117,10 @@ interface VideoEntry {
   /// Dernière frame déjà envoyée à la texture (évite les uploads inutiles).
   lastUpload: number;
   hasFrame: boolean;
+  /// Cadrage des fonds (décision 2026-10-06) : 0 cover (paysage), et pour
+  /// les clips portrait 1 bandes, 2 duo miroir, 3 fond flouté — attribué en
+  /// rotation dès que les dimensions sont connues.
+  framing?: number;
 }
 
 /// Effets ponctuels maintenables du post-traitement (hors flash/drop/rewind).
@@ -160,6 +164,12 @@ export class Engine {
 
   /// Clip illisible (réseau, CORS, format) : l'app bannit et rejoue.
   onBgError: ((id: string, reason: string) => void) | null = null;
+
+  /// Rotation des cadrages portrait (bandes → duo → fond flouté) : chaque
+  /// nouveau clip vertical reçoit le suivant, la variété vient toute seule.
+  private framingCycle = 0;
+  /// Banc d'essai (?cadrage=) : force un cadrage portrait donné.
+  forcedFraming: number | null = null;
 
   private beatEnv = 0;
   private lastBeatIndex = -1;
@@ -529,11 +539,26 @@ export class Engine {
       if (!entry) return;
       const el = entry.el;
       if (el.readyState >= 2 && el.currentTime !== entry.lastUpload) {
+        // Cadrage attribué à la première frame : cover pour le paysage, et
+        // pour le portrait le prochain de la rotation (ou celui du banc).
+        if (entry.framing === undefined && el.videoWidth > 0) {
+          if (el.videoWidth >= el.videoHeight) {
+            entry.framing = 0;
+          } else {
+            entry.framing = this.forcedFraming ?? 1 + (this.framingCycle++ % 3);
+            if (entry.framing === 3) {
+              // Fond flouté : le flou est un échantillonnage mipmap.
+              gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            }
+          }
+        }
         gl.bindTexture(gl.TEXTURE_2D, entry.tex);
         try {
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
           entry.lastUpload = el.currentTime;
           entry.hasFrame = true;
+          if (entry.framing === 3) gl.generateMipmap(gl.TEXTURE_2D);
         } catch (e) {
           this.dropVideo(ref.id);
           this.onBgError?.(ref.id, `texture : ${String(e)}`);
@@ -555,6 +580,10 @@ export class Engine {
         if (va > ca) gl.uniform2f(cover, ca / va, 1);
         else gl.uniform2f(cover, 1, va / ca);
       }
+      const mode = p.uniforms.get('uMode');
+      if (mode) gl.uniform1f(mode, entry.framing ?? 0);
+      const contain = p.uniforms.get('uContain');
+      if (contain) gl.uniform1f(contain, ca / va);
       const set1 = (name: string, v: number) => {
         const loc = p.uniforms.get(name);
         if (loc) gl.uniform1f(loc, v);
