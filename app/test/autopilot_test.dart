@@ -189,8 +189,12 @@ void main() {
       final state = scene['state'] as Map<String, dynamic>;
       expect(state['background']['kind'], 'shader');
       expect(cosmos.backgrounds, contains(state['background']['id']));
-      // Plus de motifs superposés : les effets vidéo séquencés les remplacent.
-      expect(state['overlays'], isEmpty);
+      // Motifs procéduraux uniquement : jamais d'url ni de kind vidéo.
+      for (final o in state['overlays'] as List) {
+        expect(retrofutur.motifs,
+            contains((o as Map<String, dynamic>)['motif']));
+        expect(o.containsKey('url'), isFalse);
+      }
       expect(state['filters'], isNotEmpty,
           reason: 'la scène de départ arrive toujours avec des effets');
       for (final f in state['filters'] as List) {

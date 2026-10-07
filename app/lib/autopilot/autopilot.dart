@@ -10,16 +10,26 @@ import 'presets.dart';
 
 /// Règles du brief implémentées ici :
 /// - changement de fond toutes les 32 (énergie 0) à 4 (énergie 100) mesures ;
-/// - effets vidéo séquencés (décision 2026-10-07, remplace les motifs
-///   superposés jugés cheap) : plusieurs filtres par style, intensités et
-///   pulsations sur le beat aléatoires, enchaînés, avec des pauses ;
-/// - l'univers rend les effets plus ou moins marqués (fxGain) et y mêle ses
-///   filtres signatures (fxIds) ;
+/// - effets vidéo séquencés (décision 2026-10-07) : plusieurs filtres par
+///   style, intensités et pulsations sur le beat aléatoires, enchaînés, avec
+///   des pauses ; l'univers les rend plus ou moins marqués (fxGain) et y mêle
+///   ses filtres signatures (fxIds) ;
+/// - motifs superposés PROCÉDURAUX uniquement (lasers, ondes de basses,
+///   trames… — plus aucune image toute faite ni boucle vidéo, demande
+///   utilisateur 2026-10-07) : 0 à 4 selon l'énergie, dérive douce ;
 /// - historique des 10 derniers fonds (variété) ; bannis de session sur erreur ;
 /// - transitions quantifiées sur la mesure ; sans beat : dérive lente ;
 /// - montée détectée : changements resserrés ; drop : tout au maximum 4 mesures.
-/// Les effets ponctuels des boutons (strobe, echo…) sont gérés par le moteur
+/// Les effets ponctuels des boutons (strobe, echo…) et la surimpression
+/// caméra (config.camera, bouton de la console) sont gérés par le moteur
 /// (voir renderer/PROTOCOL.md), pas ici.
+
+/// Nombre de motifs superposés visés : 0 à énergie nulle, 4 à fond, +1 en drop.
+int overlayTarget(double energy, StructureState structure) {
+  var n = (energy.clamp(0.0, 1.0) * 4).round();
+  if (structure == StructureState.drop) n += 1;
+  return n.clamp(0, 4);
+}
 
 double changeIntervalMeasures(double energy, StructureState structure) {
   var interval = 32 - 28 * energy.clamp(0.0, 1.0); // 32 -> 4
@@ -62,11 +72,26 @@ class FxStep {
   const FxStep(this.id, this.intensity, this.pulse);
 }
 
-class Autopilot {
-  /// Fond caméra (id réservé du protocole) : caméra de l'appareil côté
-  /// moteur — webcam en préviz PC, objectif arrière sur téléphone.
-  static const cameraBgId = 'camera';
+/// Motif procédural superposé (shader du moteur, fusion additive).
+class OverlayState {
+  final String iid;
+  final String motif;
+  final double x, y, scale, rot, pulse;
+  const OverlayState(
+      this.iid, this.motif, this.x, this.y, this.scale, this.rot, this.pulse);
 
+  Map<String, dynamic> toJson() => {
+        'iid': iid,
+        'motif': motif,
+        'x': x,
+        'y': y,
+        'scale': scale,
+        'rot': rot,
+        'pulse': pulse,
+      };
+}
+
+class Autopilot {
   StylePreset style;
   UniversePreset universe;
   final Random rng;
@@ -81,11 +106,12 @@ class Autopilot {
   StructureState structure = StructureState.steady;
 
   String? _currentBg;
-  bool _cameraOn = false;
-  bool _cameraPinned = false;
   final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
   List<FxStep> _fx = const [];
+  final List<OverlayState> _overlays = [];
+  int _overlaySeq = 0;
   int _nextFxMeasure = 0;
+  int _nextOverlayDriftMeasure = 0;
   int _nextChangeMeasure = 0;
   int _dropUntilMeasure = -1;
   bool _sceneRequested = false;
@@ -138,11 +164,13 @@ class Autopilot {
     send({'type': 'config', 'light': light});
   }
 
-  /// Changement de style : nouveau bassin d'effets, appliqué immédiatement.
+  /// Changement de style : nouveaux bassins d'effets et de motifs, appliqués
+  /// immédiatement (mêmes effectifs de motifs, redessinés dans le style).
   void setStyle(StylePreset s) {
     if (s.id == style.id) return;
     style = s;
     _mutateFx(allowPause: false);
+    _rebuildOverlays(_overlays.length);
     _pushScene();
   }
 
@@ -167,46 +195,10 @@ class Autopilot {
       ..addEntries(clips.map((c) => MapEntry(c.id, c.url)));
   }
 
-  /// Source caméra chargée/déchargée (écran Sources). Chargée : elle entre
-  /// dans le bassin de fonds comme un clip. Déchargée : plus jamais piochée,
-  /// et si elle est à l'écran (rotation ou bouton caméra) on la remplace.
-  void setCamera(bool on) {
-    _cameraOn = on;
-    if (!on && _currentBg == cameraBgId) {
-      _cameraPinned = false;
-      _changeBackground();
-      _pushScene();
-      _scheduleNextChange();
-    }
-  }
-
-  /// Bouton caméra de la console : affiche la caméra et la MAINTIENT à
-  /// l'écran (les changements de fond sont suspendus) jusqu'au masquage.
-  /// Indépendant du bassin : marche même source non chargée, et retenter
-  /// après un refus de permission est permis (dé-bannie au passage).
-  /// Caméra indisponible ⇒ le moteur envoie `bgerror`, banOnError libère.
-  void setCameraPinned(bool v) {
-    if (v == _cameraPinned) return;
-    _cameraPinned = v;
-    if (v) {
-      banned.remove(cameraBgId);
-      _currentBg = cameraBgId;
-      history.add(cameraBgId);
-      if (history.length > 10) history.removeAt(0);
-      _pushScene();
-      _scheduleNextChange();
-    } else if (_currentBg == cameraBgId) {
-      _changeBackground();
-      _pushScene();
-      _scheduleNextChange();
-    }
-  }
-
   /// Fond illisible côté moteur (réseau, CORS…) : banni pour la session,
   /// et remplacé immédiatement s'il est à l'écran.
   void banOnError(String id) {
     banned.add(id);
-    if (id == cameraBgId) _cameraPinned = false;
     if (_currentBg == id) {
       _changeBackground();
       _pushScene();
@@ -214,11 +206,7 @@ class Autopilot {
     }
   }
 
-  List<String> get _bgPool => [
-        ...universe.backgrounds,
-        ..._clipUrls.keys,
-        if (_cameraOn) cameraBgId,
-      ];
+  List<String> get _bgPool => [...universe.backgrounds, ..._clipUrls.keys];
 
   /// Bassin d'effets : filtres du style (plusieurs par cran EFFECTS) + les
   /// filtres signatures de l'univers.
@@ -230,6 +218,7 @@ class Autopilot {
     _dropUntilMeasure = clock.measureCount + 4;
     _changeBackground();
     _mutateFx(allowPause: false);
+    _rebuildOverlays(overlayTarget(energy, StructureState.drop));
     _pushScene();
     _scheduleNextChange();
   }
@@ -252,6 +241,7 @@ class Autopilot {
       _sceneRequested = false;
       _changeBackground();
       _mutateFx(allowPause: false);
+      _rebuildOverlays(overlayTarget(energy, structure));
       _pushScene();
       _scheduleNextChange();
       return;
@@ -260,25 +250,70 @@ class Autopilot {
       _changeBackground();
       _pushScene();
       _scheduleNextChange();
-    } else if (m >= _nextFxMeasure) {
-      // Les effets vivent leur vie entre deux changements de fond.
-      _mutateFx();
-      _pushScene();
+      return;
     }
+    // Entre deux changements de fond, effets et motifs vivent leur vie.
+    var changed = false;
+    if (m >= _nextFxMeasure) {
+      _mutateFx();
+      changed = true;
+    }
+    if (m >= _nextOverlayDriftMeasure) {
+      _driftOverlays();
+      _nextOverlayDriftMeasure = m + 2;
+      changed = true;
+    }
+    if (changed) _pushScene();
   }
 
   void _scheduleNextChange() {
     final interval = changeIntervalMeasures(energy, structure).round();
     _nextChangeMeasure = clock.measureCount + interval;
+    _nextOverlayDriftMeasure = clock.measureCount + 2;
   }
 
   void _changeBackground() {
-    // Caméra maintenue par le bouton de la console : le fond ne tourne pas.
-    if (_cameraPinned) return;
     final bg = selectBackground(rng, _bgPool, history, banned);
     _currentBg = bg;
     history.add(bg);
     if (history.length > 10) history.removeAt(0);
+  }
+
+  OverlayState _randomOverlay() {
+    final motif = style.motifs[rng.nextInt(style.motifs.length)];
+    return OverlayState(
+      'o${_overlaySeq++}',
+      motif,
+      (rng.nextDouble() - 0.5) * 1.2,
+      (rng.nextDouble() - 0.5) * 1.0,
+      0.3 + rng.nextDouble() * 0.35,
+      (rng.nextDouble() - 0.5) * 1.2,
+      0.3 + 0.7 * energy,
+    );
+  }
+
+  void _rebuildOverlays(int count) {
+    _overlays.clear();
+    for (var i = 0; i < count; i++) {
+      _overlays.add(_randomOverlay());
+    }
+  }
+
+  /// Dérive douce : on ajuste le nombre de motifs à l'énergie et on en
+  /// remplace un de temps en temps pour que ça vive.
+  void _driftOverlays() {
+    final target = _dropUntilMeasure >= 0
+        ? overlayTarget(energy, StructureState.drop)
+        : overlayTarget(energy, structure);
+    while (_overlays.length > target) {
+      _overlays.removeAt(rng.nextInt(_overlays.length));
+    }
+    while (_overlays.length < target) {
+      _overlays.add(_randomOverlay());
+    }
+    if (_overlays.isNotEmpty && rng.nextDouble() < 0.4) {
+      _overlays[rng.nextInt(_overlays.length)] = _randomOverlay();
+    }
   }
 
   /// Fait vivre les effets vidéo (décision 2026-10-07) : tirage de 1 à 3
@@ -326,14 +361,12 @@ class Autopilot {
     send({
       'type': 'scene',
       'state': {
-        'background': _currentBg == cameraBgId
-            ? {'kind': 'camera', 'id': cameraBgId}
-            : clipUrl != null
-                ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
-                : {'kind': 'shader', 'id': _currentBg},
-        // Plus de motifs superposés (2026-10-07) : les effets vidéo séquencés
-        // les remplacent. Le moteur les supporte toujours (bancs d'essai).
-        'overlays': const [],
+        'background': clipUrl != null
+            ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
+            : {'kind': 'shader', 'id': _currentBg},
+        // Motifs procéduraux uniquement (lasers, ondes de basses, trames…) :
+        // plus aucune image toute faite ni boucle vidéo (2026-10-07).
+        'overlays': [for (final o in _overlays) o.toJson()],
         'filters': [
           for (final f in _fx)
             {'id': f.id, 'intensity': f.intensity, 'pulse': f.pulse},

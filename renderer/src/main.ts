@@ -110,7 +110,7 @@ engine.start((stats) => {
 // Test visuel direct, utilisé par les captures automatisées et le dev :
 //   ?bg=cosmos-stars                    force un fond
 //   ?video=<url>                        fond clip vidéo
-//   ?camera=1                           fond caméra (webcam sur PC)
+//   ?camera=0.7                         caméra en surimpression (opacité)
 //   ?cadrage=bandes|duo|fond-flou      force le cadrage des clips portrait
 //   ?motifs=grid,loop                   ajoute des motifs (positions fixes)
 //   ?filters=bloom:0.7,chroma:0.6       applique des filtres
@@ -127,7 +127,14 @@ engine.start((stats) => {
   const params = new URLSearchParams(location.search);
   const bg = params.get('bg');
   const video = params.get('video'); // URL d'un clip : fond kind "video"
-  const camera = params.get('camera'); // fond kind "camera" (webcam sur PC)
+  const camera = params.get('camera'); // surimpression caméra (webcam sur PC)
+  if (camera) {
+    window.VJM.handleMessage({
+      type: 'config',
+      camera: true,
+      cameraOpacity: parseFloat(camera) || 0.75,
+    });
+  }
   const cadrage = params.get('cadrage'); // force le cadrage portrait
   if (cadrage) {
     engine.forcedFraming = { bandes: 1, duo: 2, 'fond-flou': 3 }[cadrage] ?? null;
@@ -149,15 +156,13 @@ engine.start((stats) => {
     { x: 0.55, y: -0.25, scale: 0.45, rot: 0 },
     { x: 0.1, y: 0.1, scale: 0.6, rot: -0.3 },
   ];
-  if (bg || video || camera || loop || demo || motifs.length || filters.length) {
+  if (bg || video || loop || demo || motifs.length || filters.length) {
     window.VJM.handleMessage({
       type: 'scene',
       state: {
-        background: camera
-          ? { kind: 'camera', id: 'camera' }
-          : video
-            ? { kind: 'video', id: 'test-video', url: video }
-            : { kind: 'shader', id: bg ?? 'cosmos-sun' },
+        background: video
+          ? { kind: 'video', id: 'test-video', url: video }
+          : { kind: 'shader', id: bg ?? 'cosmos-sun' },
         overlays: [
           ...motifs.map((motif, i) => ({
             iid: `t${i}`,
@@ -197,17 +202,7 @@ if (import.meta.env.DEV) {
     if (e.key === 'f') window.VJM.handleMessage({ type: 'trigger', id: 'flash' });
     if (e.key === 'c') {
       camOn = !camOn;
-      window.VJM.handleMessage({
-        type: 'scene',
-        state: {
-          background: camOn
-            ? { kind: 'camera', id: 'camera' }
-            : { kind: 'shader', id: 'cosmos-sun' },
-          overlays: [],
-          filters: [],
-          transition: { kind: 'crossfade', beats: 2 },
-        },
-      });
+      window.VJM.handleMessage({ type: 'config', camera: camOn, cameraOpacity: 0.75 });
     }
     if (e.key === 'b') {
       simBpm = simBpm ? 0 : 124;

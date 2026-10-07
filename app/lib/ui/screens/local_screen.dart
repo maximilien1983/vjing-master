@@ -146,14 +146,6 @@ class _LocalScreenState extends State<LocalScreen> {
                       fontWeight: FontWeight.w600,
                       letterSpacing: 2)),
               const SizedBox(width: 10),
-              ValueListenableBuilder(
-                valueListenable: session.cameraShown,
-                builder: (_, shown, _) => CameraButton(
-                  active: shown,
-                  onTap: session.toggleCamera,
-                ),
-              ),
-              const SizedBox(width: 8),
               ListenableBuilder(
                 listenable: session.sourcesModel,
                 builder: (context, _) => MechKey(
@@ -391,6 +383,10 @@ class _LocalScreenState extends State<LocalScreen> {
       const SizedBox(width: 16),
       fader('ÉNERGIE', FaderGeometry.energyDrawer, session.energy,
           session.setEnergy),
+      const SizedBox(width: 16),
+      // Opacité de la surimpression caméra (bouton CAM dans les effets).
+      fader('CAM', FaderGeometry.cameraDrawer, session.cameraOpacity,
+          session.setCameraOpacity),
     ]);
   }
 
@@ -426,7 +422,21 @@ class _LocalScreenState extends State<LocalScreen> {
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [for (final fx in fxDefs.skip(4)) btn(fx)],
+            children: [
+              for (final fx in fxDefs.skip(4)) btn(fx),
+              // Caméra à côté des effets : surimpression, opacité au fader CAM.
+              ValueListenableBuilder(
+                valueListenable: session.cameraShown,
+                builder: (_, shown, _) => CameraButton(
+                  active: shown,
+                  size: 40,
+                  onTap: () {
+                    _armIdle();
+                    session.toggleCamera();
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

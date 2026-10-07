@@ -103,6 +103,32 @@ class FaderGeometry {
     numbers: true,
   );
 
+  /// Opacité caméra, console : compact sous le bouton caméra.
+  static const cameraConsole = FaderGeometry(
+    size: Size(52, 104),
+    tickTop: 12,
+    tickBottom: 92,
+    slotTop: 8,
+    slotHeight: 88,
+    slotX: 23,
+    cap: Size(44, 22),
+    ticks: 5,
+    longEvery: 2,
+  );
+
+  /// Opacité caméra, tiroir du mode local : étroit pour tenir sur la rangée.
+  static const cameraDrawer = FaderGeometry(
+    size: Size(44, 128),
+    tickTop: 16,
+    tickBottom: 110,
+    slotTop: 12,
+    slotHeight: 102,
+    slotX: 19,
+    cap: Size(38, 24),
+    ticks: 5,
+    longEvery: 2,
+  );
+
   double centerYFor(double value) =>
       tickTop + (1 - value.clamp(0.0, 1.0)) * (tickBottom - tickTop);
 

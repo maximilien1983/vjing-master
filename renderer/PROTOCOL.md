@@ -36,7 +36,14 @@ en cover comme un clip, elle compte dans le budget de décodage (2 vidéos max).
 La transition attend la première frame, sans délai limite (l'invite de
 permission peut rester ouverte) ; refus ou absence de caméra ⇒ message
 sortant `bgerror` id `camera`. L'iframe de préviz doit déléguer la permission
-(`allow="camera"`). Banc d'essai : `?camera=1`, touche `c` en dev.
+(`allow="camera"`).
+
+L'app n'utilise pas la caméra en fond : elle la SURIMPRIME au fond courant
+via `config.camera` / `config.cameraOpacity` (voir `config`), dessinée entre
+le fond et les motifs, avec fondu d'entrée/sortie (~300 ms) et libération du
+périphérique au masquage. Local uniquement : le receiver Chromecast n'a pas
+accès à la caméra du téléphone. Banc d'essai : `?camera=0.7` (opacité),
+touche `c` en dev.
 
 Fond vidéo : `{"kind": "video", "id": "px-21118", "url": "https://…/x.mp4"}`.
 Le clip doit être servi avec CORS (`crossorigin`), il est lu muet en boucle,
@@ -137,10 +144,16 @@ l'effet dure jusqu'au relâchement. Sans `on` : équivaut à un tap.
 ### `config` — réglages du moteur
 
 ```json
-{"type": "config", "debug": true, "energy": 0.6, "light": 0.5}
+{"type": "config", "debug": true, "energy": 0.6, "light": 0.5, "camera": true, "cameraOpacity": 0.75}
 ```
 
 `debug` : overlay BPM / phase / niveaux / i/s.
+
+`camera` : surimpression caméra par-dessus le fond (sous les motifs et le
+post-traitement). `true` = ouverture `getUserMedia` + fondu d'entrée ;
+`false` = fondu de sortie puis libération (le voyant webcam s'éteint).
+`cameraOpacity` ∈ [0, 1] : opacité de la surimpression (0.75 par défaut),
+modifiable à la volée pendant l'affichage.
 
 ## Messages sortants (`onFeedback`)
 

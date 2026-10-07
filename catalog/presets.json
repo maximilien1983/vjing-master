@@ -1,36 +1,42 @@
 {
-  "version": 2,
-  "commentaire": "Presets des styles et univers (brief, section Paramètres). Fichier de référence ; copie embarquée dans app/assets/catalog/presets.json (test de synchronisation dans app/test/presets_test.dart). Les ids de filtres et de fonds sont documentés dans renderer/PROTOCOL.md. Depuis le 2026-10-07 : plus de motifs superposés — chaque style porte un bassin d'effets vidéo séquencés par l'autopilote, et chaque univers un bloc fx (gain = effets plus ou moins marqués, filters = filtres signatures mêlés au bassin du style).",
+  "version": 3,
+  "commentaire": "Presets des styles et univers (brief, section Paramètres). Fichier de référence ; copie embarquée dans app/assets/catalog/presets.json (test de synchronisation dans app/test/presets_test.dart). Les ids de filtres, motifs et fonds sont documentés dans renderer/PROTOCOL.md. Depuis le 2026-10-07 : chaque style porte un bassin d'effets vidéo séquencés par l'autopilote et des motifs PROCÉDURAUX uniquement (lasers, ondes de basses, trames… — plus d'images toutes faites ni boucles vidéo) ; chaque univers un bloc fx (gain = effets plus ou moins marqués, filters = filtres signatures mêlés au bassin du style).",
   "styles": {
     "vintage": {
       "label": "Vintage",
       "filters": ["grain", "vignette", "sepia", "warmth"],
-      "transition": { "kind": "crossfade", "beats": 8 }
+      "transition": { "kind": "crossfade", "beats": 8 },
+      "motifs": ["lightleak", "poussieres", "vumetre"]
     },
     "70s": {
       "label": "70's",
       "filters": ["warmth", "grain", "bloom", "hue"],
-      "transition": { "kind": "crossfade", "beats": 8 }
+      "transition": { "kind": "crossfade", "beats": 8 },
+      "motifs": ["lightleak", "bokeh", "ticks", "ondebasse"]
     },
     "punk": {
       "label": "Punk",
       "filters": ["photocopy", "glitch", "posterize", "vhs"],
-      "transition": { "kind": "cut", "beats": 1 }
+      "transition": { "kind": "cut", "beats": 1 },
+      "motifs": ["oscillo", "trame", "hud", "laser"]
     },
     "retrofutur": {
       "label": "Retrofutur",
       "filters": ["bloom", "chroma", "glitch", "posterize"],
-      "transition": { "kind": "crossfade", "beats": 2 }
+      "transition": { "kind": "crossfade", "beats": 2 },
+      "motifs": ["grid", "flare", "ticks", "laser", "ondebasse"]
     },
     "vhs": {
       "label": "VHS",
       "filters": ["vhs", "chroma", "grain", "glitch"],
-      "transition": { "kind": "cut", "beats": 1 }
+      "transition": { "kind": "cut", "beats": 1 },
+      "motifs": ["timecode", "tracking", "oscillo"]
     },
     "psyche": {
       "label": "Psyché",
       "filters": ["kaleido", "huerot", "bloom", "hue"],
-      "transition": { "kind": "crossfade", "beats": 16 }
+      "transition": { "kind": "crossfade", "beats": 16 },
+      "motifs": ["mandala", "fluide", "onde", "laser", "ondebasse"]
     }
   },
   "universes": {

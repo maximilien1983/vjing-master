@@ -99,6 +99,11 @@ export interface ConfigMsg {
   beatBar?: boolean;
   energy?: number;
   light?: number;
+  /// Caméra de l'appareil en SURIMPRESSION du fond (webcam en préviz PC) :
+  /// true = ouvre et affiche, false = fondu de sortie puis libération.
+  camera?: boolean;
+  /// Opacité de la surimpression caméra, 0..1 (0.75 par défaut).
+  cameraOpacity?: number;
 }
 
 export interface PingMsg {

@@ -27,6 +27,7 @@ void main() {
       // Effets séquencés (2026-10-07) : chaque style porte un vrai bassin.
       expect(s.filterIds.length, greaterThanOrEqualTo(2),
           reason: 'style ${s.id} : il faut plusieurs effets par cran');
+      expect(s.motifs, isNotEmpty, reason: 'style ${s.id} sans motif');
       expect(['crossfade', 'cut'], contains(s.transitionKind));
       expect(s.transitionBeats, greaterThan(0));
     }
@@ -74,6 +75,7 @@ void main() {
     }
 
     final bgIds = keysOf('BACKGROUNDS');
+    final motifIds = keysOf('OVERLAYS');
     // Filtres branchés dans engine.ts : fxLevel('<id>').
     final filterIds = RegExp("fxLevel\\('([a-z]+)'\\)")
         .allMatches(engine)
@@ -87,6 +89,9 @@ void main() {
       final m = value as Map<String, dynamic>;
       for (final f in m['filters'] as List) {
         expect(filterIds, contains(f), reason: 'filtre "$f" du style $key');
+      }
+      for (final mo in m['motifs'] as List) {
+        expect(motifIds, contains(mo), reason: 'motif "$mo" du style $key');
       }
     }
     for (final MapEntry(:key, :value)

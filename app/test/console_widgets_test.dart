@@ -153,7 +153,7 @@ void main() {
           Autopilot(style: retrofutur, universe: cosmos, send: msgs.add);
       pilot.setEnergy(.5); // pousse une première scène
       msgs.clear();
-      const autre = StylePreset('essai', ['posterize'], 'cut', 1);
+      const autre = StylePreset('essai', ['posterize'], 'cut', 1, ['grid']);
       pilot.setStyle(autre);
       final scene = msgs.lastWhere((m) => m['type'] == 'scene');
       final filters =

@@ -78,8 +78,8 @@ void main() {
     });
   });
 
-  group('Autopilot sans motifs superposés (décision 2026-10-07)', () {
-    test('les scènes partent toujours avec une liste d\'overlays vide', () {
+  group('Autopilot : motifs procéduraux uniquement (décision 2026-10-07)', () {
+    test('jamais d\'image toute faite ni de boucle vidéo en surimpression', () {
       final msgs = <Map<String, dynamic>>[];
       final pilot = Autopilot(
           style: retrofutur, universe: cosmos, send: msgs.add, rng: Random(5));
@@ -87,9 +87,19 @@ void main() {
       for (var i = 0; i < 10; i++) {
         pilot.triggerDrop();
       }
+      var sawOverlay = false;
       for (final scene in msgs.where((m) => m['type'] == 'scene')) {
-        expect((scene['state'] as Map<String, dynamic>)['overlays'], isEmpty);
+        final overlays =
+            (scene['state'] as Map<String, dynamic>)['overlays'] as List;
+        sawOverlay |= overlays.isNotEmpty;
+        for (final o in overlays.cast<Map<String, dynamic>>()) {
+          expect(o.containsKey('url'), isFalse);
+          expect(o.containsKey('kind'), isFalse);
+          expect(retrofutur.motifs, contains(o['motif']));
+        }
       }
+      expect(sawOverlay, isTrue,
+          reason: 'à pleine énergie les motifs shaders doivent apparaître');
     });
   });
 

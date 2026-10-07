@@ -2,10 +2,10 @@
 /// copie embarquée dans assets/catalog/) fait foi ; les constantes ci-dessous
 /// servent de repli tant qu'il n'est pas chargé.
 ///
-/// Brief « Paramètres » : un style = bassin d'effets vidéo + montage ; un
-/// univers = ce que l'on voit (fonds, clips) et la couleur de ses effets
-/// (gain + filtres signatures). Les motifs superposés ont été retirés le
-/// 2026-10-07 (remplacés par les effets vidéo séquencés).
+/// Brief « Paramètres » : un style = bassin d'effets vidéo + motifs
+/// procéduraux + montage ; un univers = ce que l'on voit (fonds, clips) et la
+/// couleur de ses effets (gain + filtres signatures). Les motifs sont des
+/// shaders uniquement — plus aucune image toute faite (décision 2026-10-07).
 library;
 
 import 'dart:convert';
@@ -21,8 +21,9 @@ class StylePreset {
   final List<String> filterIds; // bassin d'effets du moteur (PROTOCOL.md)
   final String transitionKind; // 'crossfade' | 'cut'
   final int transitionBeats;
-  const StylePreset(
-      this.id, this.filterIds, this.transitionKind, this.transitionBeats);
+  final List<String> motifs; // motifs procéduraux superposés (shaders)
+  const StylePreset(this.id, this.filterIds, this.transitionKind,
+      this.transitionBeats, this.motifs);
 }
 
 class UniversePreset {
@@ -39,8 +40,8 @@ class UniversePreset {
 
 /// Repli : Retrofutur × Cosmos (jalons 1-3), utilisés avant le chargement
 /// du catalogue et si un id inconnu arrive.
-const retrofutur =
-    StylePreset('retrofutur', ['bloom', 'chroma'], 'crossfade', 2);
+const retrofutur = StylePreset('retrofutur', ['bloom', 'chroma'], 'crossfade',
+    2, ['grid', 'flare', 'laser']);
 
 const cosmos = UniversePreset(
   'cosmos',
@@ -100,6 +101,7 @@ abstract final class PresetCatalog {
         List<String>.from(m['filters'] as List),
         t['kind'] as String,
         t['beats'] as int,
+        List<String>.from((m['motifs'] ?? const []) as List),
       );
     }
     final u = <String, UniversePreset>{};

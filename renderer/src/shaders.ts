@@ -1112,7 +1112,49 @@ void main() {
   outColor = vec4(col * uOpacity, 1.0);
 }`;
 
+// Lasers de scène : éventail de faisceaux colorés qui balaient, resserrés sur
+// le beat (demande utilisateur 2026-10-07 : motifs procéduraux uniquement).
+const OV_LASER = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  vec2 p = uv - vec2(0.0, -0.95); // source en bas du quad
+  float a = atan(p.x, p.y);
+  float sweep = sin(uTime * 0.6) * 0.8;
+  vec3 col = vec3(0.0);
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    float ang = sweep * (fi - 2.0) * 0.22
+              + sin(uMeasure * 6.2831 + fi * 1.7) * 0.10;
+    // Faisceau fin, resserré encore sur l'attaque du temps.
+    float beam = exp(-pow((a - ang) * (24.0 + 14.0 * uPulse * uBeat), 2.0));
+    vec3 tint = 0.55 + 0.45 * cos(vec3(0.0, 2.1, 4.2) + fi * 1.3 + uTime * 0.25);
+    col += tint * beam;
+  }
+  col *= smoothstep(1.7, 0.25, length(p));
+  col *= 0.35 + 0.65 * uPulse * uBeat + 0.25 * uHigh;
+  outColor = vec4(col * uOpacity, 1.0);
+}`;
+
+// Onde de basse : fronts circulaires émis sur les temps, poussés par le kick.
+const OV_ONDEBASSE = `
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float d = length(uv);
+  // Deux fronts en quinconce : rayon = phase du temps, éteints en fin de course.
+  float ph = fract(uMeasure * 4.0);
+  float ph2 = fract(uMeasure * 4.0 + 0.5);
+  float front = exp(-pow((d - ph * 1.3) * 8.0, 2.0)) * (1.0 - ph);
+  float front2 = exp(-pow((d - ph2 * 1.3) * 8.0, 2.0)) * (1.0 - ph2) * 0.6;
+  float push = 0.25 + 0.75 * uLow;
+  vec3 col = vec3(0.95, 0.32, 0.22) * front * push
+           + vec3(0.35, 0.15, 0.65) * front2 * push;
+  col *= 1.0 + uBeat * uPulse * 0.8;
+  outColor = vec4(col * uOpacity * smoothstep(1.45, 0.2, d), 1.0);
+}`;
+
 export const OVERLAYS: Record<string, string> = {
+  'laser': OV_LASER,
+  'ondebasse': OV_ONDEBASSE,
   'lightleak': OV_LIGHTLEAK,
   'bokeh': OV_BOKEH,
   'flare': OV_FLARE,

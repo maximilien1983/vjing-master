@@ -129,18 +129,20 @@ class IndicatorKey extends StatelessWidget {
   }
 }
 
-/// Bouton caméra 48 × 48 : affiche/masque la caméra de l'appareil en fond
-/// (webcam en préviz PC). Enfoncé et ambré tant que la caméra est à l'écran.
+/// Bouton caméra : affiche/masque la caméra de l'appareil en surimpression
+/// du fond (webcam en préviz PC). Enfoncé et ambré tant qu'elle est affichée.
 class CameraButton extends StatelessWidget {
   final bool active;
   final VoidCallback? onTap;
-  const CameraButton({super.key, required this.active, this.onTap});
+  final double size;
+  const CameraButton(
+      {super.key, required this.active, this.onTap, this.size = 48});
 
   @override
   Widget build(BuildContext context) {
     return MechKey(
-      width: 48,
-      height: 48,
+      width: size,
+      height: size,
       down: active,
       onTap: () {
         HapticFeedback.lightImpact();
@@ -150,7 +152,8 @@ class CameraButton extends StatelessWidget {
           active ? 'Masquer la caméra' : 'Afficher la caméra',
       child: Center(
         child: Icon(active ? Icons.videocam : Icons.videocam_outlined,
-            size: 26, color: active ? VjColors.amberLabel : VjColors.print),
+            size: size * 0.54,
+            color: active ? VjColors.amberLabel : VjColors.print),
       ),
     );
   }

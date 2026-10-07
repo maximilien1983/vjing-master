@@ -169,6 +169,12 @@ export class Engine {
   /// Clip illisible (réseau, CORS, format) : l'app bannit et rejoue.
   onBgError: ((id: string, reason: string) => void) | null = null;
 
+  /// Caméra en surimpression du fond (config.camera) : opacité cible choisie
+  /// à la console, niveau lissé pour un fondu d'entrée/sortie doux.
+  private cameraOn = false;
+  private cameraOpacity = 0.75;
+  private cameraLevel = 0;
+
   /// Rotation des cadrages portrait (bandes → duo → fond flouté) : chaque
   /// nouveau clip vertical reçoit le suivant, la variété vient toute seule.
   private framingCycle = 0;
@@ -368,6 +374,7 @@ export class Engine {
         .filter((r): r is BgRef => !!r && r.kind !== 'shader')
         .map((r) => r.id),
     );
+    if (this.cameraOn) keep.add('camera');
     for (const o of this.overlays) {
       if (o.kind === 'video') keep.add(`ov:${o.iid}`);
     }
@@ -377,11 +384,13 @@ export class Engine {
   }
 
   /// Nombre de fonds vidéo actifs (budget de décodage, brief : 2 max).
-  /// La caméra compte comme une vidéo décodée.
+  /// La caméra (fond ou surimpression) compte comme une vidéo décodée.
   private bgVideoCount(): number {
-    return [this.currentBg, this.nextBg, this.pendingBg?.ref].filter(
-      (r) => r && r.kind !== 'shader',
-    ).length;
+    return (
+      [this.currentBg, this.nextBg, this.pendingBg?.ref].filter(
+        (r) => r && r.kind !== 'shader',
+      ).length + (this.cameraOn ? 1 : 0)
+    );
   }
 
   private getOverlayVideoProgram(): GlProgram {
@@ -433,6 +442,13 @@ export class Engine {
       case 'config':
         if (msg.energy !== undefined) this.energy = msg.energy;
         if (msg.light !== undefined) this.light = msg.light;
+        if (msg.cameraOpacity !== undefined) {
+          this.cameraOpacity = Math.min(1, Math.max(0, msg.cameraOpacity));
+        }
+        if (msg.camera !== undefined) {
+          this.cameraOn = msg.camera;
+          if (msg.camera) this.ensureVideo({ kind: 'camera', id: 'camera' });
+        }
         break;
       case 'ping':
         break;
@@ -762,6 +778,22 @@ export class Engine {
     }
     this.drawBackground(this.currentBg, now, 1);
     if (this.nextBg) this.drawBackground(this.nextBg, now, fade);
+
+    // Caméra en surimpression : fondu lissé vers l'opacité de la console,
+    // par-dessus le fond (shader ou clip), sous les motifs et le post.
+    const camTarget = this.cameraOn ? this.cameraOpacity : 0;
+    this.cameraLevel += (camTarget - this.cameraLevel) * (1 - Math.exp(-dt * 6));
+    if (this.cameraLevel > 0.004) {
+      this.drawBackground(
+        { kind: 'camera', id: 'camera' },
+        now,
+        Math.min(this.cameraLevel, 0.999),
+      );
+    } else if (!this.cameraOn && this.cameraLevel !== 0) {
+      // Fondu terminé : on libère la webcam (le voyant s'éteint).
+      this.cameraLevel = 0;
+      this.releaseUnusedVideos();
+    }
 
     // 2. Motifs en fusion additive (shaders et boucles vidéo).
     if (this.overlays.length > 0) {
