@@ -27,7 +27,16 @@ Le moteur remonte des infos (stats, clips en cours pour les aperçus console) vi
 }}
 ```
 
-`background.kind` : `shader` | `video`.
+`background.kind` : `shader` | `video` | `camera`.
+
+Fond caméra : `{"kind": "camera", "id": "camera"}` (id réservé, pas d'url).
+Le moteur ouvre la caméra de l'appareil via `getUserMedia` (`facingMode:
+environment`) : webcam en préviz PC, objectif arrière sur téléphone. Recadrée
+en cover comme un clip, elle compte dans le budget de décodage (2 vidéos max).
+La transition attend la première frame, sans délai limite (l'invite de
+permission peut rester ouverte) ; refus ou absence de caméra ⇒ message
+sortant `bgerror` id `camera`. L'iframe de préviz doit déléguer la permission
+(`allow="camera"`). Banc d'essai : `?camera=1`, touche `c` en dev.
 
 Fond vidéo : `{"kind": "video", "id": "px-21118", "url": "https://…/x.mp4"}`.
 Le clip doit être servi avec CORS (`crossorigin`), il est lu muet en boucle,
@@ -64,7 +73,14 @@ Motif vidéo (boucle VJ sur fond noir, fusion additive) :
 privilégie les fonds : au-delà de 2 vidéos actives, la boucle est mise en
 pause sur sa dernière frame. L'app n'envoie qu'une boucle vidéo à la fois.
 
-`filters[]` : `{id, intensity}` avec `intensity` ∈ [0, 1]. Ids :
+`filters[]` : `{id, intensity, pulse}` avec `intensity` ∈ [0, 1] et `pulse`
+∈ [0, 1] optionnel (0 par défaut) : pulsation de l'intensité sur le beat —
+0 = constante, 1 = l'effet ne vit que sur les temps (enveloppe interne du
+moteur, retombée ~180 ms). Le moteur lisse l'intensité de base (~250 ms)
+pour que les enchaînements d'effets restent fluides. Depuis le 2026-10-07
+l'autopilote n'envoie plus de motifs superposés : il séquence ces filtres
+(1 à 3 à la fois, intensités et pulsations aléatoires, pauses) ; les motifs
+restent supportés pour les bancs d'essai. Ids :
 `bloom`, `chroma` (Retrofutur) ; `grain`, `vignette`, `sepia` (Vintage) ;
 `warmth` (70's, inclut le halo) ; `photocopy`, `glitch` (Punk) ; `vhs`
 (lignes + bruit + bavure + sauts) ; `kaleido`, `huerot` (Psyché — `huerot`
@@ -78,6 +94,9 @@ Id inconnu ⇒ ignoré.
 ```
 
 - `bpm` : tempo détecté. `bpm = 0` ⇒ pas de beat détecté (dérive lente, aucune pulsation).
+  Depuis le 2026-10-07 l'app ne l'envoie plus en pratique : sans détection elle
+  se cale sur un BPM de secours de 120 (moyenne usuelle, confiance 0), grille
+  ancrée sur l'horloge epoch. Le moteur reste compatible avec `bpm = 0`.
 - `phase` : position dans la **mesure de 4 temps**, ∈ [0, 1) — 0 = temps 1, 0.25 = temps 2…
 - `t0` : horodatage epoch ms auquel `phase` était valable (horloge de l'émetteur).
 - `offsetMs` : décalage de calibration (positif = retarder les visuels).

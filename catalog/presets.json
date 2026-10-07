@@ -1,48 +1,43 @@
 {
-  "version": 1,
-  "commentaire": "Presets des styles et univers (brief, section Paramètres). Fichier de référence ; copie embarquée dans app/assets/catalog/presets.json (test de synchronisation dans app/test/presets_test.dart). Les ids de filtres, motifs et fonds sont documentés dans renderer/PROTOCOL.md.",
+  "version": 2,
+  "commentaire": "Presets des styles et univers (brief, section Paramètres). Fichier de référence ; copie embarquée dans app/assets/catalog/presets.json (test de synchronisation dans app/test/presets_test.dart). Les ids de filtres et de fonds sont documentés dans renderer/PROTOCOL.md. Depuis le 2026-10-07 : plus de motifs superposés — chaque style porte un bassin d'effets vidéo séquencés par l'autopilote, et chaque univers un bloc fx (gain = effets plus ou moins marqués, filters = filtres signatures mêlés au bassin du style).",
   "styles": {
     "vintage": {
       "label": "Vintage",
-      "filters": ["grain", "vignette", "sepia"],
-      "transition": { "kind": "crossfade", "beats": 8 },
-      "motifs": ["lightleak", "poussieres", "vumetre"]
+      "filters": ["grain", "vignette", "sepia", "warmth"],
+      "transition": { "kind": "crossfade", "beats": 8 }
     },
     "70s": {
       "label": "70's",
-      "filters": ["warmth"],
-      "transition": { "kind": "crossfade", "beats": 8 },
-      "motifs": ["lightleak", "bokeh", "ticks"]
+      "filters": ["warmth", "grain", "bloom", "hue"],
+      "transition": { "kind": "crossfade", "beats": 8 }
     },
     "punk": {
       "label": "Punk",
-      "filters": ["photocopy", "glitch"],
-      "transition": { "kind": "cut", "beats": 1 },
-      "motifs": ["oscillo", "trame", "hud"]
+      "filters": ["photocopy", "glitch", "posterize", "vhs"],
+      "transition": { "kind": "cut", "beats": 1 }
     },
     "retrofutur": {
       "label": "Retrofutur",
-      "filters": ["bloom", "chroma"],
-      "transition": { "kind": "crossfade", "beats": 2 },
-      "motifs": ["flare", "hud", "ticks"]
+      "filters": ["bloom", "chroma", "glitch", "posterize"],
+      "transition": { "kind": "crossfade", "beats": 2 }
     },
     "vhs": {
       "label": "VHS",
-      "filters": ["vhs", "chroma"],
-      "transition": { "kind": "cut", "beats": 1 },
-      "motifs": ["timecode", "tracking", "oscillo"]
+      "filters": ["vhs", "chroma", "grain", "glitch"],
+      "transition": { "kind": "cut", "beats": 1 }
     },
     "psyche": {
       "label": "Psyché",
-      "filters": ["kaleido", "huerot", "bloom"],
-      "transition": { "kind": "crossfade", "beats": 16 },
-      "motifs": ["mandala", "fluide", "bokeh"]
+      "filters": ["kaleido", "huerot", "bloom", "hue"],
+      "transition": { "kind": "crossfade", "beats": 16 }
     }
   },
   "universes": {
     "danse": {
       "label": "Danse",
       "backgrounds": ["danse-spots", "danse-disco", "danse-foule"],
+      "fx": { "gain": 1.1, "filters": ["bloom"] },
       "pixabay": [
         "people dancing",
         "dancer silhouette",
@@ -63,26 +58,31 @@
     "ville": {
       "label": "Ville",
       "backgrounds": ["ville-skyline", "ville-trafic", "ville-pluie"],
+      "fx": { "gain": 1.0, "filters": ["chroma"] },
       "pixabay": ["city night traffic", "neon street", "skyline timelapse"]
     },
     "cosmos": {
       "label": "Cosmos",
       "backgrounds": ["cosmos-sun", "cosmos-stars", "cosmos-nebula", "cosmos-rings"],
+      "fx": { "gain": 0.9, "filters": ["bloom"] },
       "pixabay": ["nebula space", "galaxy stars"]
     },
     "machines": {
       "label": "Machines",
       "backgrounds": ["machines-engrenages", "machines-pistons", "machines-circuits"],
+      "fx": { "gain": 1.2, "filters": ["posterize"] },
       "pixabay": ["industrial machine", "gears mechanism", "factory robot"]
     },
     "nature": {
       "label": "Nature",
       "backgrounds": ["nature-eau", "nature-fumee", "nature-lucioles"],
+      "fx": { "gain": 0.8, "filters": ["vignette"] },
       "pixabay": ["water surface ripples", "smoke slow motion", "forest canopy"]
     },
     "miroir": {
       "label": "Crazy AI",
       "backgrounds": ["miroir-kaleido", "miroir-chrome"],
+      "fx": { "gain": 1.3, "filters": ["kaleido", "glitch"] },
       "note": "Caméra du téléphone au jalon 5 ; fonds génératifs en attendant."
     }
   }

@@ -78,37 +78,18 @@ void main() {
     });
   });
 
-  group('Autopilot avec boucles vidéo', () {
-    test('au plus une boucle vidéo parmi les motifs superposés', () {
+  group('Autopilot sans motifs superposés (décision 2026-10-07)', () {
+    test('les scènes partent toujours avec une liste d\'overlays vide', () {
       final msgs = <Map<String, dynamic>>[];
       final pilot = Autopilot(
           style: retrofutur, universe: cosmos, send: msgs.add, rng: Random(5));
-      pilot.setLoops(ClipCatalog.parse(_fixture, 'b/').loops);
       pilot.setEnergy(1);
-      var sawVideo = false;
-      // Drop reconstruit 4 motifs à chaque appel : on échantillonne large.
-      for (var i = 0; i < 40; i++) {
+      for (var i = 0; i < 10; i++) {
         pilot.triggerDrop();
-        final scene = msgs.lastWhere((m) => m['type'] == 'scene');
-        final overlays =
-            (scene['state'] as Map<String, dynamic>)['overlays'] as List;
-        expect(overlays, hasLength(4));
-        final videos = overlays
-            .where((o) => (o as Map<String, dynamic>)['kind'] == 'video')
-            .length;
-        expect(videos, lessThanOrEqualTo(1), reason: 'itération $i');
-        sawVideo |= videos == 1;
-        for (final o in overlays.cast<Map<String, dynamic>>()) {
-          if (o['kind'] == 'video') {
-            expect(o['url'], startsWith('b/loops/'));
-            expect(o.containsKey('motif'), isFalse);
-          } else {
-            expect(retrofutur.motifs, contains(o['motif']));
-          }
-        }
       }
-      expect(sawVideo, isTrue,
-          reason: 'les boucles vidéo doivent finir par apparaître');
+      for (final scene in msgs.where((m) => m['type'] == 'scene')) {
+        expect((scene['state'] as Map<String, dynamic>)['overlays'], isEmpty);
+      }
     });
   });
 

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import '../audio/audio_analyzer.dart';
 import '../sources/clips.dart';
 import 'beat_clock.dart';
@@ -8,8 +10,11 @@ import 'presets.dart';
 
 /// Règles du brief implémentées ici :
 /// - changement de fond toutes les 32 (énergie 0) à 4 (énergie 100) mesures ;
-/// - 0 à 4 boucles superposées selon l'énergie, apparition/disparition en fondu ;
-/// - intensité des filtres 20 % à 100 % ;
+/// - effets vidéo séquencés (décision 2026-10-07, remplace les motifs
+///   superposés jugés cheap) : plusieurs filtres par style, intensités et
+///   pulsations sur le beat aléatoires, enchaînés, avec des pauses ;
+/// - l'univers rend les effets plus ou moins marqués (fxGain) et y mêle ses
+///   filtres signatures (fxIds) ;
 /// - historique des 10 derniers fonds (variété) ; bannis de session sur erreur ;
 /// - transitions quantifiées sur la mesure ; sans beat : dérive lente ;
 /// - montée détectée : changements resserrés ; drop : tout au maximum 4 mesures.
@@ -30,17 +35,6 @@ double changeIntervalMeasures(double energy, StructureState structure) {
   return interval.clamp(2, 48);
 }
 
-int overlayTarget(double energy, StructureState structure) {
-  var n = (energy.clamp(0.0, 1.0) * 4).round();
-  if (structure == StructureState.drop) n += 1;
-  return n.clamp(0, 4);
-}
-
-double filterIntensity(double energy, StructureState structure) {
-  if (structure == StructureState.drop) return 1.0;
-  return 0.2 + 0.8 * energy.clamp(0.0, 1.0);
-}
-
 /// Choisit un fond hors historique récent et hors bannis. Si tout est épuisé,
 /// l'historique est ignoré (mais jamais les bannis, sauf s'il ne reste rien).
 String selectBackground(
@@ -59,32 +53,20 @@ String selectBackground(
   return candidates[rng.nextInt(candidates.length)];
 }
 
-class OverlayState {
-  final String iid;
-  final String? motif; // motif shader, null pour une boucle vidéo
-  final String? url; // boucle vidéo (motif lumineux sur fond noir)
-  final double x, y, scale, rot, pulse;
-  const OverlayState(this.iid, this.motif, this.x, this.y, this.scale, this.rot, this.pulse)
-      : url = null;
-  const OverlayState.video(this.iid, this.url, this.x, this.y, this.scale, this.rot, this.pulse)
-      : motif = null;
-
-  bool get isVideo => url != null;
-
-  Map<String, dynamic> toJson() => {
-        'iid': iid,
-        if (isVideo) 'kind': 'video',
-        if (isVideo) 'url': url,
-        if (!isVideo) 'motif': motif,
-        'x': x,
-        'y': y,
-        'scale': scale,
-        'rot': rot,
-        'pulse': pulse,
-      };
+/// Effet vidéo actif : filtre du moteur + intensité de base + pulsation sur
+/// le beat (appliquée image par image côté moteur, voir PROTOCOL.md).
+class FxStep {
+  final String id;
+  final double intensity; // 0..1
+  final double pulse; // 0 = constant, 1 = ne vit que sur les temps
+  const FxStep(this.id, this.intensity, this.pulse);
 }
 
 class Autopilot {
+  /// Fond caméra (id réservé du protocole) : caméra de l'appareil côté
+  /// moteur — webcam en préviz PC, objectif arrière sur téléphone.
+  static const cameraBgId = 'camera';
+
   StylePreset style;
   UniversePreset universe;
   final Random rng;
@@ -99,12 +81,12 @@ class Autopilot {
   StructureState structure = StructureState.steady;
 
   String? _currentBg;
+  bool _cameraOn = false;
+  bool _cameraPinned = false;
   final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
-  List<EngineClip> _loops = []; // boucles VJ du style courant
-  final List<OverlayState> _overlays = [];
+  List<FxStep> _fx = const [];
+  int _nextFxMeasure = 0;
   int _nextChangeMeasure = 0;
-  int _nextOverlayDriftMeasure = 0;
-  int _overlaySeq = 0;
   int _dropUntilMeasure = -1;
   bool _sceneRequested = false;
   Timer? _ticker;
@@ -116,7 +98,11 @@ class Autopilot {
     Random? rng,
   }) : rng = rng ?? Random();
 
+  /// Effets vidéo actifs (lecture seule, pour les tests).
+  List<FxStep> get activeFx => List.unmodifiable(_fx);
+
   void start() {
+    _mutateFx(allowPause: false);
     _pushScene(cut: true);
     _scheduleNextChange();
     // Tick court : la quantification se fait sur l'horloge de mesure, pas sur
@@ -143,7 +129,7 @@ class Autopilot {
   void setEnergy(double v) {
     energy = v.clamp(0.0, 1.0);
     send({'type': 'config', 'energy': energy});
-    _pushScene(); // met à jour filtres et nombre de boucles en douceur
+    _pushScene(); // réapplique la scène courante en douceur
     _scheduleNextChange();
   }
 
@@ -152,14 +138,15 @@ class Autopilot {
     send({'type': 'config', 'light': light});
   }
 
-  /// Changement de style : les filtres et transitions suivent immédiatement.
+  /// Changement de style : nouveau bassin d'effets, appliqué immédiatement.
   void setStyle(StylePreset s) {
     if (s.id == style.id) return;
     style = s;
+    _mutateFx(allowPause: false);
     _pushScene();
   }
 
-  /// Changement d'univers : nouveau bassin de fonds et de motifs, nouvelle
+  /// Changement d'univers : nouveau bassin de fonds et d'effets, nouvelle
   /// scène quantifiée au prochain temps 1 (comme le bouton Scène).
   void setUniverse(UniversePreset u) {
     if (u.id == universe.id) return;
@@ -180,17 +167,46 @@ class Autopilot {
       ..addEntries(clips.map((c) => MapEntry(c.id, c.url)));
   }
 
-  /// Boucles VJ du style courant (motifs vidéo, fusion additive), mélangées
-  /// aux motifs shaders. Une seule boucle vidéo à l'écran à la fois : le
-  /// budget de décodage du moteur privilégie les fonds (2 vidéos max).
-  void setLoops(List<EngineClip> loops) {
-    _loops = loops;
+  /// Source caméra chargée/déchargée (écran Sources). Chargée : elle entre
+  /// dans le bassin de fonds comme un clip. Déchargée : plus jamais piochée,
+  /// et si elle est à l'écran (rotation ou bouton caméra) on la remplace.
+  void setCamera(bool on) {
+    _cameraOn = on;
+    if (!on && _currentBg == cameraBgId) {
+      _cameraPinned = false;
+      _changeBackground();
+      _pushScene();
+      _scheduleNextChange();
+    }
+  }
+
+  /// Bouton caméra de la console : affiche la caméra et la MAINTIENT à
+  /// l'écran (les changements de fond sont suspendus) jusqu'au masquage.
+  /// Indépendant du bassin : marche même source non chargée, et retenter
+  /// après un refus de permission est permis (dé-bannie au passage).
+  /// Caméra indisponible ⇒ le moteur envoie `bgerror`, banOnError libère.
+  void setCameraPinned(bool v) {
+    if (v == _cameraPinned) return;
+    _cameraPinned = v;
+    if (v) {
+      banned.remove(cameraBgId);
+      _currentBg = cameraBgId;
+      history.add(cameraBgId);
+      if (history.length > 10) history.removeAt(0);
+      _pushScene();
+      _scheduleNextChange();
+    } else if (_currentBg == cameraBgId) {
+      _changeBackground();
+      _pushScene();
+      _scheduleNextChange();
+    }
   }
 
   /// Fond illisible côté moteur (réseau, CORS…) : banni pour la session,
   /// et remplacé immédiatement s'il est à l'écran.
   void banOnError(String id) {
     banned.add(id);
+    if (id == cameraBgId) _cameraPinned = false;
     if (_currentBg == id) {
       _changeBackground();
       _pushScene();
@@ -198,14 +214,22 @@ class Autopilot {
     }
   }
 
-  List<String> get _bgPool => [...universe.backgrounds, ..._clipUrls.keys];
+  List<String> get _bgPool => [
+        ...universe.backgrounds,
+        ..._clipUrls.keys,
+        if (_cameraOn) cameraBgId,
+      ];
+
+  /// Bassin d'effets : filtres du style (plusieurs par cran EFFECTS) + les
+  /// filtres signatures de l'univers.
+  List<String> get _fxPool => {...style.filterIds, ...universe.fxIds}.toList();
 
   /// Drop : coupe au noir (moteur), puis tout au maximum pendant 4 mesures.
   void triggerDrop() {
     send({'type': 'trigger', 'id': 'drop'});
     _dropUntilMeasure = clock.measureCount + 4;
     _changeBackground();
-    _rebuildOverlays(4);
+    _mutateFx(allowPause: false);
     _pushScene();
     _scheduleNextChange();
   }
@@ -220,13 +244,14 @@ class Autopilot {
 
     final m = clock.measureCount;
     if (_dropUntilMeasure >= 0 && m >= _dropUntilMeasure) {
-      _dropUntilMeasure = -1; // retour progressif : la scène suivante retombe
+      _dropUntilMeasure = -1; // retour progressif : les effets retombent
+      _mutateFx(allowPause: false);
       _pushScene();
     }
     if (_sceneRequested) {
       _sceneRequested = false;
       _changeBackground();
-      _rebuildOverlays(overlayTarget(energy, structure));
+      _mutateFx(allowPause: false);
       _pushScene();
       _scheduleNextChange();
       return;
@@ -235,85 +260,83 @@ class Autopilot {
       _changeBackground();
       _pushScene();
       _scheduleNextChange();
-    } else if (m >= _nextOverlayDriftMeasure) {
-      // Dérive douce : on remplace ou déplace une boucle sans toucher au fond.
-      _driftOverlays();
+    } else if (m >= _nextFxMeasure) {
+      // Les effets vivent leur vie entre deux changements de fond.
+      _mutateFx();
       _pushScene();
-      _nextOverlayDriftMeasure = m + 2;
     }
   }
 
   void _scheduleNextChange() {
     final interval = changeIntervalMeasures(energy, structure).round();
     _nextChangeMeasure = clock.measureCount + interval;
-    _nextOverlayDriftMeasure = clock.measureCount + 2;
   }
 
   void _changeBackground() {
+    // Caméra maintenue par le bouton de la console : le fond ne tourne pas.
+    if (_cameraPinned) return;
     final bg = selectBackground(rng, _bgPool, history, banned);
     _currentBg = bg;
     history.add(bg);
     if (history.length > 10) history.removeAt(0);
   }
 
-  bool get _hasVideoOverlay => _overlays.any((o) => o.isVideo);
-
-  OverlayState _randomOverlay({bool allowVideo = true}) {
-    final iid = 'o${_overlaySeq++}';
-    final x = (rng.nextDouble() - 0.5) * 1.2;
-    final y = (rng.nextDouble() - 0.5) * 1.0;
-    final rot = (rng.nextDouble() - 0.5) * 1.2;
-    final pulse = 0.3 + 0.7 * energy;
-    // Une chance sur deux de piocher une boucle vidéo quand c'est permis.
-    if (allowVideo && _loops.isNotEmpty && rng.nextBool()) {
-      final loop = _loops[rng.nextInt(_loops.length)];
-      return OverlayState.video(
-          iid, loop.url, x, y, 0.45 + rng.nextDouble() * 0.35, rot * 0.3, pulse);
+  /// Fait vivre les effets vidéo (décision 2026-10-07) : tirage de 1 à 3
+  /// filtres du bassin, intensités et pulsations sur le beat aléatoires,
+  /// enchaînés toutes les 1 à 6 mesures (resserré par l'énergie), avec
+  /// parfois une pause d'une à trois mesures sans aucun effet. L'univers
+  /// les rend plus ou moins marqués (fxGain). Pendant un drop : tout au
+  /// maximum, pulsation forte.
+  void _mutateFx({bool allowPause = true}) {
+    final dropping = _dropUntilMeasure >= 0;
+    if (allowPause && !dropping && _fx.isNotEmpty && rng.nextDouble() < 0.18) {
+      _fx = const [];
+      _nextFxMeasure = clock.measureCount + 1 + rng.nextInt(3);
+      return;
     }
-    // Les motifs appartiennent au style (brief « Paramètres »).
-    final motif = style.motifs[rng.nextInt(style.motifs.length)];
-    return OverlayState(
-        iid, motif, x, y, 0.3 + rng.nextDouble() * 0.35, rot, pulse);
+    final pool = _fxPool..shuffle(rng);
+    final maxN = min(3, pool.length);
+    final count = dropping ? maxN : 1 + rng.nextInt(maxN);
+    // « Plus ou moins marqués » : plancher d'ambiance à énergie 0, plein
+    // régime à 100, le tout teinté par le gain de l'univers.
+    final strength = ((0.35 + 0.65 * energy) * universe.fxGain).clamp(0.0, 1.0);
+    _fx = [
+      for (final id in pool.take(count))
+        FxStep(
+          id,
+          dropping
+              ? 1.0
+              : ((0.35 + 0.65 * rng.nextDouble()) * strength).clamp(0.1, 1.0),
+          dropping ? 0.8 : 0.2 + 0.8 * rng.nextDouble(),
+        ),
+    ];
+    final span =
+        dropping ? 2 : 1 + rng.nextInt(max(1, (6 - 4 * energy).round()));
+    _nextFxMeasure = clock.measureCount + span;
   }
 
-  void _rebuildOverlays(int count) {
-    _overlays.clear();
-    for (var i = 0; i < count; i++) {
-      _overlays.add(_randomOverlay(allowVideo: !_hasVideoOverlay));
-    }
-  }
-
-  void _driftOverlays() {
-    final target = _dropUntilMeasure >= 0 ? 4 : overlayTarget(energy, structure);
-    while (_overlays.length > target) {
-      _overlays.removeAt(rng.nextInt(_overlays.length));
-    }
-    while (_overlays.length < target) {
-      _overlays.add(_randomOverlay(allowVideo: !_hasVideoOverlay));
-    }
-    // Remplace une boucle de temps en temps pour que ça vive.
-    if (_overlays.isNotEmpty && rng.nextDouble() < 0.4) {
-      final i = rng.nextInt(_overlays.length);
-      final allowVideo = _overlays[i].isVideo || !_hasVideoOverlay;
-      _overlays[i] = _randomOverlay(allowVideo: allowVideo);
-    }
-  }
+  @visibleForTesting
+  void debugMutateFx({bool allowPause = true}) =>
+      _mutateFx(allowPause: allowPause);
 
   void _pushScene({bool cut = false}) {
     _currentBg ??= selectBackground(rng, _bgPool, history, banned);
     if (history.isEmpty) history.add(_currentBg!);
-    final dropping = _dropUntilMeasure >= 0;
-    final intensity = filterIntensity(energy, dropping ? StructureState.drop : structure);
     final clipUrl = _clipUrls[_currentBg];
     send({
       'type': 'scene',
       'state': {
-        'background': clipUrl != null
-            ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
-            : {'kind': 'shader', 'id': _currentBg},
-        'overlays': [for (final o in _overlays) o.toJson()],
+        'background': _currentBg == cameraBgId
+            ? {'kind': 'camera', 'id': cameraBgId}
+            : clipUrl != null
+                ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
+                : {'kind': 'shader', 'id': _currentBg},
+        // Plus de motifs superposés (2026-10-07) : les effets vidéo séquencés
+        // les remplacent. Le moteur les supporte toujours (bancs d'essai).
+        'overlays': const [],
         'filters': [
-          for (final id in style.filterIds) {'id': id, 'intensity': intensity},
+          for (final f in _fx)
+            {'id': f.id, 'intensity': f.intensity, 'pulse': f.pulse},
         ],
         'transition': {
           'kind': cut ? 'cut' : style.transitionKind,

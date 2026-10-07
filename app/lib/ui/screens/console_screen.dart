@@ -60,7 +60,9 @@ class ConsoleScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: Center(child: _sourcesStrip(context))),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+            _cameraColumn(),
+            const SizedBox(width: 8),
             // Aperçu de la sortie : le moteur local rend le même flux que la TV.
             VideoMonitor(child: session.local.buildView()),
             const SizedBox(width: 12),
@@ -117,6 +119,29 @@ class ConsoleScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  /// Bouton caméra : affiche/masque la caméra de l'appareil en fond
+  /// (maintenue à l'écran tant qu'elle est affichée).
+  Widget _cameraColumn() {
+    return SizedBox(
+      width: 48,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ValueListenableBuilder(
+            valueListenable: session.cameraShown,
+            builder: (_, shown, _) => CameraButton(
+              active: shown,
+              onTap: session.toggleCamera,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('CAMÉRA',
+              style: VjText.hint.copyWith(fontSize: 8, letterSpacing: 1)),
+        ],
+      ),
     );
   }
 

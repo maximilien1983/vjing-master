@@ -3,7 +3,9 @@
 export const PROTOCOL_VERSION = 1;
 
 export interface SceneBackground {
-  kind: 'shader' | 'video';
+  /// 'camera' : caméra de l'appareil via getUserMedia (webcam en préviz PC,
+  /// objectif arrière sur téléphone) — id réservé "camera", pas d'url.
+  kind: 'shader' | 'video' | 'camera';
   id: string;
   /// kind 'video' : URL du clip (mp4/webm, servi avec CORS).
   url?: string;
@@ -26,8 +28,11 @@ export interface SceneOverlay {
 }
 
 export interface SceneFilter {
-  id: string; // 'bloom' | 'chroma' | 'posterize' | 'hue' (jalon 2)
+  id: string; // ids documentés dans PROTOCOL.md
   intensity: number; // 0..1 ('hue' : radians)
+  /// Pulsation sur le beat, 0..1 : 0 = intensité constante, 1 = l'effet ne
+  /// vit que sur les temps (enveloppe du moteur). Absent = 0.
+  pulse?: number;
 }
 
 export interface SceneTransition {

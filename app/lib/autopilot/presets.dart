@@ -2,8 +2,10 @@
 /// copie embarquée dans assets/catalog/) fait foi ; les constantes ci-dessous
 /// servent de repli tant qu'il n'est pas chargé.
 ///
-/// Brief « Paramètres » : un style = filtres + montage + motifs ; un univers
-/// = ce que l'on voit (fonds ; clips vidéo à venir dans la suite du jalon 4).
+/// Brief « Paramètres » : un style = bassin d'effets vidéo + montage ; un
+/// univers = ce que l'on voit (fonds, clips) et la couleur de ses effets
+/// (gain + filtres signatures). Les motifs superposés ont été retirés le
+/// 2026-10-07 (remplacés par les effets vidéo séquencés).
 library;
 
 import 'dart:convert';
@@ -16,25 +18,29 @@ import '../config.dart';
 
 class StylePreset {
   final String id;
-  final List<String> filterIds; // filtres du moteur (voir PROTOCOL.md)
+  final List<String> filterIds; // bassin d'effets du moteur (PROTOCOL.md)
   final String transitionKind; // 'crossfade' | 'cut'
   final int transitionBeats;
-  final List<String> motifs; // motifs superposés du moteur
-  const StylePreset(this.id, this.filterIds, this.transitionKind,
-      this.transitionBeats, this.motifs);
+  const StylePreset(
+      this.id, this.filterIds, this.transitionKind, this.transitionBeats);
 }
 
 class UniversePreset {
   final String id;
   final List<String> backgrounds; // fonds shaders du moteur
   final List<String> queries; // requêtes Pixabay prédéfinies (brief)
-  const UniversePreset(this.id, this.backgrounds, [this.queries = const []]);
+  /// Effets « représentatifs de l'univers » : gain global (plus ou moins
+  /// marqués) et filtres signatures mêlés au bassin du style.
+  final double fxGain;
+  final List<String> fxIds;
+  const UniversePreset(this.id, this.backgrounds,
+      [this.queries = const [], this.fxGain = 1, this.fxIds = const []]);
 }
 
 /// Repli : Retrofutur × Cosmos (jalons 1-3), utilisés avant le chargement
 /// du catalogue et si un id inconnu arrive.
-const retrofutur = StylePreset(
-    'retrofutur', ['bloom', 'chroma'], 'crossfade', 2, ['grid', 'loop', 'flare']);
+const retrofutur =
+    StylePreset('retrofutur', ['bloom', 'chroma'], 'crossfade', 2);
 
 const cosmos = UniversePreset(
   'cosmos',
@@ -94,17 +100,19 @@ abstract final class PresetCatalog {
         List<String>.from(m['filters'] as List),
         t['kind'] as String,
         t['beats'] as int,
-        List<String>.from(m['motifs'] as List),
       );
     }
     final u = <String, UniversePreset>{};
     for (final MapEntry(:key, :value)
         in (root['universes'] as Map<String, dynamic>).entries) {
       final m = value as Map<String, dynamic>;
+      final fx = (m['fx'] ?? const <String, dynamic>{}) as Map<String, dynamic>;
       u[key] = UniversePreset(
         key,
         List<String>.from(m['backgrounds'] as List),
         List<String>.from((m['pixabay'] ?? const []) as List),
+        (fx['gain'] as num?)?.toDouble() ?? 1,
+        List<String>.from((fx['filters'] ?? const []) as List),
       );
     }
     styles = s;

@@ -129,6 +129,33 @@ class IndicatorKey extends StatelessWidget {
   }
 }
 
+/// Bouton caméra 48 × 48 : affiche/masque la caméra de l'appareil en fond
+/// (webcam en préviz PC). Enfoncé et ambré tant que la caméra est à l'écran.
+class CameraButton extends StatelessWidget {
+  final bool active;
+  final VoidCallback? onTap;
+  const CameraButton({super.key, required this.active, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return MechKey(
+      width: 48,
+      height: 48,
+      down: active,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap?.call();
+      },
+      semanticsLabel:
+          active ? 'Masquer la caméra' : 'Afficher la caméra',
+      child: Center(
+        child: Icon(active ? Icons.videocam : Icons.videocam_outlined,
+            size: 26, color: active ? VjColors.amberLabel : VjColors.print),
+      ),
+    );
+  }
+}
+
 /// Bouton de diffusion 48 × 48 : icône TV + triangle, crème ou ambrée.
 class CastButton extends StatelessWidget {
   final bool active;

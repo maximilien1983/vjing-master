@@ -146,6 +146,14 @@ class _LocalScreenState extends State<LocalScreen> {
                       fontWeight: FontWeight.w600,
                       letterSpacing: 2)),
               const SizedBox(width: 10),
+              ValueListenableBuilder(
+                valueListenable: session.cameraShown,
+                builder: (_, shown, _) => CameraButton(
+                  active: shown,
+                  onTap: session.toggleCamera,
+                ),
+              ),
+              const SizedBox(width: 8),
               ListenableBuilder(
                 listenable: session.sourcesModel,
                 builder: (context, _) => MechKey(

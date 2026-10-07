@@ -15,7 +15,11 @@ class WebViewLink extends LocalEngineLink {
   final List<String> _queue = [];
 
   WebViewLink() {
-    controller = WebViewController()
+    // Fond "camera" du moteur : getUserMedia dans la WebView demande l'accord
+    // de l'app. (Permission Android CAMERA à déclarer et demander au runtime
+    // pour le téléphone — jalon 5.)
+    controller = WebViewController(
+        onPermissionRequest: (request) => request.grant())
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF000000))
       ..addJavaScriptChannel('VjmFeedback',

@@ -22,16 +22,90 @@ void main() {
     });
   });
 
-  group('overlayTarget / filterIntensity', () {
-    test('0 boucle et 20 % à énergie 0, 4 boucles et 100 % à énergie 100', () {
-      expect(overlayTarget(0, StructureState.steady), 0);
-      expect(overlayTarget(1, StructureState.steady), 4);
-      expect(filterIntensity(0, StructureState.steady), closeTo(0.2, 1e-9));
-      expect(filterIntensity(1, StructureState.steady), closeTo(1.0, 1e-9));
+  group('séquenceur d\'effets vidéo', () {
+    Autopilot makePilot(List<Map<String, dynamic>> msgs, {int seed = 3}) =>
+        Autopilot(
+            style: retrofutur,
+            universe: cosmos,
+            send: msgs.add,
+            rng: Random(seed));
+
+    test('1 à 3 effets du bassin, intensités et pulsations bornées', () {
+      final pilot = makePilot([]);
+      for (var i = 0; i < 60; i++) {
+        pilot.debugMutateFx(allowPause: false);
+        expect(pilot.activeFx, isNotEmpty);
+        expect(pilot.activeFx.length, inInclusiveRange(1, 3));
+        for (final f in pilot.activeFx) {
+          expect(retrofutur.filterIds, contains(f.id));
+          expect(f.intensity, inInclusiveRange(0.1, 1.0));
+          expect(f.pulse, inInclusiveRange(0.2, 1.0));
+        }
+      }
     });
-    test('drop : filtres au maximum, plafond de 4 boucles', () {
-      expect(filterIntensity(0.3, StructureState.drop), 1.0);
-      expect(overlayTarget(1, StructureState.drop), 4);
+
+    test('les effets s\'enchaînent : le tirage varie', () {
+      final pilot = makePilot([]);
+      final sets = <String>{};
+      for (var i = 0; i < 30; i++) {
+        pilot.debugMutateFx(allowPause: false);
+        sets.add((pilot.activeFx.map((f) => f.id).toList()..sort()).join('+'));
+      }
+      expect(sets.length, greaterThan(1),
+          reason: 'le même jeu d\'effets ne doit pas tourner en boucle');
+    });
+
+    test('parfois une pause : plus aucun effet', () {
+      final pilot = makePilot([]);
+      var sawPause = false;
+      for (var i = 0; i < 200 && !sawPause; i++) {
+        pilot.debugMutateFx();
+        sawPause = pilot.activeFx.isEmpty;
+      }
+      expect(sawPause, isTrue, reason: 'les pauses font partie du brief');
+    });
+
+    test('drop : tout au maximum', () {
+      final msgs = <Map<String, dynamic>>[];
+      final pilot = makePilot(msgs);
+      pilot.triggerDrop();
+      expect(pilot.activeFx, isNotEmpty);
+      for (final f in pilot.activeFx) {
+        expect(f.intensity, 1.0);
+      }
+    });
+
+    test('le gain de l\'univers rend les effets plus ou moins marqués', () {
+      const doux = UniversePreset('doux', ['cosmos-sun'], [], 0.5);
+      const marque = UniversePreset('marque', ['cosmos-sun'], [], 1.0);
+      double maxIntensity(UniversePreset u) {
+        final pilot = Autopilot(
+            style: retrofutur, universe: u, send: (_) {}, rng: Random(9));
+        pilot.setEnergy(1);
+        var best = 0.0;
+        for (var i = 0; i < 40; i++) {
+          pilot.debugMutateFx(allowPause: false);
+          for (final f in pilot.activeFx) {
+            if (f.intensity > best) best = f.intensity;
+          }
+        }
+        return best;
+      }
+
+      expect(maxIntensity(doux), lessThan(maxIntensity(marque)));
+    });
+
+    test('les filtres signatures de l\'univers se mêlent au bassin', () {
+      const miroir =
+          UniversePreset('miroir', ['miroir-kaleido'], [], 1.3, ['kaleido']);
+      final pilot = Autopilot(
+          style: retrofutur, universe: miroir, send: (_) {}, rng: Random(2));
+      var sawSignature = false;
+      for (var i = 0; i < 80 && !sawSignature; i++) {
+        pilot.debugMutateFx(allowPause: false);
+        sawSignature = pilot.activeFx.any((f) => f.id == 'kaleido');
+      }
+      expect(sawSignature, isTrue);
     });
   });
 
@@ -115,10 +189,14 @@ void main() {
       final state = scene['state'] as Map<String, dynamic>;
       expect(state['background']['kind'], 'shader');
       expect(cosmos.backgrounds, contains(state['background']['id']));
-      expect(state['filters'], isNotEmpty);
+      // Plus de motifs superposés : les effets vidéo séquencés les remplacent.
+      expect(state['overlays'], isEmpty);
+      expect(state['filters'], isNotEmpty,
+          reason: 'la scène de départ arrive toujours avec des effets');
       for (final f in state['filters'] as List) {
         expect(retrofutur.filterIds, contains(f['id']));
-        expect(f['intensity'], inInclusiveRange(0.2, 1.0));
+        expect(f['intensity'], inInclusiveRange(0.1, 1.0));
+        expect(f['pulse'], inInclusiveRange(0.0, 1.0));
       }
       expect(state['transition']['kind'], 'crossfade');
       pilot.stop();

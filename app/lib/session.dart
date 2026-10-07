@@ -14,6 +14,21 @@ import 'sources/clip_catalog.dart';
 import 'sources/pixabay.dart';
 import 'sources/sources_model.dart';
 
+/// BPM de secours quand l'analyse ne détecte rien (silence, ambiance sans
+/// pulsation nette, premières secondes de signal) : 120 BPM, la moyenne
+/// usuelle de la musique populaire. Mesure de 2 s ancrée sur l'horloge epoch :
+/// deux messages de secours successifs décrivent la même grille, donc pas de
+/// saut de phase côté moteur. Confiance 0 — la vraie détection reprend la
+/// main dès qu'elle verrouille.
+const double kFallbackBpm = 120;
+
+BeatEstimate withFallbackBpm(BeatEstimate b) {
+  if (b.bpm > 0) return b;
+  const measureMs = 4 * 60000 / kFallbackBpm; // 2000 ms
+  final phase = (b.t0 % measureMs) / measureMs;
+  return BeatEstimate(kFallbackBpm, phase, b.t0, 0);
+}
+
 /// Session jalon 2 : micro -> analyse -> autopilote -> moteur(s).
 /// Le même flux de messages part vers le moteur local (WebView sur mobile,
 /// iframe en préviz web) et, si connecté, vers le Chromecast.
@@ -43,6 +58,11 @@ class Session {
 
   /// Sources vidéo de la session (données factices au jalon 3).
   final sourcesModel = SourcesModel();
+  bool _cameraLoaded = false;
+
+  /// Vrai quand la caméra est affichée en fond via le bouton de la console
+  /// (maintenue à l'écran tant qu'elle n'est pas masquée).
+  final cameraShown = ValueNotifier<bool>(false);
 
   /// Fonds Pixabay par univers (jalon 4). Sans clé : shaders seuls.
   final PixabayClient? _pixabay =
@@ -86,7 +106,6 @@ class Session {
     ClipCatalog.load(catalogUrl).then((data) {
       _catalog = data;
       _pushPool(universeId.value);
-      _pushLoops(styleId.value);
     });
   }
 
@@ -117,12 +136,6 @@ class Session {
     ]);
   }
 
-  /// Boucles VJ du style courant (les motifs appartiennent aux styles).
-  void _pushLoops(String styleId) {
-    pilot.setLoops(
-        _catalog.loops.where((l) => l.styles.contains(styleId)).toList());
-  }
-
   List<EngineLink> get _links => [
         local,
         if (cast.state == CastState.connected) cast,
@@ -135,7 +148,8 @@ class Session {
       levels.value = l;
       _sendAll({'type': 'levels', 'low': l.low, 'mid': l.mid, 'high': l.high});
     }));
-    _subs.add(analyzer.beats.listen((b) {
+    _subs.add(analyzer.beats.listen((raw) {
+      final b = withFallbackBpm(raw);
       bpm.value = b.bpm;
       confidence.value = b.confidence;
       pilot.onBeat(b);
@@ -169,10 +183,19 @@ class Session {
         } else if (msg['type'] == 'bgerror') {
           // Clip illisible : banni pour la session, scène remplacée.
           debugPrint('Fond vidéo illisible : ${msg['id']} (${msg['reason']})');
+          // Caméra refusée ou absente : le bouton de la console se relâche.
+          if (msg['id'] == Autopilot.cameraBgId) cameraShown.value = false;
           pilot.banOnError(msg['id'] as String);
         }
       };
     }
+
+    // Caméra (webcam en préviz PC, téléphone au jalon 5) : dans le bassin de
+    // l'autopilote tant que la source est chargée ; l'affichage direct passe
+    // par le bouton caméra de la console (toggleCamera).
+    _cameraLoaded = _isCameraLoaded;
+    pilot.setCamera(_cameraLoaded);
+    sourcesModel.addListener(_onSourcesChanged);
 
     local.send({'type': 'config', 'debug': debug, 'beatBar': beatBar.value});
     pilot.start();
@@ -207,6 +230,29 @@ class Session {
       debugPrint('Micro indisponible : $e');
       micOk.value = false;
     }
+  }
+
+  bool get _isCameraLoaded => sourcesModel.sources.any(
+      (s) => s.kind == SourceKind.camera && s.state == SourceState.loaded);
+
+  void _onSourcesChanged() {
+    final loaded = _isCameraLoaded;
+    if (loaded == _cameraLoaded) return;
+    _cameraLoaded = loaded;
+    pilot.setCamera(loaded);
+    // Source déchargée : l'autopilote a déjà remplacé le fond, on relâche
+    // le bouton de la console.
+    if (!loaded) cameraShown.value = false;
+  }
+
+  /// Bouton caméra de la console : affiche/masque la caméra de l'appareil en
+  /// fond (webcam en préviz PC, objectif arrière sur téléphone). Affichée,
+  /// elle reste à l'écran — la rotation de fonds reprend au masquage.
+  void toggleCamera() => setCameraShown(!cameraShown.value);
+
+  void setCameraShown(bool v) {
+    cameraShown.value = v;
+    pilot.setCameraPinned(v);
   }
 
   void _sendAll(Map<String, dynamic> msg) {
@@ -266,7 +312,6 @@ class Session {
   void setStyle(String id) {
     styleId.value = id;
     pilot.setStyle(stylePresetFor(id));
-    _pushLoops(id);
   }
 
   void setUniverse(String id) {
@@ -292,6 +337,7 @@ class Session {
   Future<void> dispose() async {
     _pingTimer?.cancel();
     pilot.stop();
+    sourcesModel.removeListener(_onSourcesChanged);
     sourcesModel.dispose();
     for (final s in _subs) {
       await s.cancel();

@@ -104,9 +104,10 @@ export interface EngineStats {
   bg: string;
 }
 
-/// Référence de fond : shader générativement rendu, ou clip vidéo (jalon 4).
+/// Référence de fond : shader générativement rendu, clip vidéo (jalon 4),
+/// ou caméra de l'appareil (webcam en préviz PC, téléphone au jalon 5).
 interface BgRef {
-  kind: 'shader' | 'video';
+  kind: 'shader' | 'video' | 'camera';
   id: string;
   url?: string;
 }
@@ -157,7 +158,10 @@ export class Engine {
   private fadeStart = 0;
   private fadeDurMs = 0;
   private overlays: OverlayInstance[] = [];
-  private filters = new Map<string, number>();
+  private filters = new Map<string, { intensity: number; pulse: number }>();
+  /// Intensités lissées des filtres (fondu ~250 ms entre deux scènes, pour
+  /// que les enchaînements d'effets de l'autopilote restent fluides).
+  private fxSmooth = new Map<string, number>();
   private videos = new Map<string, VideoEntry>();
   private videoProgram: GlProgram | null = null;
   private overlayVideoProgram: GlProgram | null = null;
@@ -300,10 +304,34 @@ export class Engine {
       this.dropVideo(ref.id);
       this.onBgError?.(ref.id, el.error?.message ?? 'erreur vidéo');
     });
-    el.src = ref.url ?? '';
-    void el.play().catch(() => {
-      // L'autoplay muet est normalement permis ; on retentera à l'upload.
-    });
+    if (ref.kind === 'camera') {
+      // Caméra de l'appareil : webcam en préviz PC, objectif arrière sur
+      // téléphone. La transition attend la première frame comme pour un clip
+      // réseau ; refus de permission ou absence de caméra ⇒ bgerror.
+      navigator.mediaDevices
+        .getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        })
+        .then((stream) => {
+          if (this.videos.get(ref.id)?.el !== el) {
+            // Fond libéré pendant l'attente de permission : on referme le flux.
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+          el.srcObject = stream;
+          void el.play().catch(() => {});
+        })
+        .catch((e) => {
+          if (this.pendingBg?.ref.id === ref.id) this.pendingBg = null;
+          this.dropVideo(ref.id);
+          this.onBgError?.(ref.id, `caméra : ${String(e)}`);
+        });
+    } else {
+      el.src = ref.url ?? '';
+      void el.play().catch(() => {
+        // L'autoplay muet est normalement permis ; on retentera à l'upload.
+      });
+    }
     const gl = this.gl;
     const tex = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -320,17 +348,24 @@ export class Engine {
     const entry = this.videos.get(id);
     if (!entry) return;
     entry.el.pause();
+    const stream = entry.el.srcObject as MediaStream | null;
+    if (stream) {
+      // Caméra : couper les pistes éteint le voyant et libère le périphérique.
+      stream.getTracks().forEach((t) => t.stop());
+      entry.el.srcObject = null;
+    }
     entry.el.removeAttribute('src');
     entry.el.load();
     this.gl.deleteTexture(entry.tex);
     this.videos.delete(id);
   }
 
-  /// Vidéos encore utiles : fonds actifs + boucles en surimpression.
+  /// Vidéos encore utiles : fonds actifs (clips et caméra) + boucles en
+  /// surimpression.
   private releaseUnusedVideos(): void {
     const keep = new Set(
       [this.currentBg, this.nextBg, this.pendingBg?.ref]
-        .filter((r): r is BgRef => !!r && r.kind === 'video')
+        .filter((r): r is BgRef => !!r && r.kind !== 'shader')
         .map((r) => r.id),
     );
     for (const o of this.overlays) {
@@ -342,9 +377,10 @@ export class Engine {
   }
 
   /// Nombre de fonds vidéo actifs (budget de décodage, brief : 2 max).
+  /// La caméra compte comme une vidéo décodée.
   private bgVideoCount(): number {
     return [this.currentBg, this.nextBg, this.pendingBg?.ref].filter(
-      (r) => r?.kind === 'video',
+      (r) => r && r.kind !== 'shader',
     ).length;
   }
 
@@ -410,8 +446,9 @@ export class Engine {
       const ref: BgRef = { kind: bg.kind, id: bg.id, url: bg.url };
       const cut = state.transition?.kind === 'cut';
       const beats = state.transition?.beats ?? 4;
-      if (ref.kind === 'video') {
-        // Préchauffe le clip ; la transition démarre quand il est décodable.
+      if (ref.kind !== 'shader') {
+        // Préchauffe le clip (ou ouvre la caméra) ; la transition démarre
+        // quand une frame est décodable.
         this.ensureVideo(ref);
         this.pendingBg = { ref, cut, beats, since: performance.now() };
       } else {
@@ -440,8 +477,12 @@ export class Engine {
     }
 
     this.filters.clear();
-    for (const f of (state.filters ?? []) as { id: string; intensity: number }[]) {
-      this.filters.set(f.id, f.intensity);
+    for (const f of (state.filters ?? []) as {
+      id: string;
+      intensity: number;
+      pulse?: number;
+    }[]) {
+      this.filters.set(f.id, { intensity: f.intensity, pulse: f.pulse ?? 0 });
     }
   }
 
@@ -534,7 +575,7 @@ export class Engine {
   private drawBackground(ref: BgRef, now: number, fade: number): void {
     const gl = this.gl;
     let p: GlProgram;
-    if (ref.kind === 'video') {
+    if (ref.kind !== 'shader') {
       const entry = this.videos.get(ref.id);
       if (!entry) return;
       const el = entry.el;
@@ -680,7 +721,9 @@ export class Engine {
         const { ref, cut, beats } = this.pendingBg;
         this.pendingBg = null;
         this.startTransition(ref, cut, beats);
-      } else if (now - this.pendingBg.since > 8000) {
+      } else if (this.pendingBg.ref.kind !== 'camera' && now - this.pendingBg.since > 8000) {
+        // La caméra n'a pas de délai : l'invite de permission peut rester
+        // ouverte longtemps, et un refus remonte déjà par getUserMedia.
         const id = this.pendingBg.ref.id;
         this.pendingBg = null;
         this.dropVideo(id);
@@ -833,19 +876,33 @@ export class Engine {
     gl.uniform1i(this.post.uniforms.get('uScene')!, 0);
     setP('uTime', (now - this.startTime) / 1000);
     setP('uBeat', this.clock.hasBeat ? this.beatEnv : 0);
-    setP('uBloom', this.filters.get('bloom') ?? 0);
-    setP('uChroma', this.filters.get('chroma') ?? 0);
-    setP('uPosterize', this.filters.get('posterize') ?? 0);
-    setP('uHue', this.filters.get('hue') ?? 0);
-    setP('uGrain', this.filters.get('grain') ?? 0);
-    setP('uVignette', this.filters.get('vignette') ?? 0);
-    setP('uSepia', this.filters.get('sepia') ?? 0);
-    setP('uWarmth', this.filters.get('warmth') ?? 0);
-    setP('uPhotocopy', this.filters.get('photocopy') ?? 0);
-    setP('uGlitch', this.filters.get('glitch') ?? 0);
-    setP('uVhs', this.filters.get('vhs') ?? 0);
-    setP('uKaleido', this.filters.get('kaleido') ?? 0);
-    setP('uHueRot', this.filters.get('huerot') ?? 0);
+    // Niveau effectif d'un filtre : intensité de base lissée (fondu ~250 ms
+    // entre deux scènes), puis modulée sur le beat selon `pulse` (0 =
+    // constant, 1 = l'effet ne vit que sur les temps).
+    const fxK = 1 - Math.exp(-dt * 4);
+    const fxGate = this.clock.hasBeat ? this.beatEnv : 0.6;
+    const fxLevel = (id: string): number => {
+      const f = this.filters.get(id);
+      const prev = this.fxSmooth.get(id) ?? 0;
+      const base = prev + ((f?.intensity ?? 0) - prev) * fxK;
+      if (base < 0.001 && !f) this.fxSmooth.delete(id);
+      else this.fxSmooth.set(id, base);
+      const pulse = f?.pulse ?? 0;
+      return base * (1 - pulse + pulse * fxGate);
+    };
+    setP('uBloom', fxLevel('bloom'));
+    setP('uChroma', fxLevel('chroma'));
+    setP('uPosterize', fxLevel('posterize'));
+    setP('uHue', fxLevel('hue'));
+    setP('uGrain', fxLevel('grain'));
+    setP('uVignette', fxLevel('vignette'));
+    setP('uSepia', fxLevel('sepia'));
+    setP('uWarmth', fxLevel('warmth'));
+    setP('uPhotocopy', fxLevel('photocopy'));
+    setP('uGlitch', fxLevel('glitch'));
+    setP('uVhs', fxLevel('vhs'));
+    setP('uKaleido', fxLevel('kaleido'));
+    setP('uHueRot', fxLevel('huerot'));
     setP('uStrobe', this.fx.strobe.level);
     setP('uStrobeGate', strobeGate);
     setP('uNegate', this.fx.negative.level);

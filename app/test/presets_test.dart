@@ -24,13 +24,16 @@ void main() {
     expect(PresetCatalog.styles.keys, containsAll(styleIds));
     expect(PresetCatalog.universes.keys, containsAll(universeIds));
     for (final s in PresetCatalog.styles.values) {
-      expect(s.filterIds, isNotEmpty, reason: 'style ${s.id} sans filtre');
-      expect(s.motifs, isNotEmpty, reason: 'style ${s.id} sans motif');
+      // Effets séquencés (2026-10-07) : chaque style porte un vrai bassin.
+      expect(s.filterIds.length, greaterThanOrEqualTo(2),
+          reason: 'style ${s.id} : il faut plusieurs effets par cran');
       expect(['crossfade', 'cut'], contains(s.transitionKind));
       expect(s.transitionBeats, greaterThan(0));
     }
     for (final u in PresetCatalog.universes.values) {
       expect(u.backgrounds, isNotEmpty, reason: 'univers ${u.id} sans fond');
+      expect(u.fxGain, inInclusiveRange(0.3, 1.5),
+          reason: 'univers ${u.id} : gain d\'effets hors de la plage utile');
     }
   });
 
@@ -57,7 +60,7 @@ void main() {
   test('tous les ids du catalogue existent dans le moteur', () {
     final shaders = shadersFile.readAsStringSync();
     final engine = engineFile.readAsStringSync();
-    // Clés déclarées dans BACKGROUNDS / OVERLAYS de shaders.ts.
+    // Clés déclarées dans BACKGROUNDS de shaders.ts.
     Set<String> keysOf(String record) {
       final block = RegExp(
               'export const $record[^{]*\\{([^}]*)\\}',
@@ -71,9 +74,8 @@ void main() {
     }
 
     final bgIds = keysOf('BACKGROUNDS');
-    final motifIds = keysOf('OVERLAYS');
-    // Filtres branchés dans engine.ts : this.filters.get('<id>').
-    final filterIds = RegExp("filters\\.get\\('([a-z]+)'\\)")
+    // Filtres branchés dans engine.ts : fxLevel('<id>').
+    final filterIds = RegExp("fxLevel\\('([a-z]+)'\\)")
         .allMatches(engine)
         .map((m) => m.group(1)!)
         .toSet();
@@ -86,14 +88,17 @@ void main() {
       for (final f in m['filters'] as List) {
         expect(filterIds, contains(f), reason: 'filtre "$f" du style $key');
       }
-      for (final mo in m['motifs'] as List) {
-        expect(motifIds, contains(mo), reason: 'motif "$mo" du style $key');
-      }
     }
     for (final MapEntry(:key, :value)
         in (root['universes'] as Map<String, dynamic>).entries) {
-      for (final b in (value as Map<String, dynamic>)['backgrounds'] as List) {
+      final m = value as Map<String, dynamic>;
+      for (final b in m['backgrounds'] as List) {
         expect(bgIds, contains(b), reason: 'fond "$b" de l\'univers $key');
+      }
+      final fx = (m['fx'] ?? const <String, dynamic>{}) as Map<String, dynamic>;
+      for (final f in (fx['filters'] ?? const []) as List) {
+        expect(filterIds, contains(f),
+            reason: 'filtre signature "$f" de l\'univers $key');
       }
     }
   });
