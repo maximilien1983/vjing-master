@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../theme/vj_tokens.dart';
+import '../sprites.dart';
 import 'leds.dart';
 
 /// Afficheur BPM : 3 tubes Nixie. `bpm` ≤ 0 : tubes éteints (fantômes seuls).
@@ -46,33 +47,21 @@ class _NixieTube extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final big = size.width > 30;
-    return Container(
+    // Verre, culot et grille nid d'abeille : sprite du tube (vue de face) ;
+    // le halo et les chiffres restent dessinés par le code.
+    return SizedBox(
       width: size.width,
       height: size.height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(big ? 17 : 12),
-          bottom: Radius.circular(big ? 6 : 4),
-        ),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B1511), Color(0xFF0A0706)],
-        ),
-        boxShadow: [
-          BoxShadow(
-              offset: const Offset(0, 2),
-              blurRadius: 4,
-              color: Colors.black.withValues(alpha: .7)),
-        ],
-        border: Border.all(color: Colors.white.withValues(alpha: .08), width: 1),
-      ),
-      child: CustomPaint(
-        painter: _NixieInnerPainter(),
-        child: Stack(
+      child: Stack(
           alignment: Alignment.center,
           children: [
+            const Positioned.fill(
+              child: Image(
+                image: VjSprites.nixieOff,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              ),
+            ),
             // Chiffre fantôme.
             Text('8',
                 style: TextStyle(
@@ -102,43 +91,9 @@ class _NixieTube extends StatelessWidget {
                 ),
               ),
           ],
-        ),
       ),
     );
   }
-}
-
-/// Halo orangé + grille nid d'abeille à faible opacité.
-class _NixieInnerPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          center: const Alignment(0, -.2),
-          radius: .9,
-          colors: [
-            const Color(0xFFFF8232).withValues(alpha: .2),
-            const Color(0x00FF8232),
-          ],
-          stops: const [0, .65],
-        ).createShader(rect),
-    );
-    // Grille : deux réseaux de lignes à ±60°.
-    final p = Paint()
-      ..color = Colors.white.withValues(alpha: .035)
-      ..strokeWidth = 1;
-    final diag = size.height * .6;
-    for (double x = -size.height; x < size.width + size.height; x += 4) {
-      canvas.drawLine(Offset(x, 0), Offset(x + diag, size.height), p);
-      canvas.drawLine(Offset(x, 0), Offset(x - diag, size.height), p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _NixieInnerPainter old) => false;
 }
 
 /// LED tempo : allumée franchement sur le temps, éteinte à ~20 % de la

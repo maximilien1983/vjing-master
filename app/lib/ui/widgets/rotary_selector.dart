@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/vj_tokens.dart';
+import '../sprites.dart';
 
 /// Angles des 6 crans, en degrés depuis le haut (0° en haut, sens horaire).
 const rotaryAngles = [-150.0, -90.0, -30.0, 30.0, 90.0, 150.0];
@@ -181,14 +182,48 @@ class _RotarySelectorState extends State<RotarySelector>
         onTapUp: (d) => _select(nearestNotch(_angleAt(d.localPosition))),
         child: AnimatedBuilder(
           animation: _angle,
-          builder: (_, _) => CustomPaint(
-            size: g.size,
-            painter: _RotaryPainter(
-              geometry: g,
-              labels: widget.labels,
-              selected: widget.selected,
-              pointerAngle: _angle.value,
-            ),
+          builder: (_, _) => SizedBox(
+            width: g.size.width,
+            height: g.size.height,
+            child: Stack(children: [
+              // Corps du bouton : sprite tourné (brossage circulaire du
+              // chapeau : la rotation de l'image est invisible, seuls les
+              // reflets de la jupe vivent). L'index est peint au-dessus.
+              Positioned(
+                left: g.center.dx - g.knobDiameter / 2,
+                top: g.center.dy - g.knobDiameter / 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                          offset: const Offset(0, 5),
+                          blurRadius: 8,
+                          color: Colors.black.withValues(alpha: .6)),
+                    ],
+                  ),
+                  child: Transform.rotate(
+                    angle: _angle.value * math.pi / 180,
+                    child: Image(
+                      image: VjSprites.knob,
+                      width: g.knobDiameter,
+                      height: g.knobDiameter,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium,
+                    ),
+                  ),
+                ),
+              ),
+              CustomPaint(
+                size: g.size,
+                painter: _RotaryPainter(
+                  geometry: g,
+                  labels: widget.labels,
+                  selected: widget.selected,
+                  pointerAngle: _angle.value,
+                ),
+              ),
+            ]),
           ),
         ),
       ),
@@ -280,64 +315,9 @@ class _RotaryPainter extends CustomPainter {
       }
     }
 
-    // Jupe crantée (repeating-conic 5°/5°).
+    // Le corps du bouton est un sprite (couche image sous ce painter) ;
+    // ici ne restent que l'index et les repères.
     final knobR = g.knobDiameter / 2;
-    final skirtColors = <Color>[];
-    final skirtStops = <double>[];
-    const steps = 36; // 72 secteurs de 5°
-    for (var i = 0; i < steps; i++) {
-      final t0 = i / steps;
-      final t1 = (i + .5) / steps;
-      skirtColors.addAll([
-        const Color(0xFF151517),
-        const Color(0xFF151517),
-        const Color(0xFF2C2C30),
-        const Color(0xFF2C2C30)
-      ]);
-      skirtStops.addAll([t0, t1, t1, (i + 1) / steps]);
-    }
-    canvas.drawCircle(
-      g.center + const Offset(0, 6),
-      knobR,
-      Paint()
-        ..color = Colors.black.withValues(alpha: .65)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
-    );
-    // La jupe et le chapeau tournent avec le cran choisi : leurs reflets
-    // pivotent avec l'index pendant l'animation.
-    final spin = GradientRotation(pointerAngle * math.pi / 180);
-    canvas.drawCircle(
-      g.center,
-      knobR,
-      Paint()
-        ..shader =
-            SweepGradient(colors: skirtColors, stops: skirtStops, transform: spin)
-                .createShader(Rect.fromCircle(center: g.center, radius: knobR)),
-    );
-    // Chapeau métal (conic clair / foncé).
-    final capR = knobR * 2 / 3;
-    canvas.drawCircle(
-      g.center,
-      capR,
-      Paint()
-        ..shader = SweepGradient(
-          transform: GradientRotation((20 + pointerAngle) * math.pi / 180),
-          colors: const [
-            Color(0xFF55575B), Color(0xFF9A9CA0), Color(0xFF4F5155),
-            Color(0xFF8E9094), Color(0xFF4A4C50), Color(0xFF9EA0A4),
-            Color(0xFF515357), Color(0xFF8A8C90), Color(0xFF55575B),
-          ],
-          stops: [0, .10, .24, .38, .50, .62, .76, .88, 1],
-        ).createShader(Rect.fromCircle(center: g.center, radius: capR)),
-    );
-    canvas.drawCircle(
-      g.center,
-      capR,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = Colors.white.withValues(alpha: .2),
-    );
 
     // Index (trait crème) tourné sur l'angle affiché.
     final angle = pointerAngle;

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../theme/vj_tokens.dart';
+import 'sprites.dart';
 
-/// Matières de la console (DESIGN.md §4). Chaque painter reproduit les
-/// dégradés CSS des maquettes : les valeurs viennent de screens/*.html.
+/// Matières de la console (DESIGN.md §4). Les surfaces viennent des textures
+/// générées (assets/ui) ; les painters ne gardent que les finitions (liserés,
+/// creux latéraux, ombres de jouée).
 
-/// Façade en aluminium brossé : dégradé vertical + fines lignes horizontales
-/// + léger reflet horizontal.
+/// Façade en aluminium brossé, peinte (nette à toutes les tailles — la
+/// texture image 488 px pixelisait en plein écran) : dégradé + brossage fin
+/// + patine vieillie procédurale.
 class AluPanel extends StatelessWidget {
   final Widget? child;
   final BorderRadius? borderRadius;
@@ -69,6 +72,42 @@ class _AluPainter extends CustomPainter {
     for (double y = 0; y < size.height; y += 13) {
       canvas.drawRect(Rect.fromLTWH(0, y, size.width, 2), faint);
     }
+    // Patine vieillie (demande utilisateur 2026-10-07) : voiles sombres
+    // irréguliers, piqûres claires et rayures d'usure — déterministes (LCG à
+    // graine fixe), très discrets pour ne pas salir les contrôles posés dessus.
+    var seed = 0x12345678;
+    double rnd() {
+      seed = (seed * 1664525 + 1013904223) & 0x7FFFFFFF;
+      return seed / 0x7FFFFFFF;
+    }
+
+    for (var i = 0; i < 6; i++) {
+      final c = Offset(rnd() * size.width, rnd() * size.height);
+      final r = 50 + rnd() * 140;
+      canvas.drawCircle(
+          c,
+          r,
+          Paint()
+            ..color = Colors.black.withValues(alpha: .035 + rnd() * .03)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 36));
+    }
+    final pit = Paint()..color = Colors.white.withValues(alpha: .07);
+    final pitDark = Paint()..color = Colors.black.withValues(alpha: .16);
+    for (var i = 0; i < 110; i++) {
+      final p = Offset(rnd() * size.width, rnd() * size.height);
+      final w = 1 + rnd() * 1.6;
+      canvas.drawRect(
+          Rect.fromLTWH(p.dx, p.dy, w, 1), rnd() < .6 ? pitDark : pit);
+    }
+    // Quelques rayures horizontales plus franches (sens du brossage).
+    for (var i = 0; i < 9; i++) {
+      final y = rnd() * size.height;
+      final x = rnd() * size.width * .75;
+      final w = 24 + rnd() * 110;
+      canvas.drawRect(Rect.fromLTWH(x, y, w, 1),
+          Paint()..color = Colors.white.withValues(alpha: .04 + rnd() * .035));
+    }
+
     // Liseré clair en haut (inset 0 1px 0 rgba(255,255,255,.14)).
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, 1),
         Paint()..color = Colors.white.withValues(alpha: .14));
@@ -94,7 +133,7 @@ class _AluPainter extends CustomPainter {
   bool shouldRepaint(covariant _AluPainter oldDelegate) => false;
 }
 
-/// Joue en noyer : dégradé horizontal 5 arrêts + grain vertical.
+/// Joue en noyer : texture + ombre interne côté façade.
 class WalnutPanel extends StatelessWidget {
   /// Ombre interne côté façade : -1 = façade à gauche, 1 = à droite, 0 = aucune.
   final int shadowSide;
@@ -103,9 +142,18 @@ class WalnutPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: CustomPaint(
-        painter: _WalnutPainter(shadowSide),
-        size: Size.infinite,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: VjSprites.texWalnut,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+          ),
+        ),
+        child: CustomPaint(
+          painter: _WalnutPainter(shadowSide),
+          size: Size.infinite,
+        ),
       ),
     );
   }
@@ -118,48 +166,9 @@ class _WalnutPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: VjColors.walnut,
-          stops: const [0, .25, .5, .75, 1],
-        ).createShader(rect),
-    );
-    // Reflets chauds (radial-gradient des maquettes, approchés).
-    canvas.drawOval(
-      Rect.fromCenter(
-          center: Offset(size.width * .4, size.height * .3),
-          width: size.width * 1.2,
-          height: size.height * .36),
-      Paint()
-        ..shader = RadialGradient(colors: [
-          const Color(0xFF824E28).withValues(alpha: .35),
-          const Color(0x00824E28),
-        ]).createShader(Rect.fromCenter(
-            center: Offset(size.width * .4, size.height * .3),
-            width: size.width * 1.2,
-            height: size.height * .36))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
-    );
-    // Grain : traits verticaux fins, quasi verticaux (91° / 88.5°).
-    final grain1 = Paint()..color = Colors.black.withValues(alpha: .22);
-    final grain2 = Paint()..color = const Color(0xFFFFC896).withValues(alpha: .05);
-    final grain3 = Paint()..color = Colors.black.withValues(alpha: .18);
     canvas.save();
     canvas.clipRect(rect);
-    for (double x = -6; x < size.width + 6; x += 7) {
-      canvas.drawLine(Offset(x, -4), Offset(x - size.height * .017, size.height + 4),
-          grain1..strokeWidth = 1);
-      canvas.drawLine(Offset(x + 3, -4),
-          Offset(x + 3 - size.height * .017, size.height + 4), grain2..strokeWidth = 1);
-    }
-    for (double x = -8; x < size.width + 8; x += 11) {
-      canvas.drawLine(Offset(x, -4), Offset(x + size.height * .026, size.height + 4),
-          grain3..strokeWidth = 2);
-    }
+    // La matière vient de la texture (VjSprites.texWalnut).
     // Ombre interne côté façade.
     if (shadowSide != 0) {
       final w = 12.0;

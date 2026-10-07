@@ -39,6 +39,8 @@ flutter:
     # Copie des presets styles/univers (référence : /catalog/presets.json,
     # synchronisation vérifiée par app/test/presets_test.dart).
     - assets/catalog/
+    # Sprites de l'habillage matériel (découpés depuis docs/design/assets).
+    - assets/ui/
   # Polices embarquées (licence OFL, fichiers OFL-*.txt à côté) : pas de
   # dépendance réseau en soirée (cf. DESIGN.md §3).
   fonts:

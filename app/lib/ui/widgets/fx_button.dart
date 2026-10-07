@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/vj_tokens.dart';
+import '../sprites.dart';
 
 /// Les 7 effets de la console (id protocole, libellé, couleur de diode).
 /// `flash` est armé sur le prochain temps par le moteur ; les autres sont
@@ -53,25 +54,6 @@ class _FxButtonState extends State<FxButton> {
   bool _held = false;
   bool _lit = false;
   Timer? _off;
-
-  // Couronne moletée : 56 facettes claires/sombres alternées (métal tourné).
-  static final _knurl = () {
-    final colors = <Color>[];
-    final stops = <double>[];
-    const steps = 28;
-    for (var i = 0; i < steps; i++) {
-      final t0 = i / steps;
-      final t1 = (i + .5) / steps;
-      colors.addAll(const [
-        Color(0xFF6E7074),
-        Color(0xFF6E7074),
-        Color(0xFF26272A),
-        Color(0xFF26272A),
-      ]);
-      stops.addAll([t0, t1, t1, (i + 1) / steps]);
-    }
-    return SweepGradient(colors: colors, stops: stops);
-  }();
 
   @override
   void dispose() {
@@ -135,93 +117,25 @@ class _FxButtonState extends State<FxButton> {
     );
   }
 
+  /// Sprite du bouton (capuchon crème, couronne moletée) : relâché ou
+  /// enfoncé. La diode colorée par effet reste le widget au-dessus.
   Widget _button(double d) {
-    final down = _held;
-    return SizedBox(
+    return Container(
       width: d,
       height: d,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Couronne métal moletée, posée sur la façade.
-          Container(
-            width: d,
-            height: d,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: _knurl,
-              boxShadow: [
-                BoxShadow(
-                    offset: const Offset(0, 3),
-                    blurRadius: 7,
-                    color: Colors.black.withValues(alpha: .55)),
-                BoxShadow(
-                    offset: const Offset(0, -1),
-                    blurRadius: 1,
-                    color: Colors.white.withValues(alpha: .10)),
-              ],
-            ),
-          ),
-          // Gorge sombre entre la couronne et le capuchon.
-          Container(
-            width: d * .78,
-            height: d * .78,
-            decoration: const BoxDecoration(
-                shape: BoxShape.circle, color: Color(0xFF0B0B0D)),
-          ),
-          // Capuchon bakélite bombé, s'enfonce à l'appui.
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 70),
-            width: d * .66,
-            height: d * .66,
-            transform: Matrix4.translationValues(0, down ? 1.5 : 0, 0),
-            transformAlignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                center: const Alignment(-.35, -.42),
-                radius: 1.15,
-                colors: down
-                    ? const [Color(0xFF39352F), Color(0xFF171513)]
-                    : const [Color(0xFF4B463F), Color(0xFF1D1A17)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                    offset: Offset(0, down ? 1 : 2.5),
-                    blurRadius: down ? 2 : 5,
-                    color: Colors.black.withValues(alpha: .65)),
-                BoxShadow(
-                    offset: const Offset(0, 1),
-                    color: Colors.white.withValues(alpha: down ? .10 : .16),
-                    blurStyle: BlurStyle.inner),
-              ],
-            ),
-          ),
-          // Reflet spéculaire en croissant, en haut du capuchon.
-          IgnorePointer(
-            child: Align(
-              alignment: const Alignment(0, -.44),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 70),
-                width: d * .3,
-                height: d * .1,
-                transform:
-                    Matrix4.translationValues(0, down ? 1.5 : 0, 0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(d),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: down ? .18 : .30),
-                      Colors.white.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+              offset: const Offset(0, 3),
+              blurRadius: 7,
+              color: Colors.black.withValues(alpha: .55)),
         ],
+      ),
+      child: Image(
+        image: _held ? VjSprites.fxBtnPressed : VjSprites.fxBtn,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
       ),
     );
   }

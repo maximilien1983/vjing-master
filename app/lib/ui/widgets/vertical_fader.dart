@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/vj_tokens.dart';
+import '../sprites.dart';
 
 /// Géométrie d'un fader vertical (valeurs des maquettes).
 class FaderGeometry {
@@ -169,27 +170,16 @@ class VerticalFader extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(child: CustomPaint(painter: _FaderScalePainter(g))),
-              // Rainure.
+              // Plaque-rainure : sprite vissé, étiré sur la course.
               Positioned(
-                left: g.slotX,
-                top: g.slotTop,
-                child: Container(
-                  width: 6,
-                  height: g.slotHeight,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    color: const Color(0xFF050506),
-                    boxShadow: [
-                      const BoxShadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 2,
-                          color: Colors.black,
-                          blurStyle: BlurStyle.inner),
-                      BoxShadow(
-                          offset: const Offset(0, 1),
-                          color: Colors.white.withValues(alpha: .08)),
-                    ],
-                  ),
+                left: g.slotX + 3 - 13,
+                top: g.slotTop - 10,
+                child: Image(
+                  image: VjSprites.faderRail,
+                  width: 26,
+                  height: g.slotHeight + 20,
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.medium,
                 ),
               ),
               // Curseur.
@@ -212,22 +202,12 @@ class _FaderCap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sprite du capuchon strié (ligne crème incluse dans l'image).
     return Container(
       width: size.width,
       height: size.height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(4),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF3D3E42),
-            Color(0xFF202123),
-            Color(0xFF141416),
-            Color(0xFF26272A)
-          ],
-          stops: [0, .47, .53, 1],
-        ),
         boxShadow: [
           BoxShadow(
               offset: const Offset(0, 6),
@@ -237,21 +217,12 @@ class _FaderCap extends StatelessWidget {
               offset: const Offset(0, 2),
               blurRadius: 3,
               color: Colors.black.withValues(alpha: .8)),
-          BoxShadow(
-              offset: const Offset(0, 1),
-              color: Colors.white.withValues(alpha: .22),
-              blurStyle: BlurStyle.inner),
         ],
       ),
-      child: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 5),
-          height: 2,
-          decoration: BoxDecoration(
-            color: VjColors.pointer,
-            borderRadius: BorderRadius.circular(1),
-          ),
-        ),
+      child: Image(
+        image: VjSprites.faderCap,
+        fit: BoxFit.fill,
+        filterQuality: FilterQuality.medium,
       ),
     );
   }

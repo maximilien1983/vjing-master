@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/vj_tokens.dart';
+import '../sprites.dart';
 import 'leds.dart';
 
 /// Touche mécanique rectangulaire (« tkey » des maquettes) : relief 3 pt,
@@ -51,13 +52,13 @@ class _MechKeyState extends State<MechKey> {
             width: widget.width,
             height: widget.height,
             margin: EdgeInsets.only(top: down ? 2 : 0, bottom: down ? 0 : 2),
+            // Sprite : touche relevée, ou enfoncée rétroéclairée ambre.
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(VjDims.keyRadius),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [VjColors.keyTop, VjColors.keyMid, VjColors.keyBottom],
-                stops: [0, .55, 1],
+              image: DecorationImage(
+                image: down ? VjSprites.keyDown : VjSprites.keyUp,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.medium,
               ),
               boxShadow: [
                 BoxShadow(
@@ -66,23 +67,8 @@ class _MechKeyState extends State<MechKey> {
                     offset: Offset(0, down ? 2 : 5),
                     blurRadius: down ? 4 : 8,
                     color: Colors.black.withValues(alpha: .5)),
-                BoxShadow(
-                    offset: const Offset(0, 1),
-                    color: Colors.white.withValues(alpha: down ? .1 : .16),
-                    blurStyle: BlurStyle.inner),
               ],
             ),
-            foregroundDecoration: down && widget.down
-                ? BoxDecoration(
-                    borderRadius: BorderRadius.circular(VjDims.keyRadius),
-                    boxShadow: [
-                      BoxShadow(
-                          blurRadius: 18,
-                          color: const Color(0xFFFFA03C).withValues(alpha: .08),
-                          blurStyle: BlurStyle.inner),
-                    ],
-                  )
-                : null,
             child: widget.child,
           ),
         ),
