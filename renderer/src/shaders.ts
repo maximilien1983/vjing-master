@@ -1186,6 +1186,11 @@ export const OVERLAYS: Record<string, string> = {
 // bandes noires, duo miroir ou fond flouté (flou par mipmaps, générés par le
 // moteur pour ce mode seulement). La règle de lumière est la même que pour
 // les fonds shaders ; les styles s'appliquent ensuite dans le post-traitement.
+// Décision 2026-10-22 : un clip de fond n'est jamais affiché brut — un
+// traitement d'ambiance permanent (désaturation, assombrissement, vignettage)
+// est appliqué ici, même quand aucun filtre de style n'est actif (pauses de
+// l'autopilote, mode manuel). Le fond est une matière d'ambiance, pas un
+// contenu à lire.
 
 export const VIDEO_FRAGMENT = `#version 300 es
 precision highp float;
@@ -1221,6 +1226,12 @@ void main() {
     vec2 uv = vec2((p.x - 0.5) * uContain + 0.5, p.y);
     col = (uv.x < 0.0 || uv.x > 1.0) ? fond : texture(uTex, uv).rgb;
   }
+  // Traitement d'ambiance permanent : désaturation légère, image assombrie
+  // et vignettage doux (même forme que le filtre vignette du post).
+  float luma = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(col, vec3(luma), 0.25);
+  vec2 v = (vUv - 0.5) * vec2(854.0 / 480.0, 1.0);
+  col *= 0.78 * (1.0 - dot(v, v) * 0.4);
   // Légère pulsation de luminosité sur le kick, proportionnelle à l'énergie.
   col *= 1.0 + uBeat * uEnergy * 0.12;
   col *= 0.55 + 0.9 * uLight;
