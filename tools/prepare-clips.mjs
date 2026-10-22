@@ -39,8 +39,11 @@ const only = process.argv.includes('--only')
 // portrait (reels) -> 480 px de haut. Les verticales restent verticales :
 // le cadrage paysage (bandes, duo miroir, fond flouté) est fait par le
 // moteur au rendu, pour varier les traitements sur un même fichier.
+// Cadence plafonnée à 24 i/s : les fonds sont une matière d'ambiance,
+// toujours assombris/filtrés par le moteur (décision 2026-10-22) — la
+// fluidité des reels 60 i/s ne justifie pas leur poids.
 const normalizeVf =
-  "scale='if(gt(iw\\,ih)\\,854\\,-2)':'if(gt(iw\\,ih)\\,-2\\,480)'";
+  "scale='if(gt(iw\\,ih)\\,854\\,-2)':'if(gt(iw\\,ih)\\,-2\\,480)',fps=24";
 
 function run(args, opts = {}) {
   const r = spawnSync(ffmpeg, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts });
@@ -95,7 +98,9 @@ for (const src of manifest.sources) {
         '-t', String(seg.dur),
         '-vf', normalizeVf,
         '-an',
-        '-c:v', 'libx264', '-crf', '26', '-preset', 'veryfast',
+        // CRF 32 + slow (2026-10-22) : −50 % de poids vs crf 26/veryfast,
+        // défauts masqués par le traitement d'ambiance permanent du moteur.
+        '-c:v', 'libx264', '-crf', '32', '-preset', 'slow',
         '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
         out,
       ]);

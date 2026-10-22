@@ -11,7 +11,7 @@
         "univers": "danse",
         "epoque": "1950s",
         "luminosite": 0.47,
-        "couleur": "#7a767a",
+        "couleur": "#7a777b",
         "extra": "couples swing"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
@@ -59,7 +59,7 @@
         "univers": "danse",
         "epoque": "1950s",
         "luminosite": 0.48,
-        "couleur": "#807c81",
+        "couleur": "#807c80",
         "extra": "charleston"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.49773",
@@ -91,7 +91,7 @@
         "univers": "cosmos",
         "epoque": "1969",
         "luminosite": 0.47,
-        "couleur": "#8e9a95",
+        "couleur": "#909c97",
         "extra": "décollage Saturn V"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
@@ -107,7 +107,7 @@
         "univers": "cosmos",
         "epoque": "1969",
         "luminosite": 0.24,
-        "couleur": "#312d40",
+        "couleur": "#302d40",
         "extra": "cratères en orbite"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
@@ -123,7 +123,7 @@
         "univers": "cosmos",
         "epoque": "1969",
         "luminosite": 0.36,
-        "couleur": "#605a63",
+        "couleur": "#5f5a63",
         "extra": "astronautes et drapeau"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
@@ -155,7 +155,7 @@
         "univers": "cosmos",
         "epoque": "1969",
         "luminosite": 0.2,
-        "couleur": "#2e3d2c",
+        "couleur": "#2d3d2b",
         "extra": "la Terre depuis l'espace"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.45017",
@@ -171,7 +171,7 @@
         "univers": "danse",
         "epoque": "1940s",
         "luminosite": 0.46,
-        "couleur": "#7e7a7e",
+        "couleur": "#7d7a7e",
         "extra": "boogie solo"
       },
       "source": "Prelinger Archives — archive.org : soundie_12",
@@ -193,6 +193,21 @@
       "source": "Prelinger Archives — archive.org : soundie_12",
       "licence": "Domaine public (CC Public Domain Mark)",
       "credit": "Prelinger Archives"
+    },
+    {
+      "id": "cai-03050e-01",
+      "url": "clips/cai-03050e-01.mp4",
+      "vignette": "clips/cai-03050e-01.jpg",
+      "duree": 13,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.29,
+        "couleur": "#181919"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
     },
     {
       "id": "cai-057ffe-01",
@@ -218,7 +233,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.41,
-        "couleur": "#6c696a"
+        "couleur": "#6b696a"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -233,7 +248,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.24,
-        "couleur": "#453330"
+        "couleur": "#463330"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -247,8 +262,23 @@
       "tags": {
         "univers": "miroir",
         "epoque": "2020s",
-        "luminosite": 0.45,
-        "couleur": "#898991"
+        "luminosite": 0.46,
+        "couleur": "#8a8891"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-13bd34-01",
+      "url": "clips/cai-13bd34-01.mp4",
+      "vignette": "clips/cai-13bd34-01.jpg",
+      "duree": 7,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.21,
+        "couleur": "#171d19"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -278,7 +308,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.18,
-        "couleur": "#342224"
+        "couleur": "#342225"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -293,7 +323,67 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.45,
-        "couleur": "#817d72"
+        "couleur": "#817c72"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-2a8091-01",
+      "url": "clips/cai-2a8091-01.mp4",
+      "vignette": "clips/cai-2a8091-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.23,
+        "couleur": "#3e333c"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-2ccac2-01",
+      "url": "clips/cai-2ccac2-01.mp4",
+      "vignette": "clips/cai-2ccac2-01.jpg",
+      "duree": 11,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.38,
+        "couleur": "#5c758c"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-31fb9f-01",
+      "url": "clips/cai-31fb9f-01.mp4",
+      "vignette": "clips/cai-31fb9f-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.12,
+        "couleur": "#000219"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-348b1b-01",
+      "url": "clips/cai-348b1b-01.mp4",
+      "vignette": "clips/cai-348b1b-01.jpg",
+      "duree": 7,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.27,
+        "couleur": "#354356"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -345,6 +435,36 @@
       "credit": ""
     },
     {
+      "id": "cai-3cd392-01",
+      "url": "clips/cai-3cd392-01.mp4",
+      "vignette": "clips/cai-3cd392-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.24,
+        "couleur": "#575141"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-40b393-01",
+      "url": "clips/cai-40b393-01.mp4",
+      "vignette": "clips/cai-40b393-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.34,
+        "couleur": "#656d72"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-412055-01",
       "url": "clips/cai-412055-01.mp4",
       "vignette": "clips/cai-412055-01.jpg",
@@ -368,7 +488,67 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.53,
-        "couleur": "#8f7a72"
+        "couleur": "#8e7a72"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-45afc3-01",
+      "url": "clips/cai-45afc3-01.mp4",
+      "vignette": "clips/cai-45afc3-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.15,
+        "couleur": "#242624"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-45afc3-02",
+      "url": "clips/cai-45afc3-02.mp4",
+      "vignette": "clips/cai-45afc3-02.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.24,
+        "couleur": "#484a47"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-48621b-01",
+      "url": "clips/cai-48621b-01.mp4",
+      "vignette": "clips/cai-48621b-01.jpg",
+      "duree": 10,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.32,
+        "couleur": "#5c524f"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-4b7cbf-01",
+      "url": "clips/cai-4b7cbf-01.mp4",
+      "vignette": "clips/cai-4b7cbf-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.33,
+        "couleur": "#56535c"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -450,6 +630,36 @@
       "credit": ""
     },
     {
+      "id": "cai-52b109-01",
+      "url": "clips/cai-52b109-01.mp4",
+      "vignette": "clips/cai-52b109-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.57,
+        "couleur": "#c999ba"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-57d8e7-01",
+      "url": "clips/cai-57d8e7-01.mp4",
+      "vignette": "clips/cai-57d8e7-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.22,
+        "couleur": "#27353a"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-58928d-01",
       "url": "clips/cai-58928d-01.mp4",
       "vignette": "clips/cai-58928d-01.jpg",
@@ -458,7 +668,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.18,
-        "couleur": "#3b3e3a"
+        "couleur": "#3b3d3a"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -480,6 +690,81 @@
       "credit": ""
     },
     {
+      "id": "cai-5f1c79-01",
+      "url": "clips/cai-5f1c79-01.mp4",
+      "vignette": "clips/cai-5f1c79-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.18,
+        "couleur": "#585552"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-60e56a-01",
+      "url": "clips/cai-60e56a-01.mp4",
+      "vignette": "clips/cai-60e56a-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.54,
+        "couleur": "#a6acb5"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-611471-01",
+      "url": "clips/cai-611471-01.mp4",
+      "vignette": "clips/cai-611471-01.jpg",
+      "duree": 9,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.25,
+        "couleur": "#142824"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-64eb37-01",
+      "url": "clips/cai-64eb37-01.mp4",
+      "vignette": "clips/cai-64eb37-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.34,
+        "couleur": "#9b5526"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-7cf28f-01",
+      "url": "clips/cai-7cf28f-01.mp4",
+      "vignette": "clips/cai-7cf28f-01.jpg",
+      "duree": 10,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.62,
+        "couleur": "#b2b2ae"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-7cf382-01",
       "url": "clips/cai-7cf382-01.mp4",
       "vignette": "clips/cai-7cf382-01.jpg",
@@ -488,7 +773,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.19,
-        "couleur": "#33286d"
+        "couleur": "#33286c"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -503,7 +788,67 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.39,
-        "couleur": "#5c5b5f"
+        "couleur": "#5c5b60"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-87aaa4-01",
+      "url": "clips/cai-87aaa4-01.mp4",
+      "vignette": "clips/cai-87aaa4-01.jpg",
+      "duree": 13,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.33,
+        "couleur": "#893cd0"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-8c3c2f-01",
+      "url": "clips/cai-8c3c2f-01.mp4",
+      "vignette": "clips/cai-8c3c2f-01.jpg",
+      "duree": 8,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.43,
+        "couleur": "#787772"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-8f9538-01",
+      "url": "clips/cai-8f9538-01.mp4",
+      "vignette": "clips/cai-8f9538-01.jpg",
+      "duree": 6,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.43,
+        "couleur": "#686d82"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-9030d1-01",
+      "url": "clips/cai-9030d1-01.mp4",
+      "vignette": "clips/cai-9030d1-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.31,
+        "couleur": "#393032"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -548,7 +893,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.35,
-        "couleur": "#9b8981"
+        "couleur": "#9b8980"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -563,7 +908,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.22,
-        "couleur": "#373743"
+        "couleur": "#373744"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -578,7 +923,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.39,
-        "couleur": "#543a28"
+        "couleur": "#543b28"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -593,7 +938,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.16,
-        "couleur": "#282420"
+        "couleur": "#28241f"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -638,7 +983,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.44,
-        "couleur": "#818081"
+        "couleur": "#818082"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -653,7 +998,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.43,
-        "couleur": "#979697"
+        "couleur": "#989697"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -705,6 +1050,36 @@
       "credit": ""
     },
     {
+      "id": "cai-b00b71-01",
+      "url": "clips/cai-b00b71-01.mp4",
+      "vignette": "clips/cai-b00b71-01.jpg",
+      "duree": 10,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.67,
+        "couleur": "#b3b0a4"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-b564f1-01",
+      "url": "clips/cai-b564f1-01.mp4",
+      "vignette": "clips/cai-b564f1-01.jpg",
+      "duree": 8,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.57,
+        "couleur": "#c89c5f"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-b6f2a4-01",
       "url": "clips/cai-b6f2a4-01.mp4",
       "vignette": "clips/cai-b6f2a4-01.jpg",
@@ -713,7 +1088,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.72,
-        "couleur": "#c1bfbe"
+        "couleur": "#c1bebe"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -728,7 +1103,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.72,
-        "couleur": "#cfcdcd"
+        "couleur": "#cfcdcc"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -758,7 +1133,22 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.37,
-        "couleur": "#636772"
+        "couleur": "#636771"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-bae8b4-01",
+      "url": "clips/cai-bae8b4-01.mp4",
+      "vignette": "clips/cai-bae8b4-01.jpg",
+      "duree": 8,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.49,
+        "couleur": "#918c86"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -772,8 +1162,8 @@
       "tags": {
         "univers": "miroir",
         "epoque": "2020s",
-        "luminosite": 0.34,
-        "couleur": "#524e4d"
+        "luminosite": 0.33,
+        "couleur": "#514d4c"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -803,7 +1193,37 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.73,
-        "couleur": "#a5a5a4"
+        "couleur": "#a4a6a4"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-d0bd30-01",
+      "url": "clips/cai-d0bd30-01.mp4",
+      "vignette": "clips/cai-d0bd30-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.44,
+        "couleur": "#7a787a"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-d29853-01",
+      "url": "clips/cai-d29853-01.mp4",
+      "vignette": "clips/cai-d29853-01.jpg",
+      "duree": 10,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.62,
+        "couleur": "#b1b2ae"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -825,6 +1245,51 @@
       "credit": ""
     },
     {
+      "id": "cai-dc953c-01",
+      "url": "clips/cai-dc953c-01.mp4",
+      "vignette": "clips/cai-dc953c-01.jpg",
+      "duree": 11,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.3,
+        "couleur": "#695b3d"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-dd2e93-01",
+      "url": "clips/cai-dd2e93-01.mp4",
+      "vignette": "clips/cai-dd2e93-01.jpg",
+      "duree": 12,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.54,
+        "couleur": "#7d7f7c"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-deb6ba-01",
+      "url": "clips/cai-deb6ba-01.mp4",
+      "vignette": "clips/cai-deb6ba-01.jpg",
+      "duree": 9,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.38,
+        "couleur": "#5f5d63"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-e40b04-01",
       "url": "clips/cai-e40b04-01.mp4",
       "vignette": "clips/cai-e40b04-01.jpg",
@@ -840,6 +1305,21 @@
       "credit": ""
     },
     {
+      "id": "cai-e42759-01",
+      "url": "clips/cai-e42759-01.mp4",
+      "vignette": "clips/cai-e42759-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.22,
+        "couleur": "#61411e"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "cai-e5aca0-01",
       "url": "clips/cai-e5aca0-01.mp4",
       "vignette": "clips/cai-e5aca0-01.jpg",
@@ -848,7 +1328,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.38,
-        "couleur": "#595964"
+        "couleur": "#5a5964"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -863,7 +1343,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.46,
-        "couleur": "#6b736e"
+        "couleur": "#6a736d"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -878,7 +1358,22 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.21,
-        "couleur": "#45332b"
+        "couleur": "#46342c"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-f399f0-01",
+      "url": "clips/cai-f399f0-01.mp4",
+      "vignette": "clips/cai-f399f0-01.jpg",
+      "duree": 8,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.3,
+        "couleur": "#384953"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -893,7 +1388,22 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.34,
-        "couleur": "#5d5954"
+        "couleur": "#5d5854"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "cai-fa452e-01",
+      "url": "clips/cai-fa452e-01.mp4",
+      "vignette": "clips/cai-fa452e-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "miroir",
+        "epoque": "2020s",
+        "luminosite": 0.27,
+        "couleur": "#4c4945"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -908,7 +1418,7 @@
         "univers": "miroir",
         "epoque": "2020s",
         "luminosite": 0.3,
-        "couleur": "#51555d"
+        "couleur": "#50555c"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -923,7 +1433,7 @@
         "univers": "ville",
         "epoque": "1939",
         "luminosite": 0.35,
-        "couleur": "#726e72",
+        "couleur": "#706f72",
         "extra": "cheminées industrielles"
       },
       "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
@@ -939,7 +1449,7 @@
         "univers": "ville",
         "epoque": "1939",
         "luminosite": 0.22,
-        "couleur": "#423f43",
+        "couleur": "#433f43",
         "extra": "gratte-ciels"
       },
       "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
@@ -987,12 +1497,42 @@
         "univers": "ville",
         "epoque": "1939",
         "luminosite": 0.34,
-        "couleur": "#767276",
+        "couleur": "#757276",
         "extra": "vie de rue"
       },
       "source": "FedFlix / FDR Library — archive.org : gov.fdr.353.3.2",
       "licence": "Domaine public (CC0)",
       "credit": "American Documentary Films / FDR Presidential Library"
+    },
+    {
+      "id": "dnc-09be29-01",
+      "url": "clips/dnc-09be29-01.mp4",
+      "vignette": "clips/dnc-09be29-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.4,
+        "couleur": "#6a6261"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-13ed77-01",
+      "url": "clips/dnc-13ed77-01.mp4",
+      "vignette": "clips/dnc-13ed77-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.26,
+        "couleur": "#463c3b"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
     },
     {
       "id": "dnc-2678f2-01",
@@ -1003,7 +1543,37 @@
         "univers": "danse",
         "epoque": "rétro",
         "luminosite": 0.59,
-        "couleur": "#999b99"
+        "couleur": "#999b9a"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-28cfd7-01",
+      "url": "clips/dnc-28cfd7-01.mp4",
+      "vignette": "clips/dnc-28cfd7-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.52,
+        "couleur": "#827a72"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-37814f-01",
+      "url": "clips/dnc-37814f-01.mp4",
+      "vignette": "clips/dnc-37814f-01.jpg",
+      "duree": 11,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.3,
+        "couleur": "#676969"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -1055,6 +1625,96 @@
       "credit": ""
     },
     {
+      "id": "dnc-433a0b-01",
+      "url": "clips/dnc-433a0b-01.mp4",
+      "vignette": "clips/dnc-433a0b-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.28,
+        "couleur": "#564733"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-4de041-01",
+      "url": "clips/dnc-4de041-01.mp4",
+      "vignette": "clips/dnc-4de041-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.44,
+        "couleur": "#75777a"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-4de041-02",
+      "url": "clips/dnc-4de041-02.mp4",
+      "vignette": "clips/dnc-4de041-02.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.43,
+        "couleur": "#717477"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-4de041-03",
+      "url": "clips/dnc-4de041-03.mp4",
+      "vignette": "clips/dnc-4de041-03.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.43,
+        "couleur": "#717377"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-5362dd-01",
+      "url": "clips/dnc-5362dd-01.mp4",
+      "vignette": "clips/dnc-5362dd-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.27,
+        "couleur": "#4b433e"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-5502a7-01",
+      "url": "clips/dnc-5502a7-01.mp4",
+      "vignette": "clips/dnc-5502a7-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.47,
+        "couleur": "#81745e"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "dnc-625bc4-01",
       "url": "clips/dnc-625bc4-01.mp4",
       "vignette": "clips/dnc-625bc4-01.jpg",
@@ -1078,7 +1738,7 @@
         "univers": "danse",
         "epoque": "rétro",
         "luminosite": 0.24,
-        "couleur": "#52221c"
+        "couleur": "#53221c"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -1094,6 +1754,51 @@
         "epoque": "rétro",
         "luminosite": 0.22,
         "couleur": "#6b2214"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-65856c-01",
+      "url": "clips/dnc-65856c-01.mp4",
+      "vignette": "clips/dnc-65856c-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.54,
+        "couleur": "#8f7c7b"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-6aef87-01",
+      "url": "clips/dnc-6aef87-01.mp4",
+      "vignette": "clips/dnc-6aef87-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.69,
+        "couleur": "#e0ba99"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-6f44c4-01",
+      "url": "clips/dnc-6f44c4-01.mp4",
+      "vignette": "clips/dnc-6f44c4-01.jpg",
+      "duree": 7,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.43,
+        "couleur": "#8d7e6d"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -1145,6 +1850,66 @@
       "credit": ""
     },
     {
+      "id": "dnc-811968-01",
+      "url": "clips/dnc-811968-01.mp4",
+      "vignette": "clips/dnc-811968-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.49,
+        "couleur": "#7b8583"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-811968-02",
+      "url": "clips/dnc-811968-02.mp4",
+      "vignette": "clips/dnc-811968-02.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.49,
+        "couleur": "#7f8989"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-811968-03",
+      "url": "clips/dnc-811968-03.mp4",
+      "vignette": "clips/dnc-811968-03.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.47,
+        "couleur": "#717b78"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-8a80e2-01",
+      "url": "clips/dnc-8a80e2-01.mp4",
+      "vignette": "clips/dnc-8a80e2-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.48,
+        "couleur": "#9e848f"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "dnc-8b1783-01",
       "url": "clips/dnc-8b1783-01.mp4",
       "vignette": "clips/dnc-8b1783-01.jpg",
@@ -1175,6 +1940,51 @@
       "credit": ""
     },
     {
+      "id": "dnc-8e5c0f-01",
+      "url": "clips/dnc-8e5c0f-01.mp4",
+      "vignette": "clips/dnc-8e5c0f-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.42,
+        "couleur": "#6b6e6b"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-8e5c0f-02",
+      "url": "clips/dnc-8e5c0f-02.mp4",
+      "vignette": "clips/dnc-8e5c0f-02.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.43,
+        "couleur": "#6c6e6b"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-8e5c0f-03",
+      "url": "clips/dnc-8e5c0f-03.mp4",
+      "vignette": "clips/dnc-8e5c0f-03.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.43,
+        "couleur": "#6d706c"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
       "id": "dnc-9d6df7-01",
       "url": "clips/dnc-9d6df7-01.mp4",
       "vignette": "clips/dnc-9d6df7-01.jpg",
@@ -1183,7 +1993,7 @@
         "univers": "danse",
         "epoque": "rétro",
         "luminosite": 0.4,
-        "couleur": "#5f665d"
+        "couleur": "#5e665d"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -1198,7 +2008,52 @@
         "univers": "danse",
         "epoque": "rétro",
         "luminosite": 0.36,
-        "couleur": "#484648"
+        "couleur": "#474647"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-c3082b-01",
+      "url": "clips/dnc-c3082b-01.mp4",
+      "vignette": "clips/dnc-c3082b-01.jpg",
+      "duree": 15,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.47,
+        "couleur": "#7b7863"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-f48f86-01",
+      "url": "clips/dnc-f48f86-01.mp4",
+      "vignette": "clips/dnc-f48f86-01.jpg",
+      "duree": 14,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.46,
+        "couleur": "#786a67"
+      },
+      "source": "Collection perso (domaine public)",
+      "licence": "Domaine public",
+      "credit": ""
+    },
+    {
+      "id": "dnc-f55220-01",
+      "url": "clips/dnc-f55220-01.mp4",
+      "vignette": "clips/dnc-f55220-01.jpg",
+      "duree": 8,
+      "tags": {
+        "univers": "danse",
+        "epoque": "rétro",
+        "luminosite": 0.47,
+        "couleur": "#786546"
       },
       "source": "Collection perso (domaine public)",
       "licence": "Domaine public",
@@ -1213,7 +2068,7 @@
         "univers": "danse",
         "epoque": "1940s",
         "luminosite": 0.49,
-        "couleur": "#7d7a7e",
+        "couleur": "#7d797d",
         "extra": "danseuse jupe"
       },
       "source": "Prelinger Archives — archive.org : MexicanHatDa",
@@ -1229,7 +2084,7 @@
         "univers": "danse",
         "epoque": "1940s",
         "luminosite": 0.4,
-        "couleur": "#817d81",
+        "couleur": "#807d81",
         "extra": "danse et mariachis"
       },
       "source": "Prelinger Archives — archive.org : MexicanHatDa",
@@ -1261,7 +2116,7 @@
         "univers": "danse",
         "epoque": "1925",
         "luminosite": 0.41,
-        "couleur": "#585458",
+        "couleur": "#585559",
         "extra": "lion dans la rue"
       },
       "source": "Prelinger Archives — archive.org : ChineseL1925",
@@ -1293,7 +2148,7 @@
         "univers": "machines",
         "epoque": "1946",
         "luminosite": 0.45,
-        "couleur": "#7a7a79",
+        "couleur": "#7a7a7a",
         "extra": "chevalement minier"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
@@ -1309,7 +2164,7 @@
         "univers": "machines",
         "epoque": "1946",
         "luminosite": 0.4,
-        "couleur": "#5f5f5f",
+        "couleur": "#5f5f5e",
         "extra": "halle aux fours"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",
@@ -1325,7 +2180,7 @@
         "univers": "machines",
         "epoque": "1946",
         "luminosite": 0.44,
-        "couleur": "#727272",
+        "couleur": "#737372",
         "extra": "poche de coulée"
       },
       "source": "FedFlix / NARA — archive.org : gov.archives.arc.12505",

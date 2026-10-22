@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -111,16 +112,28 @@ void main() {
     }
     // Base vide : les URL relatives restent relatives pour vérifier les
     // fichiers sur disque.
-    final data = ClipCatalog.parse(f.readAsStringSync(), '');
+    final body = f.readAsStringSync();
+    final data = ClipCatalog.parse(body, '');
     expect(data.clips, isNotEmpty);
     expect(data.loops, isNotEmpty);
+    // Collection perso : crédit volontairement vide (confidentialité,
+    // décision 2026-10-06 — rien ne doit identifier les comptes d'origine).
+    final raw = jsonDecode(body) as Map<String, dynamic>;
+    final sansCredit = {
+      for (final c in (raw['clips'] ?? const []) as List)
+        if ('${(c as Map<String, dynamic>)['source'] ?? ''}'
+            .startsWith('Collection perso'))
+          'cat-${c['id']}',
+    };
     const universes = ['danse', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
     for (final c in data.clips) {
       expect(universes, contains(c.univers), reason: c.id);
       expect(c.duree, inInclusiveRange(4, 30), reason: c.id);
       expect(c.luminosite, inInclusiveRange(0, 1), reason: c.id);
       expect(c.licence, isNotEmpty, reason: '${c.id} : licence obligatoire');
-      expect(c.credit, isNotEmpty, reason: '${c.id} : crédit obligatoire');
+      if (!sansCredit.contains(c.id)) {
+        expect(c.credit, isNotEmpty, reason: '${c.id} : crédit obligatoire');
+      }
       if (!c.url.startsWith('http')) {
         expect(File('../catalog/${c.url}').existsSync(), isTrue,
             reason: 'fichier manquant : ${c.url}');
