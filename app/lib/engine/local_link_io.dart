@@ -22,14 +22,24 @@ class WebViewLink extends LocalEngineLink {
         onPermissionRequest: (request) => request.grant())
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF000000))
+      // Console du moteur relayée vers logcat : seul moyen de voir une
+      // erreur JS (ex. « WebGL2 indisponible ») sur téléphone.
+      ..setOnConsoleMessage(
+          (m) => debugPrint('[moteur] ${m.level.name}: ${m.message}'))
       ..addJavaScriptChannel('VjmFeedback',
           onMessageReceived: (m) => handleFeedback(m.message))
       ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) {
+        controller.runJavaScript(
+            "console.log('VJM sonde: VJM=' + typeof window.VJM + "
+            "' webgl2=' + !!document.createElement('canvas').getContext('webgl2'))");
         _ready = true;
         for (final json in _queue) {
           sendJson(json);
         }
         _queue.clear();
+      }, onWebResourceError: (e) {
+        debugPrint('[moteur] erreur ressource ${e.errorCode} '
+            '${e.description} ${e.url}');
       }))
       ..loadFlutterAsset('assets/renderer/index.html');
   }

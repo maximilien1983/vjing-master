@@ -28,6 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Impeller (backend OpenGLES sur les GPU sans Vulkan) laisse la
+             WebView du moteur noire sur ce Huawei/Mali : retour à Skia.
+             La charge GPU est dans la WebView, pas dans l'UI Flutter. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <!-- Cast SDK : fournisseur d'options (App ID du receiver). -->
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
