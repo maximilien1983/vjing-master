@@ -1298,6 +1298,7 @@ uniform float uEcho;
 uniform float uRewind;
 uniform float uFlash;
 uniform float uBlack;
+uniform float uLight;
 uniform vec2 uRes;
 
 float phash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -1448,6 +1449,12 @@ void main() {
 
   // Strobe : alternance blanc/noir pilotée côté moteur (uStrobeGate).
   if (uStrobe > 0.001) col = mix(col, vec3(uStrobeGate), clamp(uStrobe, 0.0, 1.0) * 0.92);
+
+  // Fader LIGHT, bas de course : en plus de la teinte propre à chaque fond,
+  // la moitié basse du fader assombrit toute la scène jusqu'au quasi-noir
+  // (demande utilisateur 2026-11-24 : « plus sombre quand le curseur est en
+  // bas »). La moitié haute ne change rien au rendu historique.
+  col *= mix(0.08, 1.0, smoothstep(0.0, 0.5, uLight));
 
   col = mix(col, vec3(0.0), clamp(uBlack, 0.0, 1.0));
   col = mix(col, vec3(1.0), clamp(uFlash, 0.0, 1.0));

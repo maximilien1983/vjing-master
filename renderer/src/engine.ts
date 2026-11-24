@@ -944,6 +944,7 @@ export class Engine {
     setP('uRewind', rewindLevel);
     setP('uFlash', this.flashLevel);
     setP('uBlack', this.blackLevel);
+    setP('uLight', this.light);
     const res = this.post.uniforms.get('uRes');
     if (res) gl.uniform2f(res, INTERNAL_WIDTH, INTERNAL_HEIGHT);
     gl.bindVertexArray(this.fullscreenVao);
