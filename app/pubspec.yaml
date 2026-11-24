@@ -68,3 +68,7 @@ flutter:
     - family: Gajraj One
       fonts:
         - asset: assets/fonts/GajrajOne-Regular.ttf
+    # Sous-titre « robotique » du splashscreen (badge techno 70s).
+    - family: Michroma
+      fonts:
+        - asset: assets/fonts/Michroma-Regular.ttf

@@ -18,6 +18,14 @@ App mobile perso (iOS + Android) de VJing automatique : elle écoute la musique 
 - App en paysage uniquement, thème sombre uniquement, cibles tactiles de 48 pt minimum.
 - Avant de coder un écran, lire son HTML et son PNG ; après, comparer le rendu (golden test ou capture) au PNG.
 
+## Décisions actées (2026-11-24)
+
+- Simplification UI : rotacteur SOURCE 8 crans (univers + Cam + My List),
+  écran d'accueil épuré, libellés anglais, splashscreen portrait (seul écran
+  vertical, bascule paysage à sa sortie). Roadmap des sources spéciales et de
+  leur diffusion Chromecast (Cam en WebRTC, My List servie sur le LAN) :
+  `docs/roadmap-sources.md`.
+
 ## Décisions actées (2026-09-25)
 
 - Énergie : fader manuel, avec la réactivité intégrée du brief (montée détectée → changements plus rapprochés). Pas de mode Auto en V1.

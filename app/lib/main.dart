@@ -7,18 +7,21 @@ import 'theme/vj_tokens.dart';
 import 'ui/screens/console_screen.dart';
 import 'ui/screens/local_screen.dart';
 import 'ui/screens/sources_screen.dart';
+import 'ui/screens/splash_screen.dart';
 import 'ui/screens/start_screen.dart';
 
 /// Préviz : ouvre directement un écran donné pour la comparaison aux
-/// maquettes. flutter run --dart-define=SCREEN=console|local|sources
+/// maquettes. flutter run --dart-define=SCREEN=console|local|sources|start
 const _startScreen = String.fromEnvironment('SCREEN');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+  // Le splash est le seul écran portrait (le téléphone n'a pas encore été
+  // tourné à l'ouverture) ; il bascule l'app en paysage à sa sortie. Les
+  // écrans de préviz (SCREEN=…) restent directement en paysage.
+  await SystemChrome.setPreferredOrientations(_startScreen.isEmpty
+      ? [DeviceOrientation.portraitUp]
+      : [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await WakelockPlus.enable();
   runApp(VjingMasterApp(session: Session()));
@@ -43,7 +46,8 @@ class VjingMasterApp extends StatelessWidget {
         'console' => ConsoleScreen(session: session),
         'local' => LocalScreen(session: session),
         'sources' => SourcesScreen(session: session),
-        _ => StartScreen(session: session),
+        'start' => StartScreen(session: session),
+        _ => SplashScreen(next: (_) => StartScreen(session: session)),
       },
     );
   }
