@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import 'local_link.dart';
 
@@ -45,7 +46,20 @@ class WebViewLink extends LocalEngineLink {
   }
 
   @override
-  Widget buildView() => WebViewWidget(controller: controller);
+  Widget buildView() {
+    final platform = controller.platform;
+    // Hybrid Composition (vraie vue native) : le mode TextureLayer par
+    // défaut rend une texture noire par intermittence sur ce Huawei.
+    if (platform is AndroidWebViewController) {
+      return WebViewWidget.fromPlatformCreationParams(
+        params: AndroidWebViewWidgetCreationParams(
+          controller: platform,
+          displayWithHybridComposition: true,
+        ),
+      );
+    }
+    return WebViewWidget(controller: controller);
+  }
 
   @override
   void send(Map<String, dynamic> msg) => sendJson(jsonEncode(msg));
