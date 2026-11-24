@@ -6,18 +6,32 @@ import 'package:flutter/services.dart';
 import '../../theme/vj_tokens.dart';
 import '../sprites.dart';
 
-/// Angles des 6 crans, en degrés depuis le haut (0° en haut, sens horaire).
-const rotaryAngles = [-150.0, -90.0, -30.0, 30.0, 90.0, 150.0];
+/// Angles des crans, en degrés depuis le haut (0° en haut, sens horaire),
+/// répartis symétriquement avec une zone morte en bas. 6 crans : −150° à
+/// 150° tous les 60° (valeurs historiques des maquettes) ; au-delà, la zone
+/// morte se resserre à 45° (8 crans : −157,5° à 157,5° tous les 45°).
+List<double> rotaryAnglesFor(int n) {
+  assert(n >= 2);
+  final gap = n <= 6 ? 60.0 : 45.0;
+  final step = (360 - gap) / (n - 1);
+  return List.generate(n, (i) => -180 + gap / 2 + i * step);
+}
+
+/// Angles des 6 crans historiques (maquettes 01-06).
+final rotaryAngles = rotaryAnglesFor(6);
 
 /// Cran le plus proche d'un angle continu (pour l'aimantation du geste).
-int nearestNotch(double angleDeg) {
+/// Les crans désactivés sont ignorés.
+int nearestNotch(double angleDeg, List<double> angles,
+    {Set<int> disabled = const {}}) {
   var a = angleDeg % 360;
   if (a > 180) a -= 360;
   if (a < -180) a += 360;
   var best = 0;
   var bestDist = double.infinity;
-  for (var i = 0; i < rotaryAngles.length; i++) {
-    final d = (a - rotaryAngles[i]).abs();
+  for (var i = 0; i < angles.length; i++) {
+    if (disabled.contains(i)) continue;
+    final d = (a - angles[i]).abs();
     if (d < bestDist) {
       bestDist = d;
       best = i;
@@ -102,14 +116,16 @@ class RotaryGeometry {
   );
 }
 
-/// Rotacteur 6 crans : glisser en rotation avec aimantation, ou toucher un
-/// libellé. Clic haptique à chaque cran.
+/// Rotacteur à crans : glisser en rotation avec aimantation, ou toucher un
+/// libellé. Clic haptique à chaque cran. Les crans `disabled` sont grisés
+/// et sautés par l'aimantation.
 class RotarySelector extends StatefulWidget {
   final RotaryGeometry geometry;
-  final List<String> labels; // 6, dans l'ordre des angles
+  final List<String> labels; // dans l'ordre des angles
   final int selected;
   final ValueChanged<int> onChanged;
-  final String semanticsLabel; // « Style », « Univers »
+  final String semanticsLabel; // « Source », « Effects »
+  final Set<int> disabled;
   const RotarySelector({
     super.key,
     required this.geometry,
@@ -117,7 +133,8 @@ class RotarySelector extends StatefulWidget {
     required this.selected,
     required this.onChanged,
     required this.semanticsLabel,
-  }) : assert(labels.length == 6);
+    this.disabled = const {},
+  });
 
   @override
   State<RotarySelector> createState() => _RotarySelectorState();
@@ -126,6 +143,7 @@ class RotarySelector extends StatefulWidget {
 class _RotarySelectorState extends State<RotarySelector>
     with SingleTickerProviderStateMixin {
   double? _dragAngle;
+  late List<double> _angles = rotaryAnglesFor(widget.labels.length);
 
   /// Le bouton tourne physiquement d'un cran à l'autre (pas de saut) :
   /// l'angle affiché suit l'angle du cran choisi avec une courte animation.
@@ -134,16 +152,19 @@ class _RotarySelectorState extends State<RotarySelector>
     duration: const Duration(milliseconds: 220),
   );
   late Animation<double> _angle = AlwaysStoppedAnimation(
-    rotaryAngles[widget.selected],
+    _angles[widget.selected],
   );
 
   @override
   void didUpdateWidget(covariant RotarySelector old) {
     super.didUpdateWidget(old);
+    if (old.labels.length != widget.labels.length) {
+      _angles = rotaryAnglesFor(widget.labels.length);
+    }
     if (old.selected != widget.selected) {
       _angle = Tween(
         begin: _angle.value,
-        end: rotaryAngles[widget.selected],
+        end: _angles[widget.selected],
       ).animate(CurvedAnimation(parent: _spin, curve: Curves.easeOutCubic));
       _spin.forward(from: 0);
     }
@@ -161,7 +182,7 @@ class _RotarySelectorState extends State<RotarySelector>
   }
 
   void _select(int i) {
-    if (i == widget.selected) return;
+    if (i == widget.selected || widget.disabled.contains(i)) return;
     HapticFeedback.selectionClick();
     widget.onChanged(i);
   }
@@ -176,10 +197,12 @@ class _RotarySelectorState extends State<RotarySelector>
         onPanStart: (d) => _dragAngle = _angleAt(d.localPosition),
         onPanUpdate: (d) {
           _dragAngle = _angleAt(d.localPosition);
-          _select(nearestNotch(_dragAngle!));
+          _select(nearestNotch(_dragAngle!, _angles,
+              disabled: widget.disabled));
         },
         onPanEnd: (_) => _dragAngle = null,
-        onTapUp: (d) => _select(nearestNotch(_angleAt(d.localPosition))),
+        onTapUp: (d) => _select(nearestNotch(_angleAt(d.localPosition), _angles,
+            disabled: widget.disabled)),
         child: AnimatedBuilder(
           animation: _angle,
           builder: (_, _) => SizedBox(
@@ -221,6 +244,8 @@ class _RotarySelectorState extends State<RotarySelector>
                   labels: widget.labels,
                   selected: widget.selected,
                   pointerAngle: _angle.value,
+                  angles: _angles,
+                  disabled: widget.disabled,
                 ),
               ),
             ]),
@@ -236,11 +261,15 @@ class _RotaryPainter extends CustomPainter {
   final List<String> labels;
   final int selected;
   final double pointerAngle; // angle affiché (animé), en degrés depuis le haut
+  final List<double> angles;
+  final Set<int> disabled;
   _RotaryPainter({
     required this.geometry,
     required this.labels,
     required this.selected,
     required this.pointerAngle,
+    required this.angles,
+    required this.disabled,
   });
 
   Offset _polar(double radius, double angleDeg) {
@@ -258,9 +287,14 @@ class _RotaryPainter extends CustomPainter {
       ..color = VjColors.print.withValues(alpha: .8)
       ..strokeWidth = g.size.width > 160 ? 1.8 : 1.6
       ..strokeCap = StrokeCap.round;
-    for (var i = 0; i < 6; i++) {
-      final a = rotaryAngles[i];
-      canvas.drawLine(_polar(g.tickR1, a), _polar(g.tickR2, a), tick);
+    final tickDim = Paint()
+      ..color = VjColors.print.withValues(alpha: .35)
+      ..strokeWidth = tick.strokeWidth
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < angles.length; i++) {
+      final a = angles[i];
+      canvas.drawLine(_polar(g.tickR1, a), _polar(g.tickR2, a),
+          disabled.contains(i) ? tickDim : tick);
       final ledPos = _polar(g.ledRadius, a);
       if (i == selected) {
         canvas.drawCircle(
@@ -282,11 +316,14 @@ class _RotaryPainter extends CustomPainter {
       }
     }
 
-    // Libellés.
+    // Libellés. 6 crans : placement historique des maquettes (dx/dy réglés
+    // à la main) ; autres comptes : placement elliptique générique autour
+    // du bouton (rayons déduits de la géométrie).
     if (g.showLabels) {
-      for (var i = 0; i < 6; i++) {
-        final a = rotaryAngles[i];
+      for (var i = 0; i < angles.length; i++) {
+        final a = angles[i];
         final sel = i == selected;
+        final off = disabled.contains(i);
         final tp = TextPainter(
           text: TextSpan(
             text: labels[i].toUpperCase(),
@@ -295,23 +332,38 @@ class _RotaryPainter extends CustomPainter {
               fontSize: g.labelFontSize,
               fontWeight: FontWeight.w600,
               letterSpacing: 1,
-              color: sel ? VjColors.amberLabel : VjColors.printDim,
+              color: sel
+                  ? VjColors.amberLabel
+                  : off
+                      ? VjColors.printDim.withValues(alpha: .4)
+                      : VjColors.printDim,
             ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
         final side = a > 0 ? 1 : -1; // droite / gauche
         double x, y;
-        if (a.abs() == 90) {
-          x = g.center.dx + side * g.labelSideDx;
-          y = g.center.dy - tp.height / 2;
+        if (angles.length == 6) {
+          if (a.abs() == 90) {
+            x = g.center.dx + side * g.labelSideDx;
+            y = g.center.dy - tp.height / 2;
+          } else {
+            final above = a.abs() == 30;
+            x = g.center.dx + side * g.labelDiagDx;
+            final baseline =
+                g.center.dy + (above ? g.labelAboveDy : g.labelBelowDy);
+            y = baseline - tp.height * .8;
+          }
+          tp.paint(canvas, Offset(side > 0 ? x : x - tp.width, y));
         } else {
-          final above = a.abs() == 30;
-          x = g.center.dx + side * g.labelDiagDx;
-          final baseline = g.center.dy + (above ? g.labelAboveDy : g.labelBelowDy);
-          y = baseline - tp.height * .8;
+          final rad = a * math.pi / 180;
+          // Ellipse : rayon horizontal des libellés latéraux, rayon vertical
+          // déduit des baselines haut/bas de la géométrie.
+          final ry = math.cos(rad) >= 0 ? -g.labelAboveDy : g.labelBelowDy;
+          x = g.center.dx + math.sin(rad) * g.labelSideDx;
+          y = g.center.dy - math.cos(rad) * ry - tp.height / 2;
+          tp.paint(canvas, Offset(side > 0 ? x : x - tp.width, y));
         }
-        tp.paint(canvas, Offset(side > 0 ? x : x - tp.width, y));
       }
     }
 
@@ -347,49 +399,8 @@ class _RotaryPainter extends CustomPainter {
       old.selected != selected ||
       old.pointerAngle != pointerAngle ||
       old.labels != labels ||
-      old.geometry != geometry;
+      old.geometry != geometry ||
+      old.angles != angles ||
+      old.disabled != disabled;
 }
 
-/// Fenêtre ambrée sous le rotacteur compact : nom du cran choisi.
-class RotaryReadout extends StatelessWidget {
-  final String text;
-  const RotaryReadout({super.key, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 88,
-      height: 20,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(3),
-        color: const Color(0xFF0C0A08),
-        boxShadow: [
-          const BoxShadow(
-              offset: Offset(0, 1),
-              blurRadius: 3,
-              color: Colors.black,
-              blurStyle: BlurStyle.inner),
-          BoxShadow(
-              offset: const Offset(0, 1),
-              color: Colors.white.withValues(alpha: .07)),
-        ],
-      ),
-      child: Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontFamily: 'Barlow Condensed',
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 11 * .18,
-          color: VjColors.amberLabel,
-          shadows: [
-            Shadow(
-                blurRadius: 6,
-                color: const Color(0xFFFF9628).withValues(alpha: .7)),
-          ],
-        ),
-      ),
-    );
-  }
-}

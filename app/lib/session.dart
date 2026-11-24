@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
 import 'audio/audio_analyzer.dart';
@@ -51,19 +52,16 @@ class Session {
   final energy = ValueNotifier<double>(0.5);
   final light = ValueNotifier<double>(0.5);
 
-  /// Crans choisis sur les rotacteurs (ids de presets.dart). Seuls
-  /// Retrofutur × Cosmos ont un preset moteur au jalon 3.
+  /// Crans choisis sur les rotacteurs (ids de presets.dart).
+  /// `sourceId` suit le rotacteur SOURCE (univers, `cam`, `mylist`) ;
+  /// `universeId` garde le dernier univers réel (bassins de fonds et
+  /// d'effets, repli quand la caméra lâche).
   final styleId = ValueNotifier<String>('retrofutur');
+  final sourceId = ValueNotifier<String>('cosmos');
   final universeId = ValueNotifier<String>('cosmos');
 
   /// Sources vidéo de la session (données factices au jalon 3).
   final sourcesModel = SourcesModel();
-
-  /// Surimpression caméra (bouton à côté des effets) : affichée par-dessus le
-  /// fond avec l'opacité du fader. Moteur LOCAL uniquement : en diffusion, le
-  /// Chromecast n'a pas accès à la caméra du téléphone (streaming au jalon 5+).
-  final cameraShown = ValueNotifier<bool>(false);
-  final cameraOpacity = ValueNotifier<double>(0.75);
 
   /// Fonds Pixabay par univers (jalon 4). Sans clé : shaders seuls.
   final PixabayClient? _pixabay =
@@ -164,6 +162,8 @@ class Session {
     _subs.add(cast.states.listen((s) {
       castState.value = s;
       if (s == CastState.connected) {
+        // La TV n'a pas accès à la caméra du téléphone : retour à l'univers.
+        if (sourceId.value == 'cam') setSource(universeId.value);
         // Le receiver démarre muet : on lui pousse l'état courant complet.
         cast.send({
           'type': 'config',
@@ -184,8 +184,9 @@ class Session {
         } else if (msg['type'] == 'bgerror') {
           debugPrint('Fond vidéo illisible : ${msg['id']} (${msg['reason']})');
           if (msg['id'] == 'camera') {
-            // Caméra refusée ou absente : le bouton se relâche.
-            cameraShown.value = false;
+            // Caméra refusée ou perdue : retour au dernier univers réel,
+            // le rotacteur SOURCE suit.
+            if (sourceId.value == 'cam') setSource(universeId.value);
           } else {
             // Clip illisible : banni pour la session, scène remplacée.
             pilot.banOnError(msg['id'] as String);
@@ -226,28 +227,6 @@ class Session {
     } catch (e) {
       debugPrint('Micro indisponible : $e');
       micOk.value = false;
-    }
-  }
-
-  /// Bouton caméra (à côté des effets) : affiche/masque la caméra de
-  /// l'appareil en surimpression du fond (webcam en préviz PC, objectif
-  /// arrière sur téléphone), fondu géré par le moteur.
-  void toggleCamera() => setCameraShown(!cameraShown.value);
-
-  void setCameraShown(bool v) {
-    cameraShown.value = v;
-    local.send({
-      'type': 'config',
-      'camera': v,
-      'cameraOpacity': cameraOpacity.value,
-    });
-  }
-
-  /// Fader d'opacité de la surimpression caméra.
-  void setCameraOpacity(double v) {
-    cameraOpacity.value = v;
-    if (cameraShown.value) {
-      local.send({'type': 'config', 'cameraOpacity': v});
     }
   }
 
@@ -310,10 +289,32 @@ class Session {
     pilot.setStyle(stylePresetFor(id));
   }
 
-  void setUniverse(String id) {
+  /// Cran du rotacteur SOURCE : un univers, ou une source spéciale.
+  /// `cam` : fond caméra épinglé (mode local uniquement — la TV n'a pas la
+  /// caméra du téléphone), demande la permission à la sélection et retombe
+  /// sur le dernier univers si elle est refusée. `mylist` : tranche T5.
+  Future<void> setSource(String id) async {
+    if (id == 'mylist') return; // cran grisé tant que la T5 n'est pas livrée
+    if (id == 'cam') {
+      if (castState.value == CastState.connected) return;
+      if (!await _ensureCameraPermission()) return; // le rotacteur ne bouge pas
+      sourceId.value = 'cam';
+      pilot.setPinnedBackground(const {'kind': 'camera', 'id': 'camera'});
+      return;
+    }
+    sourceId.value = id;
     universeId.value = id;
+    pilot.setPinnedBackground(null);
     pilot.setUniverse(universePresetFor(id));
     _loadClips(id);
+  }
+
+  /// Permission caméra au moment où la source CAM est choisie. Sur le web
+  /// (préviz PC) c'est le navigateur qui demande via getUserMedia.
+  Future<bool> _ensureCameraPermission() async {
+    if (kIsWeb) return true;
+    final status = await Permission.camera.request();
+    return status.isGranted;
   }
 
   /// Phase du temps courant [0,1) pour la LED tempo, calée sur l'horloge de

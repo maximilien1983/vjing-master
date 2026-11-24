@@ -7,13 +7,12 @@ import '../../theme/vj_tokens.dart';
 import '../materials.dart';
 import '../widgets/power_button.dart';
 import '../widgets/rotary_selector.dart';
-import '../widgets/source_widgets.dart';
-import '../widgets/vertical_fader.dart';
 import 'console_screen.dart';
 import 'local_screen.dart';
-import 'sources_screen.dart';
 
-/// Écran de démarrage (maquette 01) : choisir sources et ambiance, lancer.
+/// Écran de démarrage (maquette 01 simplifiée le 2026-11-24) : choisir la
+/// source et les effets, puis lancer. Le bloc sources, le fader lumière, la
+/// lampe « prêt » et le titre du bouton ont été retirés (demande utilisateur).
 class StartScreen extends StatefulWidget {
   final Session session;
   const StartScreen({super.key, required this.session});
@@ -93,7 +92,7 @@ class _StartScreenState extends State<StartScreen> {
           ),
           const SizedBox(width: 16),
           Text(
-            'CHOISISSEZ SOURCES ET AMBIANCE, PUIS LANCEZ',
+            'CHOOSE SOURCE AND EFFECTS, THEN LAUNCH',
             style: VjText.hint.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -118,45 +117,30 @@ class _StartScreenState extends State<StartScreen> {
               blurStyle: BlurStyle.inner),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _selectorColumn(
-                  title: 'UNIVERS',
-                  labels: universeLabels,
-                  ids: universeIds,
-                  notifier: session.universeId,
-                  onChanged: session.setUniverse,
-                ),
-                const SizedBox(width: 24),
-                _selectorColumn(
-                  title: 'EFFECTS',
-                  labels: styleLabels,
-                  ids: styleIds,
-                  notifier: session.styleId,
-                  onChanged: session.setStyle,
-                ),
-                const SizedBox(width: 24),
-                _lightColumn(),
-              ],
+          ValueListenableBuilder(
+            valueListenable: session.castState,
+            builder: (_, cast, _) => _selectorColumn(
+              title: 'SOURCE',
+              labels: sourceLabels,
+              ids: sourceIds,
+              notifier: session.sourceId,
+              onChanged: session.setSource,
+              disabled: sourceDisabledNotches(
+                  castConnected: cast == CastState.connected),
             ),
           ),
-          Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                VjColors.print.withValues(alpha: 0),
-                VjColors.print.withValues(alpha: .22),
-                VjColors.print.withValues(alpha: 0),
-              ]),
-            ),
+          const SizedBox(width: 40),
+          _selectorColumn(
+            title: 'EFFECTS',
+            labels: styleLabels,
+            ids: styleIds,
+            notifier: session.styleId,
+            onChanged: session.setStyle,
           ),
-          const SizedBox(height: 8),
-          _sourcesBlock(),
         ],
       ),
     );
@@ -168,6 +152,7 @@ class _StartScreenState extends State<StartScreen> {
     required List<String> ids,
     required ValueNotifier<String> notifier,
     required ValueChanged<String> onChanged,
+    Set<int> disabled = const {},
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -177,32 +162,14 @@ class _StartScreenState extends State<StartScreen> {
           builder: (_, id, _) => RotarySelector(
             geometry: RotaryGeometry.start,
             labels: labels,
-            selected: ids.indexOf(id).clamp(0, 5),
+            selected: ids.indexOf(id).clamp(0, labels.length - 1),
             onChanged: (i) => onChanged(ids[i]),
             semanticsLabel: title,
+            disabled: disabled,
           ),
         ),
         const SizedBox(height: 12),
         _titleRule(title, width: 136),
-      ],
-    );
-  }
-
-  Widget _lightColumn() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ValueListenableBuilder(
-          valueListenable: session.light,
-          builder: (_, v, _) => VerticalFader(
-            geometry: FaderGeometry.lightStart,
-            value: v,
-            onChanged: session.setLight,
-            semanticsLabel: 'Lumière',
-          ),
-        ),
-        const SizedBox(height: 10),
-        const Text('LUMIÈRE', style: VjText.sectionTitle),
       ],
     );
   }
@@ -223,83 +190,7 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
-  Widget _sourcesBlock() {
-    return ListenableBuilder(
-      listenable: session.sourcesModel,
-      builder: (context, _) {
-        final model = session.sourcesModel;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 16,
-              child: Row(children: [
-                const Text('SOURCES', style: VjText.sectionTitle),
-                const SizedBox(width: 12),
-                Text('TOUCHER POUR CHARGER OU DÉCHARGER',
-                    style: VjText.hint),
-                const Spacer(),
-                Text(
-                  '${model.loadedCount} CHARGÉE${model.loadedCount > 1 ? 'S' : ''}',
-                  style: TextStyle(
-                    fontFamily: 'Barlow Condensed',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 11 * .18,
-                    color: VjColors.amberLabel,
-                    shadows: [
-                      Shadow(
-                          blurRadius: 6,
-                          color:
-                              const Color(0xFFFF9628).withValues(alpha: .6)),
-                    ],
-                  ),
-                ),
-              ]),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                for (final s in model.sources.take(4)) ...[
-                  SourceTile(source: s, onTap: () => model.toggle(s)),
-                  const SizedBox(width: 10),
-                ],
-                AddSourceTile(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                        builder: (_) => SourcesScreen(session: session)),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _launchPanel() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const ReadyLamp(on: true),
-        const SizedBox(height: 16),
-        PowerButton(onPressed: _launch),
-        const SizedBox(height: 16),
-        Padding(
-          padding: EdgeInsets.only(left: 22 * .42),
-          child: Text(
-            'LANCER',
-            style: TextStyle(
-              fontFamily: 'Barlow Condensed',
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 22 * .42,
-              color: VjColors.print,
-            ),
-          ),
-        ),
-      ],
-    );
+    return Center(child: PowerButton(onPressed: _launch));
   }
 }

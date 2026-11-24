@@ -50,13 +50,28 @@ const cosmos = UniversePreset(
 
 /// Les 6 crans de chaque rotacteur (ordre des maquettes : angles −150° à 150°).
 const styleIds = ['vintage', '70s', 'punk', 'retrofutur', 'vhs', 'psyche'];
-const styleLabels = ['Vintage', "70's", 'Punk', 'Retrofutur', 'VHS', 'Psyché'];
-// « Danse » a remplacé « Campagne » (demande utilisateur, 2026-09-26) :
-// boucles de gens qui dansent dans des styles très variés.
-const universeIds = ['danse', 'ville', 'cosmos', 'machines', 'nature', 'miroir'];
-// « Miroir » s'affiche « Crazy AI » (demande utilisateur, 2026-10-02),
-// l'id `miroir` reste inchangé (backgrounds du moteur, catalogue de clips).
-const universeLabels = ['Danse', 'Ville', 'Cosmos', 'Machines', 'Nature', 'Crazy AI'];
+const styleLabels = ['Vintage', "70's", 'Punk', 'Retrofutur', 'VHS', 'Psyche'];
+// Libellés anglais (simplification 2026-11-24) ; les ids restent inchangés,
+// ils taguent le catalogue de clips et les presets hébergés : `ville`
+// s'affiche « Urban », `machines` « Tools », `miroir` « Crazy AI ».
+const universeIds = ['miroir', 'ville', 'cosmos', 'nature', 'machines', 'danse'];
+const universeLabels = ['Crazy AI', 'Urban', 'Cosmos', 'Nature', 'Tools', 'Dance'];
+
+/// Rotacteur SOURCE : les 6 univers + deux sources spéciales. `cam` (caméra
+/// du téléphone, tranche T4) et `mylist` (vidéos de la galerie, tranche T5)
+/// ne sont pas des univers : ils pilotent directement le fond.
+const sourceIds = [...universeIds, 'cam', 'mylist'];
+const sourceLabels = [...universeLabels, 'Cam', 'My List'];
+
+/// Crans spéciaux du rotacteur SOURCE.
+const camNotchIndex = 6;
+const myListNotchIndex = 7;
+
+/// Crans SOURCE grisés : My List tant que la tranche T5 n'est pas livrée ;
+/// Cam aussi en diffusion (la TV n'a pas accès à la caméra du téléphone).
+Set<int> sourceDisabledNotches({required bool castConnected}) => castConnected
+    ? const {camNotchIndex, myListNotchIndex}
+    : const {myListNotchIndex};
 
 /// Catalogue chargé depuis le JSON embarqué (et plus tard rafraîchi depuis
 /// l'hébergement statique, avec le catalogue de clips).

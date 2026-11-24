@@ -15,7 +15,7 @@ typedef FxDef = ({String id, String label, Color color});
 const List<FxDef> fxDefs = [
   (id: 'flash', label: 'FLASH', color: Color(0xFFFFB13D)),
   (id: 'strobe', label: 'STROBE', color: Color(0xFFEAF4FF)),
-  (id: 'negative', label: 'NÉGATIF', color: Color(0xFFB06CFF)),
+  (id: 'negative', label: 'NEGATIVE', color: Color(0xFFB06CFF)),
   (id: 'zoom', label: 'ZOOM', color: Color(0xFF3FD9E8)),
   (id: 'shake', label: 'SHAKE', color: Color(0xFF5BE06A)),
   (id: 'echo', label: 'ECHO', color: Color(0xFFFF5FA8)),

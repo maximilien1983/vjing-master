@@ -13,21 +13,58 @@ void main() {
   group('RotarySelector : aimantation sur les crans', () {
     test('angles exacts', () {
       for (var i = 0; i < rotaryAngles.length; i++) {
-        expect(nearestNotch(rotaryAngles[i]), i);
+        expect(nearestNotch(rotaryAngles[i], rotaryAngles), i);
+      }
+    });
+
+    test('6 crans : angles historiques des maquettes', () {
+      expect(rotaryAnglesFor(6), [-150.0, -90.0, -30.0, 30.0, 90.0, 150.0]);
+    });
+
+    test('8 crans : symétriques, zone morte de 45° en bas', () {
+      final a = rotaryAnglesFor(8);
+      expect(a.length, 8);
+      expect(a.first, -157.5);
+      expect(a.last, 157.5);
+      for (var i = 1; i < a.length; i++) {
+        expect(a[i] - a[i - 1], closeTo(45, 1e-9));
       }
     });
 
     test('angles intermédiaires arrondis au plus proche', () {
-      expect(nearestNotch(-100), 1); // proche de -90
-      expect(nearestNotch(-125), 0); // à 25° de -150, 35° de -90
-      expect(nearestNotch(160), 5);
-      expect(nearestNotch(40), 3);
+      expect(nearestNotch(-100, rotaryAngles), 1); // proche de -90
+      expect(nearestNotch(-125, rotaryAngles), 0); // à 25° de -150, 35° de -90
+      expect(nearestNotch(160, rotaryAngles), 5);
+      expect(nearestNotch(40, rotaryAngles), 3);
     });
 
     test('angles hors [-180, 180] normalisés', () {
-      expect(nearestNotch(210), 0); // 210 - 360 = -150
-      expect(nearestNotch(-210), 5); // -210 + 360 = 150
-      expect(nearestNotch(450), 4); // 450 - 360 = 90
+      expect(nearestNotch(210, rotaryAngles), 0); // 210 - 360 = -150
+      expect(nearestNotch(-210, rotaryAngles), 5); // -210 + 360 = 150
+      expect(nearestNotch(450, rotaryAngles), 4); // 450 - 360 = 90
+    });
+
+    test('crans désactivés sautés par l\'aimantation', () {
+      final a8 = rotaryAnglesFor(8);
+      // Pile sur le cran 6 (Cam, désactivé) : aimante sur le voisin actif.
+      expect(nearestNotch(a8[6], a8, disabled: const {6, 7}),
+          isNot(anyOf(6, 7)));
+      expect(nearestNotch(a8[7], a8, disabled: const {6, 7}),
+          isNot(anyOf(6, 7)));
+      // Les crans actifs restent atteignables.
+      expect(nearestNotch(a8[2], a8, disabled: const {6, 7}), 2);
+    });
+
+    test('le rotacteur SOURCE déclare 8 crans, Cam et My List grisés', () {
+      expect(sourceIds.length, 8);
+      expect(sourceLabels.length, 8);
+      expect(sourceIds.sublist(0, 6), universeIds);
+      expect(sourceIds[camNotchIndex], 'cam');
+      expect(sourceIds[myListNotchIndex], 'mylist');
+      // My List grisé partout (T5 à venir) ; Cam seulement en diffusion.
+      expect(sourceDisabledNotches(castConnected: false), {myListNotchIndex});
+      expect(sourceDisabledNotches(castConnected: true),
+          {camNotchIndex, myListNotchIndex});
     });
 
     testWidgets('toucher un cran sélectionne, la rotation est animée',
@@ -73,7 +110,6 @@ void main() {
 
     test('aller-retour sur toutes les géométries', () {
       const all = [
-        FaderGeometry.lightStart,
         FaderGeometry.lightConsole,
         FaderGeometry.energyConsole,
         FaderGeometry.lightDrawer,
@@ -182,7 +218,23 @@ void main() {
       expect(universeIds, hasLength(6));
       expect(universeLabels, hasLength(6));
       expect(styleIds[3], 'retrofutur'); // cran à 30°, comme la maquette
-      expect(universeIds[2], 'cosmos'); // cran à -30°
+      expect(universeIds[2], 'cosmos'); // cran Cosmos conservé
+    });
+
+    test('fond épinglé (source CAM) : scène caméra, puis libération', () {
+      final msgs = <Map<String, dynamic>>[];
+      final pilot =
+          Autopilot(style: retrofutur, universe: cosmos, send: msgs.add);
+      pilot.setPinnedBackground(const {'kind': 'camera', 'id': 'camera'});
+      final scene = msgs.lastWhere((m) => m['type'] == 'scene');
+      expect((scene['state'] as Map<String, dynamic>)['background'],
+          const {'kind': 'camera', 'id': 'camera'});
+      msgs.clear();
+      pilot.setPinnedBackground(null);
+      final scene2 = msgs.lastWhere((m) => m['type'] == 'scene');
+      final bg =
+          (scene2['state'] as Map<String, dynamic>)['background'] as Map;
+      expect(bg['kind'], isNot('camera')); // la rotation normale reprend
     });
   });
 }

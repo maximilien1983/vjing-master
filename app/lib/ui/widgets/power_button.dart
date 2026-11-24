@@ -3,8 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/vj_tokens.dart';
-
 /// Bouton Lancer de l'écran de démarrage : lunette crantée 116 pt,
 /// anneau ambré, chapeau métal avec symbole marche.
 class PowerButton extends StatefulWidget {
@@ -129,67 +127,4 @@ class _PowerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PowerPainter old) => false;
-}
-
-/// Voyant Prêt au-dessus du bouton Lancer.
-class ReadyLamp extends StatelessWidget {
-  final bool on;
-  const ReadyLamp({super.key, required this.on});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 22,
-          height: 22,
-          padding: const EdgeInsets.all(3),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: SweepGradient(
-              transform: GradientRotation(30 * math.pi / 180),
-              colors: [
-                Color(0xFF6A6C70), Color(0xFFC2C4C7), Color(0xFF5C5E62),
-                Color(0xFFB3B5B8), Color(0xFF6A6C70),
-              ],
-              stops: [0, .2, .45, .7, 1],
-            ),
-            boxShadow: [
-              BoxShadow(offset: Offset(0, 2), blurRadius: 3, color: Color(0xB3000000)),
-            ],
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: on
-                  ? const RadialGradient(
-                      center: Alignment(-.24, -.36),
-                      colors: [Color(0xFFFFF3CC), Color(0xFFFFBF55), Color(0xFFD9701A)],
-                      stops: [0, .35, .8],
-                    )
-                  : const RadialGradient(
-                      center: Alignment(-.3, -.3),
-                      colors: [VjColors.ledOffHi, VjColors.ledOffLo],
-                    ),
-              boxShadow: on
-                  ? [
-                      BoxShadow(
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                          color: const Color(0xFFFFA032).withValues(alpha: .55)),
-                      BoxShadow(
-                          blurRadius: 18,
-                          color: const Color(0xFFFF821E).withValues(alpha: .3)),
-                    ]
-                  : null,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text('PRÊT',
-            style: VjText.sectionTitle.copyWith(letterSpacing: 11 * .28)),
-      ],
-    );
-  }
 }

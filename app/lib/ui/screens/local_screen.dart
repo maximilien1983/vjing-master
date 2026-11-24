@@ -312,7 +312,8 @@ class _LocalScreenState extends State<LocalScreen> {
 
   Widget _compactSelectors() {
     Widget selector(String title, List<String> labels, List<String> ids,
-        ValueNotifier<String> notifier, ValueChanged<String> onChanged) {
+        ValueNotifier<String> notifier, ValueChanged<String> onChanged,
+        {Set<int> disabled = const {}}) {
       return SizedBox(
         width: 136,
         child: Column(
@@ -322,23 +323,17 @@ class _LocalScreenState extends State<LocalScreen> {
             const SizedBox(height: 4),
             ValueListenableBuilder(
               valueListenable: notifier,
-              builder: (_, id, _) {
-                final i = ids.indexOf(id).clamp(0, 5);
-                return Column(children: [
-                  RotarySelector(
-                    geometry: RotaryGeometry.compact,
-                    labels: labels,
-                    selected: i,
-                    onChanged: (j) {
-                      onChanged(ids[j]);
-                      _armIdle();
-                    },
-                    semanticsLabel: title,
-                  ),
-                  const SizedBox(height: 4),
-                  RotaryReadout(text: labels[i]),
-                ]);
-              },
+              builder: (_, id, _) => RotarySelector(
+                geometry: RotaryGeometry.compact,
+                labels: labels,
+                selected: ids.indexOf(id).clamp(0, labels.length - 1),
+                onChanged: (j) {
+                  onChanged(ids[j]);
+                  _armIdle();
+                },
+                semanticsLabel: title,
+                disabled: disabled,
+              ),
             ),
           ],
         ),
@@ -346,8 +341,14 @@ class _LocalScreenState extends State<LocalScreen> {
     }
 
     return Row(children: [
-      selector('UNIVERS', universeLabels, universeIds, session.universeId,
-          session.setUniverse),
+      ValueListenableBuilder(
+        valueListenable: session.castState,
+        builder: (_, cast, _) => selector(
+            'SOURCE', sourceLabels, sourceIds, session.sourceId,
+            session.setSource,
+            disabled: sourceDisabledNotches(
+                castConnected: cast == CastState.connected)),
+      ),
       const SizedBox(width: 12),
       selector('EFFECTS', styleLabels, styleIds, session.styleId,
           session.setStyle),
@@ -379,14 +380,10 @@ class _LocalScreenState extends State<LocalScreen> {
     }
 
     return Row(children: [
-      fader('LUMIÈRE', FaderGeometry.lightDrawer, session.light, session.setLight),
+      fader('LIGHT', FaderGeometry.lightDrawer, session.light, session.setLight),
       const SizedBox(width: 16),
-      fader('ÉNERGIE', FaderGeometry.energyDrawer, session.energy,
+      fader('POWER', FaderGeometry.energyDrawer, session.energy,
           session.setEnergy),
-      const SizedBox(width: 16),
-      // Opacité de la surimpression caméra (bouton CAM dans les effets).
-      fader('CAM', FaderGeometry.cameraDrawer, session.cameraOpacity,
-          session.setCameraOpacity),
     ]);
   }
 
@@ -422,21 +419,7 @@ class _LocalScreenState extends State<LocalScreen> {
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              for (final fx in fxDefs.skip(4)) btn(fx),
-              // Caméra à côté des effets : surimpression, opacité au fader CAM.
-              ValueListenableBuilder(
-                valueListenable: session.cameraShown,
-                builder: (_, shown, _) => CameraButton(
-                  active: shown,
-                  size: 40,
-                  onTap: () {
-                    _armIdle();
-                    session.toggleCamera();
-                  },
-                ),
-              ),
-            ],
+            children: [for (final fx in fxDefs.skip(4)) btn(fx)],
           ),
         ],
       ),

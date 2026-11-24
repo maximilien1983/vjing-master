@@ -31,22 +31,7 @@ class FaderGeometry {
     this.bottomLabel,
   });
 
-  /// Lumière, écran de démarrage : 64 × 124, curseur 52 × 24.
-  static const lightStart = FaderGeometry(
-    size: Size(64, 124),
-    tickTop: 20,
-    tickBottom: 100,
-    slotTop: 16,
-    slotHeight: 88,
-    slotX: 29,
-    cap: Size(52, 24),
-    ticks: 11,
-    longEvery: 5,
-    topLabel: 'LUMINEUX',
-    bottomLabel: 'DARK',
-  );
-
-  /// Lumière, console : 56 × 164, curseur 48 × 26.
+  /// Light, console : 56 × 164, curseur 48 × 26.
   static const lightConsole = FaderGeometry(
     size: Size(56, 164),
     tickTop: 20,
@@ -57,7 +42,7 @@ class FaderGeometry {
     cap: Size(48, 26),
     ticks: 11,
     longEvery: 5,
-    topLabel: 'LUMINEUX',
+    topLabel: 'BRIGHT',
     bottomLabel: 'DARK',
   );
 
@@ -86,7 +71,7 @@ class FaderGeometry {
     cap: Size(44, 24),
     ticks: 5,
     longEvery: 2,
-    topLabel: 'LUMINEUX',
+    topLabel: 'BRIGHT',
     bottomLabel: 'DARK',
   );
 
@@ -102,32 +87,6 @@ class FaderGeometry {
     ticks: 3,
     minorsBetween: 4,
     numbers: true,
-  );
-
-  /// Opacité caméra, console : compact sous le bouton caméra.
-  static const cameraConsole = FaderGeometry(
-    size: Size(52, 104),
-    tickTop: 12,
-    tickBottom: 92,
-    slotTop: 8,
-    slotHeight: 88,
-    slotX: 23,
-    cap: Size(44, 22),
-    ticks: 5,
-    longEvery: 2,
-  );
-
-  /// Opacité caméra, tiroir du mode local : étroit pour tenir sur la rangée.
-  static const cameraDrawer = FaderGeometry(
-    size: Size(44, 128),
-    tickTop: 16,
-    tickBottom: 110,
-    slotTop: 12,
-    slotHeight: 102,
-    slotX: 19,
-    cap: Size(38, 24),
-    ticks: 5,
-    longEvery: 2,
   );
 
   double centerYFor(double value) =>

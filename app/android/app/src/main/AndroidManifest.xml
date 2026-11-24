@@ -2,6 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Analyse de la musique ambiante (détection de tempo). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Source CAM : fond caméra dans le moteur (WebView getUserMedia). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="vjing_master"
         android:name="${applicationName}"

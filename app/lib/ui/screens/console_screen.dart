@@ -86,7 +86,7 @@ class ConsoleScreen extends StatelessWidget {
               child: Row(children: [
                 const Text('SOURCES', style: VjText.sectionTitle),
                 const SizedBox(width: 10),
-                Text('TOUCHER POUR CHANGER',
+                Text('TAP TO CHANGE',
                     style: VjText.hint.copyWith(fontSize: 10)),
                 const SizedBox(width: 10),
                 Expanded(
@@ -117,33 +117,6 @@ class ConsoleScreen extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  /// Caméra, à côté des effets : bascule + opacité de la surimpression.
-  Widget _cameraBlock() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ValueListenableBuilder(
-          valueListenable: session.cameraShown,
-          builder: (_, shown, _) =>
-              CameraButton(active: shown, onTap: session.toggleCamera),
-        ),
-        const SizedBox(height: 8),
-        ValueListenableBuilder(
-          valueListenable: session.cameraOpacity,
-          builder: (_, v, _) => VerticalFader(
-            geometry: FaderGeometry.cameraConsole,
-            value: v,
-            onChanged: session.setCameraOpacity,
-            semanticsLabel: 'Opacité de la caméra',
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text('CAMÉRA',
-            style: VjText.sectionTitle.copyWith(letterSpacing: 11 * .2)),
-      ],
     );
   }
 
@@ -207,12 +180,17 @@ class ConsoleScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _selectorColumn(
-          title: 'UNIVERS',
-          labels: universeLabels,
-          ids: universeIds,
-          notifier: session.universeId,
-          onChanged: session.setUniverse,
+        ValueListenableBuilder(
+          valueListenable: session.castState,
+          builder: (_, cast, _) => _selectorColumn(
+            title: 'SOURCE',
+            labels: sourceLabels,
+            ids: sourceIds,
+            notifier: session.sourceId,
+            onChanged: session.setSource,
+            disabled: sourceDisabledNotches(
+                castConnected: cast == CastState.connected),
+          ),
         ),
         _selectorColumn(
           title: 'EFFECTS',
@@ -230,15 +208,14 @@ class ConsoleScreen extends StatelessWidget {
                 geometry: FaderGeometry.lightConsole,
                 value: v,
                 onChanged: session.setLight,
-                semanticsLabel: 'Lumière',
+                semanticsLabel: 'Light',
               ),
             ),
             const SizedBox(height: 6),
-            Text('LUMIÈRE',
+            Text('LIGHT',
                 style: VjText.sectionTitle.copyWith(letterSpacing: 11 * .22)),
           ],
         ),
-        _cameraBlock(),
         _triggersBlock(),
       ],
     );
@@ -250,6 +227,7 @@ class ConsoleScreen extends StatelessWidget {
     required List<String> ids,
     required ValueNotifier<String> notifier,
     required ValueChanged<String> onChanged,
+    Set<int> disabled = const {},
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -259,9 +237,10 @@ class ConsoleScreen extends StatelessWidget {
           builder: (_, id, _) => RotarySelector(
             geometry: RotaryGeometry.console,
             labels: labels,
-            selected: ids.indexOf(id).clamp(0, 5),
+            selected: ids.indexOf(id).clamp(0, labels.length - 1),
             onChanged: (i) => onChanged(ids[i]),
             semanticsLabel: title,
+            disabled: disabled,
           ),
         ),
         const SizedBox(height: 8),
@@ -351,7 +330,7 @@ class ConsoleScreen extends StatelessWidget {
         ),
       ),
       child: Column(children: [
-        Text('ÉNERGIE',
+        Text('POWER',
             style: VjText.sectionTitle.copyWith(letterSpacing: 11 * .2)),
         const SizedBox(height: 8),
         ValueListenableBuilder(
@@ -360,7 +339,7 @@ class ConsoleScreen extends StatelessWidget {
             geometry: FaderGeometry.energyConsole,
             value: v,
             onChanged: session.setEnergy,
-            semanticsLabel: 'Énergie',
+            semanticsLabel: 'Power',
           ),
         ),
       ]),

@@ -19,6 +19,8 @@ dependencies:
   webview_flutter_android: ^4.3.0
   # Flux PCM du micro (jalon 2 : + Visualizer / AudioPlaybackCapture en natif).
   record: ^6.0.0
+  # Permission caméra au moment où la source CAM est choisie (fond caméra).
+  permission_handler: ^12.0.1
   # Écran maintenu allumé pendant la session.
   wakelock_plus: ^1.2.8
   # FFT pure Dart pour l'analyse spectrale.

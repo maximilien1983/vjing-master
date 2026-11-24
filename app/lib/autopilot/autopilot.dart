@@ -106,6 +106,10 @@ class Autopilot {
   StructureState structure = StructureState.steady;
 
   String? _currentBg;
+
+  /// Fond épinglé (source CAM) : remplace le tirage tant qu'il est posé,
+  /// la rotation des fonds est suspendue, effets et motifs continuent.
+  Map<String, dynamic>? _pinnedBg;
   final Map<String, String> _clipUrls = {}; // id de clip -> URL (kind video)
   List<FxStep> _fx = const [];
   final List<OverlayState> _overlays = [];
@@ -187,6 +191,15 @@ class Autopilot {
     _sceneRequested = true;
   }
 
+  /// Épingle un fond (`{'kind': 'camera', 'id': 'camera'}` pour la source
+  /// CAM) ou le libère (`null`) : la scène est repoussée immédiatement,
+  /// la rotation des fonds reprend au prochain créneau après libération.
+  void setPinnedBackground(Map<String, dynamic>? bg) {
+    _pinnedBg = bg;
+    _pushScene();
+    _scheduleNextChange();
+  }
+
   /// Clips vidéo de l'univers courant (Pixabay, catalogue FedFlix…),
   /// fusionnés aux fonds shaders dans le tirage.
   void setClips(List<EngineClip> clips) {
@@ -247,7 +260,8 @@ class Autopilot {
       return;
     }
     if (m >= _nextChangeMeasure) {
-      _changeBackground();
+      // Fond épinglé (CAM) : pas de rotation, mais effets et motifs vivent.
+      if (_pinnedBg == null) _changeBackground();
       _pushScene();
       _scheduleNextChange();
       return;
@@ -361,9 +375,10 @@ class Autopilot {
     send({
       'type': 'scene',
       'state': {
-        'background': clipUrl != null
-            ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
-            : {'kind': 'shader', 'id': _currentBg},
+        'background': _pinnedBg ??
+            (clipUrl != null
+                ? {'kind': 'video', 'id': _currentBg, 'url': clipUrl}
+                : {'kind': 'shader', 'id': _currentBg}),
         // Motifs procéduraux uniquement (lasers, ondes de basses, trames…) :
         // plus aucune image toute faite ni boucle vidéo (2026-10-07).
         'overlays': [for (final o in _overlays) o.toJson()],
