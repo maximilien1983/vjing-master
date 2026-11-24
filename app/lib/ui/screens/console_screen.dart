@@ -279,7 +279,7 @@ class ConsoleScreen extends StatelessWidget {
           },
         );
     return SizedBox(
-      width: 282,
+      width: 292,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

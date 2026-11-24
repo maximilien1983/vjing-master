@@ -279,7 +279,7 @@ class _LocalScreenState extends State<LocalScreen> {
           Expanded(
             child: AluPanel(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 26, 14, 16),
+                padding: const EdgeInsets.fromLTRB(10, 26, 10, 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -287,7 +287,14 @@ class _LocalScreenState extends State<LocalScreen> {
                     _divider(),
                     _compactFaders(),
                     _divider(),
-                    _compactTriggers(),
+                    // Le bloc d'effets absorbe la largeur restante : il se
+                    // réduit à l'échelle au lieu de déborder (écrans étroits).
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _compactTriggers(),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -349,7 +356,7 @@ class _LocalScreenState extends State<LocalScreen> {
             disabled: sourceDisabledNotches(
                 castConnected: cast == CastState.connected)),
       ),
-      const SizedBox(width: 12),
+      const SizedBox(width: 8),
       selector('EFFECTS', styleLabels, styleIds, session.styleId,
           session.setStyle),
     ]);
@@ -381,7 +388,7 @@ class _LocalScreenState extends State<LocalScreen> {
 
     return Row(children: [
       fader('LIGHT', FaderGeometry.lightDrawer, session.light, session.setLight),
-      const SizedBox(width: 16),
+      const SizedBox(width: 12),
       fader('POWER', FaderGeometry.energyDrawer, session.energy,
           session.setEnergy),
     ]);
@@ -408,7 +415,7 @@ class _LocalScreenState extends State<LocalScreen> {
           },
         );
     return SizedBox(
-      width: 268,
+      width: 278,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
